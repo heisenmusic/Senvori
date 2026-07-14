@@ -1,0 +1,40 @@
+{
+  "common": {
+    "appName": "Senvori",
+    "loading": "Loading…",
+    "save": "Save",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "delete": "Delete",
+    "edit": "Edit",
+    "create": "Create",
+    "search": "Search",
+    "language": "Language",
+    "notFound": "Page not found",
+    "error": "Something went wrong"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "fleet": "Fleet",
+    "catalog": "Catalog",
+    "playlists": "Playlists",
+    "scheduling": "Scheduling",
+    "campaigns": "Campaigns",
+    "analytics": "Analytics",
+    "settings": "Settings"
+  },
+  "dashboard": {
+    "title": "Senvori Dashboard",
+    "subtitle": "The global platform for brand experience, retail media and in-store audio.",
+    "foundation": {
+      "title": "Phase 0 — Foundation",
+      "description": "Monorepo, contracts, design system, i18n and core schema are in place. Domain features arrive in Phase 1.",
+      "docs": "Foundation documents live in the docs directory."
+    }
+  },
+  "site": {
+    "title": "Senvori",
+    "tagline": "Brand experience, retail media and AI-powered in-store content — for every store, in every country.",
+    "cta": "Coming soon"
+  }
+}

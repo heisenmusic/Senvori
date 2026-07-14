@@ -1,0 +1,40 @@
+{
+  "common": {
+    "appName": "Senvori",
+    "loading": "Carregando…",
+    "save": "Salvar",
+    "cancel": "Cancelar",
+    "confirm": "Confirmar",
+    "delete": "Excluir",
+    "edit": "Editar",
+    "create": "Criar",
+    "search": "Buscar",
+    "language": "Idioma",
+    "notFound": "Página não encontrada",
+    "error": "Algo deu errado"
+  },
+  "nav": {
+    "dashboard": "Painel",
+    "fleet": "Frota",
+    "catalog": "Catálogo",
+    "playlists": "Playlists",
+    "scheduling": "Programação",
+    "campaigns": "Campanhas",
+    "analytics": "Analytics",
+    "settings": "Configurações"
+  },
+  "dashboard": {
+    "title": "Painel Senvori",
+    "subtitle": "A plataforma global de brand experience, retail media e áudio para lojas.",
+    "foundation": {
+      "title": "Fase 0 — Fundação",
+      "description": "Monorepo, contratos, design system, i18n e schema núcleo prontos. As features de domínio chegam na Fase 1.",
+      "docs": "Os documentos da fundação estão no diretório docs."
+    }
+  },
+  "site": {
+    "title": "Senvori",
+    "tagline": "Brand experience, retail media e conteúdo com IA para lojas — em qualquer loja, em qualquer país.",
+    "cta": "Em breve"
+  }
+}
