@@ -21,12 +21,24 @@ first cross-domain interface.
 ## Multi-tenancy & RLS (D3)
 
 - Every business table carries `tenant_id`; policies check
-  `current_setting('app.tenant_id', true)::uuid`.
+  `tenant_id = NULLIF(current_setting('app.tenant_id', true), '')::uuid` (the `NULLIF`
+  guard makes an unset/empty context DENY rather than raise a cast error).
 - The API sets the context per transaction via `withTenantContext()`
   (`set_config(..., true)` — transaction-local, safe with pooling).
-- Auth tables (`users`, `sessions`, `accounts`, `verifications`, `memberships`,
-  `invitations`) carry no RLS: authentication runs before tenant context exists and
-  users are global (one user, N tenants). `countries` is a platform-scope reference.
+- Tables are **FORCE ROW LEVEL SECURITY** (migration `0003`): Postgres exempts a table's
+  owner from RLS, and migrations run as the owner, so without FORCE an app connecting as
+  the owner would silently bypass isolation. With FORCE the guarantee holds no matter which
+  role the API connects as. The **only** way to cross tenants is a dedicated ops/worker
+  role with `BYPASSRLS`, used to write shared-catalog platform rows (`tenant_id NULL`).
+- Shared catalogs (`assets`, `licenses`, `playlists`, `themes`, …) have a nullable
+  `tenant_id` and a two-policy RLS: every tenant may READ platform rows (`NULL`) and its
+  own rows; WRITES are always tenant-scoped.
+- Auth tables (`users`, `sessions`, `accounts`, `verifications`, `two_factors`,
+  `memberships`, `invitations`) carry no RLS: authentication runs before tenant context
+  exists and users are global (one user, N tenants). Platform reference tables
+  (`countries`, `plans`, `player_releases`, marketplace `providers`/`listings`) are global.
+
+Full table-by-table reference: [`docs/DATABASE_ERD.md`](../../docs/DATABASE_ERD.md).
 
 ## Auth (D11)
 

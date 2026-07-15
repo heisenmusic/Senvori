@@ -1,9 +1,8 @@
-import { sql } from "drizzle-orm";
 import {
+  boolean,
   doublePrecision,
   index,
   jsonb,
-  pgPolicy,
   pgTable,
   text,
   timestamp,
@@ -11,24 +10,15 @@ import {
   uuid,
   varchar,
 } from "drizzle-orm/pg-core";
-import { uuidv7 } from "uuidv7";
+import { archivedAt, auditFields, id, tenantIsolation } from "./_helpers";
 
 /**
  * Tenancy domain schema — SENVORI_CORE_DOMAINS.md §2.
  *
- * Multi-tenant model (D3): every business table carries `tenant_id` with Row Level
- * Security; the API sets `app.tenant_id` per request/transaction. Platform-scope
- * reference tables (countries) carry no tenant_id by design (§0.1).
+ * Source of truth for the organizational hierarchy:
+ * tenant → country → brand → group → unit → zone.
+ * Platform-scope reference tables (countries) carry no tenant_id by design (§0.1).
  */
-
-/** RLS: rows are only visible/writable inside the current tenant context (D3). */
-const tenantIsolation = (table: string) =>
-  pgPolicy(`${table}_tenant_isolation`, {
-    as: "permissive",
-    for: "all",
-    using: sql`tenant_id = current_setting('app.tenant_id', true)::uuid`,
-    withCheck: sql`tenant_id = current_setting('app.tenant_id', true)::uuid`,
-  });
 
 /**
  * Tenant — the Senvori customer (§2.2).
@@ -36,7 +26,7 @@ const tenantIsolation = (table: string) =>
  * columns belong to the auth layer contract.
  */
 export const tenants = pgTable("tenants", {
-  id: uuid("id").primaryKey().$defaultFn(uuidv7),
+  id: id(),
   name: text("name").notNull(),
   slug: text("slug").notNull().unique(),
   logo: text("logo"),
@@ -47,9 +37,8 @@ export const tenants = pgTable("tenants", {
   status: text("status", { enum: ["active", "suspended", "canceled"] })
     .notNull()
     .default("active"),
-  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
-  archivedAt: timestamp("archived_at", { withTimezone: true }),
+  ...auditFields(),
+  archivedAt: archivedAt(),
 });
 
 /** ISO 3166-1 reference, platform scope, maintained by Senvori (§2.2). */
@@ -66,7 +55,7 @@ export const countries = pgTable("countries", {
 export const tenantCountries = pgTable(
   "tenant_countries",
   {
-    id: uuid("id").primaryKey().$defaultFn(uuidv7),
+    id: id(),
     tenantId: uuid("tenant_id")
       .notNull()
       .references(() => tenants.id, { onDelete: "cascade" }),
@@ -78,7 +67,7 @@ export const tenantCountries = pgTable(
     status: text("status", { enum: ["active", "disabled"] })
       .notNull()
       .default("active"),
-    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    ...auditFields(),
   },
   (t) => [
     uniqueIndex("tenant_countries_tenant_country_idx").on(t.tenantId, t.countryCode),
@@ -90,16 +79,15 @@ export const tenantCountries = pgTable(
 export const brands = pgTable(
   "brands",
   {
-    id: uuid("id").primaryKey().$defaultFn(uuidv7),
+    id: id(),
     tenantId: uuid("tenant_id")
       .notNull()
       .references(() => tenants.id, { onDelete: "cascade" }),
     name: text("name").notNull(),
     slug: text("slug").notNull(),
     defaultLocale: text("default_locale"),
-    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
-    archivedAt: timestamp("archived_at", { withTimezone: true }),
+    ...auditFields(),
+    archivedAt: archivedAt(),
   },
   (t) => [
     uniqueIndex("brands_tenant_slug_idx").on(t.tenantId, t.slug),
@@ -112,16 +100,15 @@ export const brands = pgTable(
 export const groups = pgTable(
   "groups",
   {
-    id: uuid("id").primaryKey().$defaultFn(uuidv7),
+    id: id(),
     tenantId: uuid("tenant_id")
       .notNull()
       .references(() => tenants.id, { onDelete: "cascade" }),
     name: text("name").notNull(),
     kind: text("kind"),
     description: text("description"),
-    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
-    archivedAt: timestamp("archived_at", { withTimezone: true }),
+    ...auditFields(),
+    archivedAt: archivedAt(),
   },
   (t) => [index("groups_tenant_idx").on(t.tenantId), tenantIsolation("groups")],
 ).enableRLS();
@@ -130,7 +117,7 @@ export const groups = pgTable(
 export const units = pgTable(
   "units",
   {
-    id: uuid("id").primaryKey().$defaultFn(uuidv7),
+    id: id(),
     tenantId: uuid("tenant_id")
       .notNull()
       .references(() => tenants.id, { onDelete: "cascade" }),
@@ -151,9 +138,8 @@ export const units = pgTable(
     status: text("status", { enum: ["active", "paused", "archived"] })
       .notNull()
       .default("active"),
-    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
-    archivedAt: timestamp("archived_at", { withTimezone: true }),
+    ...auditFields(),
+    archivedAt: archivedAt(),
   },
   (t) => [
     uniqueIndex("units_tenant_external_code_idx").on(t.tenantId, t.externalCode),
@@ -168,7 +154,7 @@ export const units = pgTable(
 export const groupMemberships = pgTable(
   "group_memberships",
   {
-    id: uuid("id").primaryKey().$defaultFn(uuidv7),
+    id: id(),
     tenantId: uuid("tenant_id")
       .notNull()
       .references(() => tenants.id, { onDelete: "cascade" }),
@@ -185,4 +171,63 @@ export const groupMemberships = pgTable(
     index("group_memberships_tenant_idx").on(t.tenantId),
     tenantIsolation("group_memberships"),
   ],
+).enableRLS();
+
+/**
+ * Execution point inside a unit (§2.2 Zone): ambient audio, storefront screen…
+ * Every unit is born with a default zone; devices (Fleet) bind to zones.
+ */
+export const zones = pgTable(
+  "zones",
+  {
+    id: id(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => tenants.id, { onDelete: "cascade" }),
+    unitId: uuid("unit_id")
+      .notNull()
+      .references(() => units.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    kind: text("kind", { enum: ["audio", "screen", "hybrid"] })
+      .notNull()
+      .default("audio"),
+    /** The non-removable default zone (§2.9 rule 7). */
+    isDefault: boolean("is_default").notNull().default(false),
+    ...auditFields(),
+    archivedAt: archivedAt(),
+  },
+  (t) => [
+    uniqueIndex("zones_unit_name_idx").on(t.unitId, t.name),
+    index("zones_tenant_idx").on(t.tenantId),
+    tenantIsolation("zones"),
+  ],
+).enableRLS();
+
+/**
+ * Unit business hours (§2.2): weekly rules in LOCAL wall-clock time plus dated
+ * exceptions (holidays, events). Outside business hours the default is silence.
+ */
+export const businessHours = pgTable(
+  "business_hours",
+  {
+    id: id(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => tenants.id, { onDelete: "cascade" }),
+    unitId: uuid("unit_id")
+      .notNull()
+      .references(() => units.id, { onDelete: "cascade" }),
+    /** [{ weekday: 1..7, open: "08:00", close: "22:00" }] — local wall-clock (D4). */
+    weeklyRules: jsonb("weekly_rules")
+      .$type<Array<{ weekday: number; open: string; close: string }>>()
+      .notNull()
+      .default([]),
+    /** [{ date: "2026-12-25", closed: true, open?, close? }] */
+    exceptions: jsonb("exceptions")
+      .$type<Array<{ date: string; closed: boolean; open?: string; close?: string }>>()
+      .notNull()
+      .default([]),
+    ...auditFields(),
+  },
+  (t) => [uniqueIndex("business_hours_unit_idx").on(t.unitId), tenantIsolation("business_hours")],
 ).enableRLS();
