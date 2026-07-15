@@ -23,7 +23,8 @@
     "scheduling": "Scheduling",
     "campaigns": "Campaigns",
     "analytics": "Analytics",
-    "settings": "Settings"
+    "settings": "Settings",
+    "library": "Library"
   },
   "auth": {
     "login": {
@@ -73,5 +74,70 @@
     "title": "Senvori",
     "tagline": "Brand experience, retail media and AI-powered in-store content — for every store, in every country.",
     "cta": "Coming soon"
+  },
+  "library": {
+    "title": "Library",
+    "subtitle": "All of your brand's audio content.",
+    "add": "Add content",
+    "search": "Search by title",
+    "filterType": "Filter by type",
+    "filterStatus": "Filter by status",
+    "loading": "Loading content…",
+    "empty": "Your library is still empty.",
+    "emptyHint": "Add music, idents, spots or other audio content.",
+    "noResults": "No content matches your search.",
+    "error": "We couldn't load the library. Please try again.",
+    "retry": "Try again",
+    "noPermission": "You don't have permission to view the library.",
+    "loadMore": "Load more",
+    "type": {
+      "all": "All types",
+      "track": "Music",
+      "announcement": "Voice"
+    },
+    "status": {
+      "all": "All statuses",
+      "uploading": "Uploading",
+      "processing": "Preparing",
+      "ready": "Ready",
+      "failed": "Failed",
+      "archived": "Archived"
+    },
+    "origin": {
+      "tenant_upload": "Your content",
+      "senvori_catalog": "Senvori Originals",
+      "marketplace": "Marketplace",
+      "ai_generated": "AI generated"
+    },
+    "language": {
+      "ptBR": "Portuguese (BR)",
+      "enUS": "English (US)",
+      "esES": "Spanish (ES)"
+    },
+    "country": {
+      "BR": "Brazil",
+      "US": "United States"
+    },
+    "item": {
+      "untitled": "Untitled",
+      "duration": "Duration",
+      "origin": "Origin",
+      "download": "Download",
+      "retry": "Try again"
+    },
+    "form": {
+      "file": "Audio file",
+      "title": "Title",
+      "type": "Type",
+      "language": "Language",
+      "origin": "Country of origin",
+      "submit": "Upload",
+      "sending": "Uploading…",
+      "cancel": "Cancel"
+    },
+    "upload": {
+      "invalidType": "Unsupported audio format. Use WAV, MP3, AAC or FLAC.",
+      "failed": "We couldn't upload this file. Check the format and try again."
+    }
   }
 }

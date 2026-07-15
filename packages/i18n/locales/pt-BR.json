@@ -23,7 +23,8 @@
     "scheduling": "Programação",
     "campaigns": "Campanhas",
     "analytics": "Analytics",
-    "settings": "Configurações"
+    "settings": "Configurações",
+    "library": "Biblioteca"
   },
   "auth": {
     "login": {
@@ -73,5 +74,70 @@
     "title": "Senvori",
     "tagline": "Brand experience, retail media e conteúdo com IA para lojas — em qualquer loja, em qualquer país.",
     "cta": "Em breve"
+  },
+  "library": {
+    "title": "Biblioteca",
+    "subtitle": "Todo o conteúdo de áudio da sua marca.",
+    "add": "Adicionar conteúdo",
+    "search": "Buscar por título",
+    "filterType": "Filtrar por tipo",
+    "filterStatus": "Filtrar por status",
+    "loading": "Carregando conteúdos…",
+    "empty": "Sua biblioteca ainda está vazia.",
+    "emptyHint": "Adicione músicas, vinhetas, spots ou outros conteúdos de áudio.",
+    "noResults": "Nenhum conteúdo corresponde à sua busca.",
+    "error": "Não foi possível carregar a biblioteca. Tente novamente.",
+    "retry": "Tentar novamente",
+    "noPermission": "Você não tem permissão para ver a biblioteca.",
+    "loadMore": "Carregar mais",
+    "type": {
+      "all": "Todos os tipos",
+      "track": "Música",
+      "announcement": "Locução"
+    },
+    "status": {
+      "all": "Todos os status",
+      "uploading": "Enviando",
+      "processing": "Preparando",
+      "ready": "Pronto",
+      "failed": "Falhou",
+      "archived": "Arquivado"
+    },
+    "origin": {
+      "tenant_upload": "Seu conteúdo",
+      "senvori_catalog": "Senvori Originals",
+      "marketplace": "Marketplace",
+      "ai_generated": "Gerado por IA"
+    },
+    "language": {
+      "ptBR": "Português (BR)",
+      "enUS": "Inglês (EUA)",
+      "esES": "Espanhol (ES)"
+    },
+    "country": {
+      "BR": "Brasil",
+      "US": "Estados Unidos"
+    },
+    "item": {
+      "untitled": "Sem título",
+      "duration": "Duração",
+      "origin": "Origem",
+      "download": "Baixar",
+      "retry": "Tentar novamente"
+    },
+    "form": {
+      "file": "Arquivo de áudio",
+      "title": "Título",
+      "type": "Tipo",
+      "language": "Idioma",
+      "origin": "País de origem",
+      "submit": "Enviar",
+      "sending": "Enviando…",
+      "cancel": "Cancelar"
+    },
+    "upload": {
+      "invalidType": "Formato de áudio não suportado. Use WAV, MP3, AAC ou FLAC.",
+      "failed": "Não foi possível enviar este arquivo. Verifique o formato e tente novamente."
+    }
   }
 }
