@@ -111,43 +111,48 @@ export class IdentityService {
   }
 
   async suspendMember(ctx: RequestContext, membershipId: string): Promise<void> {
-    const [existing] = await this.db
-      .select()
-      .from(memberships)
-      .where(and(eq(memberships.id, membershipId), eq(memberships.organizationId, ctx.tenantId)));
-    if (!existing)
-      throw new NotFoundException({ code: "MEMBER_NOT_FOUND", title: "Membership not found" });
+    await this.tenantContext.withTenant(async (tx) => {
+      // memberships is a global auth table (no RLS); filter by tenant explicitly.
+      const [existing] = await tx
+        .select()
+        .from(memberships)
+        .where(and(eq(memberships.id, membershipId), eq(memberships.organizationId, ctx.tenantId)));
+      if (!existing)
+        throw new NotFoundException({ code: "MEMBER_NOT_FOUND", title: "Membership not found" });
 
-    await this.db
-      .update(memberships)
-      .set({ status: "suspended" })
-      .where(eq(memberships.id, membershipId));
-    await this.audit.record({
-      action: "identity.membership.suspended",
-      resourceType: "membership",
-      resourceId: membershipId,
-      before: { status: existing.status },
-      after: { status: "suspended" },
+      await tx
+        .update(memberships)
+        .set({ status: "suspended" })
+        .where(eq(memberships.id, membershipId));
+      await this.audit.recordInTx(tx, {
+        action: "identity.membership.suspended",
+        resourceType: "membership",
+        resourceId: membershipId,
+        before: { status: existing.status },
+        after: { status: "suspended" },
+      });
     });
   }
 
   async createInvitation(ctx: RequestContext, input: InviteMemberInput): Promise<{ id: string }> {
     const id = uuidv7();
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-    await this.db.insert(invitations).values({
-      id,
-      organizationId: ctx.tenantId,
-      email: input.email,
-      role: input.role,
-      status: "pending",
-      expiresAt,
-      inviterId: ctx.userId,
-    });
-    await this.audit.record({
-      action: "identity.invitation.sent",
-      resourceType: "invitation",
-      resourceId: id,
-      after: { email: input.email, role: input.role },
+    await this.tenantContext.withTenant(async (tx) => {
+      await tx.insert(invitations).values({
+        id,
+        organizationId: ctx.tenantId,
+        email: input.email,
+        role: input.role,
+        status: "pending",
+        expiresAt,
+        inviterId: ctx.userId,
+      });
+      await this.audit.recordInTx(tx, {
+        action: "identity.invitation.sent",
+        resourceType: "invitation",
+        resourceId: id,
+        after: { email: input.email, role: input.role },
+      });
     });
     return { id };
   }
@@ -169,34 +174,37 @@ export class IdentityService {
   }
 
   async assignRole(ctx: RequestContext, input: AssignRoleInput): Promise<RoleAssignmentDto> {
-    // membership must belong to this tenant (auth table, filter explicitly)
-    const [membership] = await this.db
-      .select()
-      .from(memberships)
-      .where(
-        and(eq(memberships.id, input.membershipId), eq(memberships.organizationId, ctx.tenantId)),
-      );
-    if (!membership)
-      throw new ForbiddenException({ code: "MEMBER_NOT_FOUND", title: "Membership not in tenant" });
-
     const id = uuidv7();
-    await this.tenantContext.withTenant((tx) =>
-      tx.insert(roleAssignments).values({
+    await this.tenantContext.withTenant(async (tx) => {
+      // membership must belong to this tenant (auth table, filter explicitly)
+      const [membership] = await tx
+        .select()
+        .from(memberships)
+        .where(
+          and(eq(memberships.id, input.membershipId), eq(memberships.organizationId, ctx.tenantId)),
+        );
+      if (!membership)
+        throw new ForbiddenException({
+          code: "MEMBER_NOT_FOUND",
+          title: "Membership not in tenant",
+        });
+
+      await tx.insert(roleAssignments).values({
         id,
         tenantId: ctx.tenantId,
         membershipId: input.membershipId,
         role: input.role,
         scopeType: input.scope.type,
         scopeId: input.scope.id,
-      }),
-    );
-    await this.audit.record({
-      action: "identity.role.assigned",
-      resourceType: "role_assignment",
-      resourceId: id,
-      scopeType: input.scope.type,
-      scopeId: input.scope.id,
-      after: { role: input.role, membershipId: input.membershipId },
+      });
+      await this.audit.recordInTx(tx, {
+        action: "identity.role.assigned",
+        resourceType: "role_assignment",
+        resourceId: id,
+        scopeType: input.scope.type,
+        scopeId: input.scope.id,
+        after: { role: input.role, membershipId: input.membershipId },
+      });
     });
     return {
       id,
@@ -208,22 +216,22 @@ export class IdentityService {
   }
 
   async revokeRoleAssignment(ctx: RequestContext, id: string): Promise<void> {
-    const deleted = await this.tenantContext.withTenant((tx) =>
-      tx
+    await this.tenantContext.withTenant(async (tx) => {
+      const deleted = await tx
         .delete(roleAssignments)
         .where(eq(roleAssignments.id, id))
-        .returning({ id: roleAssignments.id }),
-    );
-    if (deleted.length === 0) {
-      throw new NotFoundException({
-        code: "ASSIGNMENT_NOT_FOUND",
-        title: "Role assignment not found",
+        .returning({ id: roleAssignments.id });
+      if (deleted.length === 0) {
+        throw new NotFoundException({
+          code: "ASSIGNMENT_NOT_FOUND",
+          title: "Role assignment not found",
+        });
+      }
+      await this.audit.recordInTx(tx, {
+        action: "identity.role.revoked",
+        resourceType: "role_assignment",
+        resourceId: id,
       });
-    }
-    await this.audit.record({
-      action: "identity.role.revoked",
-      resourceType: "role_assignment",
-      resourceId: id,
     });
   }
 

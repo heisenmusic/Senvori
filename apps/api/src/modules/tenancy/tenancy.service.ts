@@ -15,6 +15,7 @@ import type {
 } from "@senvori/contracts";
 import { and, asc, eq, gt, ilike, isNull, type SQL } from "drizzle-orm";
 import { uuidv7 } from "uuidv7";
+import type { TenantTx } from "../../database/tenant-context";
 import { brands, groups, units, zones } from "../../database/schema";
 import { AuditLogService } from "../../common/audit/audit-log.service";
 import type { RequestContext } from "../../common/context/request-context";
@@ -30,7 +31,9 @@ type ZoneRow = typeof zones.$inferSelect;
 /**
  * Tenancy domain service — SENVORI_CORE_DOMAINS.md §2. Every query runs inside
  * the tenant RLS context (TenantContextService.withTenant). Lists exclude
- * soft-deleted rows (archived_at). Administrative mutations are audited.
+ * soft-deleted rows (archived_at). Administrative mutations read the "before"
+ * state, apply the change and write the audit entry inside ONE transaction, so
+ * auditing is atomic with the mutation (§1.9 rule 7).
  */
 @Injectable()
 export class TenancyService {
@@ -50,8 +53,8 @@ export class TenancyService {
 
   async createBrand(ctx: RequestContext, input: CreateBrandInput): Promise<BrandDto> {
     const id = uuidv7();
-    const [row] = await this.tenantContext.withTenant((tx) =>
-      tx
+    return this.tenantContext.withTenant(async (tx) => {
+      const [row] = await tx
         .insert(brands)
         .values({
           id,
@@ -60,23 +63,24 @@ export class TenancyService {
           slug: input.slug,
           defaultLocale: input.defaultLocale ?? null,
         })
-        .returning(),
-    );
-    await this.audit.record({
-      action: "tenancy.brand.created",
-      resourceType: "brand",
-      resourceId: id,
-      scopeType: "brand",
-      scopeId: id,
-      after: input,
+        .returning();
+      const dto = this.toBrand(row);
+      await this.audit.recordInTx(tx, {
+        action: "tenancy.brand.created",
+        resourceType: "brand",
+        resourceId: id,
+        scopeType: "brand",
+        scopeId: id,
+        after: dto,
+      });
+      return dto;
     });
-    return this.toBrand(row);
   }
 
   async updateBrand(id: string, input: UpdateBrandInput): Promise<BrandDto> {
-    const before = await this.requireBrand(id);
-    const [row] = await this.tenantContext.withTenant((tx) =>
-      tx
+    return this.tenantContext.withTenant(async (tx) => {
+      const before = this.toBrand(await this.selectBrand(tx, id));
+      const [row] = await tx
         .update(brands)
         .set({
           ...(input.name !== undefined ? { name: input.name } : {}),
@@ -85,18 +89,19 @@ export class TenancyService {
           updatedAt: new Date(),
         })
         .where(eq(brands.id, id))
-        .returning(),
-    );
-    await this.audit.record({
-      action: "tenancy.brand.updated",
-      resourceType: "brand",
-      resourceId: id,
-      scopeType: "brand",
-      scopeId: id,
-      before: this.toBrand(before),
-      after: this.toBrand(row),
+        .returning();
+      const dto = this.toBrand(row);
+      await this.audit.recordInTx(tx, {
+        action: "tenancy.brand.updated",
+        resourceType: "brand",
+        resourceId: id,
+        scopeType: "brand",
+        scopeId: id,
+        before,
+        after: dto,
+      });
+      return dto;
     });
-    return this.toBrand(row);
   }
 
   /* ------------------------------------------------------------- groups -- */
@@ -110,8 +115,8 @@ export class TenancyService {
 
   async createGroup(ctx: RequestContext, input: CreateGroupInput): Promise<GroupDto> {
     const id = uuidv7();
-    const [row] = await this.tenantContext.withTenant((tx) =>
-      tx
+    return this.tenantContext.withTenant(async (tx) => {
+      const [row] = await tx
         .insert(groups)
         .values({
           id,
@@ -120,23 +125,24 @@ export class TenancyService {
           kind: input.kind ?? null,
           description: input.description ?? null,
         })
-        .returning(),
-    );
-    await this.audit.record({
-      action: "tenancy.group.created",
-      resourceType: "group",
-      resourceId: id,
-      scopeType: "group",
-      scopeId: id,
-      after: input,
+        .returning();
+      const dto = this.toGroup(row);
+      await this.audit.recordInTx(tx, {
+        action: "tenancy.group.created",
+        resourceType: "group",
+        resourceId: id,
+        scopeType: "group",
+        scopeId: id,
+        after: dto,
+      });
+      return dto;
     });
-    return this.toGroup(row);
   }
 
   async updateGroup(id: string, input: UpdateGroupInput): Promise<GroupDto> {
-    await this.requireGroup(id);
-    const [row] = await this.tenantContext.withTenant((tx) =>
-      tx
+    return this.tenantContext.withTenant(async (tx) => {
+      const before = this.toGroup(await this.selectGroup(tx, id));
+      const [row] = await tx
         .update(groups)
         .set({
           ...(input.name !== undefined ? { name: input.name } : {}),
@@ -145,28 +151,32 @@ export class TenancyService {
           updatedAt: new Date(),
         })
         .where(eq(groups.id, id))
-        .returning(),
-    );
-    await this.audit.record({
-      action: "tenancy.group.updated",
-      resourceType: "group",
-      resourceId: id,
-      scopeType: "group",
-      scopeId: id,
-      after: this.toGroup(row),
+        .returning();
+      const dto = this.toGroup(row);
+      await this.audit.recordInTx(tx, {
+        action: "tenancy.group.updated",
+        resourceType: "group",
+        resourceId: id,
+        scopeType: "group",
+        scopeId: id,
+        before,
+        after: dto,
+      });
+      return dto;
     });
-    return this.toGroup(row);
   }
 
   async archiveGroup(id: string): Promise<void> {
-    await this.requireGroup(id);
-    await this.tenantContext.withTenant((tx) =>
-      tx.update(groups).set({ archivedAt: new Date() }).where(eq(groups.id, id)),
-    );
-    await this.audit.record({
-      action: "tenancy.group.archived",
-      resourceType: "group",
-      resourceId: id,
+    await this.tenantContext.withTenant(async (tx) => {
+      await this.selectGroup(tx, id);
+      await tx.update(groups).set({ archivedAt: new Date() }).where(eq(groups.id, id));
+      await this.audit.recordInTx(tx, {
+        action: "tenancy.group.archived",
+        resourceType: "group",
+        resourceId: id,
+        scopeType: "group",
+        scopeId: id,
+      });
     });
   }
 
@@ -198,12 +208,12 @@ export class TenancyService {
   }
 
   async getUnit(id: string): Promise<UnitDto> {
-    return this.toUnit(await this.requireUnit(id));
+    return this.tenantContext.withTenant(async (tx) => this.toUnit(await this.selectUnit(tx, id)));
   }
 
   async createUnit(ctx: RequestContext, input: CreateUnitInput): Promise<UnitDto> {
     const id = uuidv7();
-    const unit = await this.tenantContext.withTenant(async (tx) => {
+    return this.tenantContext.withTenant(async (tx) => {
       const [created] = await tx
         .insert(units)
         .values({
@@ -229,23 +239,23 @@ export class TenancyService {
         kind: "audio",
         isDefault: true,
       });
-      return created;
+      const dto = this.toUnit(created);
+      await this.audit.recordInTx(tx, {
+        action: "tenancy.unit.created",
+        resourceType: "unit",
+        resourceId: id,
+        scopeType: "unit",
+        scopeId: id,
+        after: dto,
+      });
+      return dto;
     });
-    await this.audit.record({
-      action: "tenancy.unit.created",
-      resourceType: "unit",
-      resourceId: id,
-      scopeType: "unit",
-      scopeId: id,
-      after: input,
-    });
-    return this.toUnit(unit);
   }
 
   async updateUnit(id: string, input: UpdateUnitInput): Promise<UnitDto> {
-    const before = await this.requireUnit(id);
-    const [row] = await this.tenantContext.withTenant((tx) =>
-      tx
+    return this.tenantContext.withTenant(async (tx) => {
+      const before = this.toUnit(await this.selectUnit(tx, id));
+      const [row] = await tx
         .update(units)
         .set({
           ...(input.name !== undefined ? { name: input.name } : {}),
@@ -259,101 +269,100 @@ export class TenancyService {
           updatedAt: new Date(),
         })
         .where(eq(units.id, id))
-        .returning(),
-    );
-    await this.audit.record({
-      action: "tenancy.unit.updated",
-      resourceType: "unit",
-      resourceId: id,
-      scopeType: "unit",
-      scopeId: id,
-      before: this.toUnit(before),
-      after: this.toUnit(row),
+        .returning();
+      const dto = this.toUnit(row);
+      await this.audit.recordInTx(tx, {
+        action: "tenancy.unit.updated",
+        resourceType: "unit",
+        resourceId: id,
+        scopeType: "unit",
+        scopeId: id,
+        before,
+        after: dto,
+      });
+      return dto;
     });
-    return this.toUnit(row);
   }
 
   async archiveUnit(id: string): Promise<void> {
-    const before = await this.requireUnit(id);
-    await this.tenantContext.withTenant((tx) =>
-      tx.update(units).set({ status: "archived", archivedAt: new Date() }).where(eq(units.id, id)),
-    );
-    await this.audit.record({
-      action: "tenancy.unit.archived",
-      resourceType: "unit",
-      resourceId: id,
-      scopeType: "unit",
-      scopeId: id,
-      before: { status: before.status },
-      after: { status: "archived" },
+    await this.tenantContext.withTenant(async (tx) => {
+      const before = await this.selectUnit(tx, id);
+      await tx
+        .update(units)
+        .set({ status: "archived", archivedAt: new Date() })
+        .where(eq(units.id, id));
+      await this.audit.recordInTx(tx, {
+        action: "tenancy.unit.archived",
+        resourceType: "unit",
+        resourceId: id,
+        scopeType: "unit",
+        scopeId: id,
+        before: { status: before.status },
+        after: { status: "archived" },
+      });
     });
   }
 
   /* -------------------------------------------------------------- zones -- */
 
   async listZones(unitId: string): Promise<ZoneDto[]> {
-    await this.requireUnit(unitId);
-    const rows = await this.tenantContext.withTenant((tx) =>
-      tx
+    return this.tenantContext.withTenant(async (tx) => {
+      await this.selectUnit(tx, unitId);
+      const rows = await tx
         .select()
         .from(zones)
         .where(and(eq(zones.unitId, unitId), isNull(zones.archivedAt)))
-        .orderBy(asc(zones.id)),
-    );
-    return rows.map(this.toZone);
+        .orderBy(asc(zones.id));
+      return rows.map(this.toZone);
+    });
   }
 
   async createZone(ctx: RequestContext, unitId: string, input: CreateZoneInput): Promise<ZoneDto> {
-    await this.requireUnit(unitId);
     const id = uuidv7();
-    const [row] = await this.tenantContext.withTenant((tx) =>
-      tx
+    return this.tenantContext.withTenant(async (tx) => {
+      await this.selectUnit(tx, unitId);
+      const [row] = await tx
         .insert(zones)
         .values({ id, tenantId: ctx.tenantId, unitId, name: input.name, kind: input.kind })
-        .returning(),
-    );
-    await this.audit.record({
-      action: "tenancy.zone.created",
-      resourceType: "zone",
-      resourceId: id,
-      scopeType: "unit",
-      scopeId: unitId,
-      after: input,
+        .returning();
+      const dto = this.toZone(row);
+      await this.audit.recordInTx(tx, {
+        action: "tenancy.zone.created",
+        resourceType: "zone",
+        resourceId: id,
+        scopeType: "unit",
+        scopeId: unitId,
+        after: dto,
+      });
+      return dto;
     });
-    return this.toZone(row);
   }
 
   /* --------------------------------------------------------- internals -- */
 
-  private async requireBrand(id: string): Promise<BrandRow> {
-    const [row] = await this.tenantContext.withTenant((tx) =>
-      tx
-        .select()
-        .from(brands)
-        .where(and(eq(brands.id, id), isNull(brands.archivedAt))),
-    );
+  private async selectBrand(tx: TenantTx, id: string): Promise<BrandRow> {
+    const [row] = await tx
+      .select()
+      .from(brands)
+      .where(and(eq(brands.id, id), isNull(brands.archivedAt)));
     if (!row) throw new NotFoundException({ code: "BRAND_NOT_FOUND", title: "Brand not found" });
     return row;
   }
 
-  private async requireGroup(id: string): Promise<GroupRow> {
-    const [row] = await this.tenantContext.withTenant((tx) =>
-      tx
-        .select()
-        .from(groups)
-        .where(and(eq(groups.id, id), isNull(groups.archivedAt))),
-    );
+  private async selectGroup(tx: TenantTx, id: string): Promise<GroupRow> {
+    const [row] = await tx
+      .select()
+      .from(groups)
+      .where(and(eq(groups.id, id), isNull(groups.archivedAt)));
     if (!row) throw new NotFoundException({ code: "GROUP_NOT_FOUND", title: "Group not found" });
     return row;
   }
 
-  private async requireUnit(id: string): Promise<UnitRow> {
-    const [row] = await this.tenantContext.withTenant((tx) =>
-      tx
-        .select()
-        .from(units)
-        .where(and(eq(units.id, id), isNull(units.archivedAt))),
-    );
+  private async selectUnit(tx: TenantTx, id: string): Promise<UnitRow> {
+    const [row] = await tx
+      .select()
+      .from(units)
+      .where(and(eq(units.id, id), isNull(units.archivedAt)));
     if (!row) throw new NotFoundException({ code: "UNIT_NOT_FOUND", title: "Unit not found" });
     return row;
   }

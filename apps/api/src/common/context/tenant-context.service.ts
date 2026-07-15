@@ -1,10 +1,10 @@
 import { AsyncLocalStorage } from "node:async_hooks";
 import { Inject, Injectable } from "@nestjs/common";
 import { DRIZZLE, type DrizzleDb } from "../../database/database.module";
-import { withTenantContext } from "../../database/tenant-context";
+import { withTenantContext, type TenantTx } from "../../database/tenant-context";
 import type { RequestContext } from "./request-context";
 
-type Tx = Parameters<Parameters<DrizzleDb["transaction"]>[0]>[0];
+type Tx = TenantTx;
 
 /**
  * Runtime tenant context (P1). Holds the authenticated request context in
