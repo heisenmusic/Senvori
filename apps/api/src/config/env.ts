@@ -11,6 +11,8 @@ export const envSchema = z.object({
   REDIS_URL: z.string().min(1).optional(),
   BETTER_AUTH_SECRET: z.string().min(32),
   BETTER_AUTH_URL: z.string().url(),
+  /** Dashboard origin allowed for CORS + Better Auth trusted origins. */
+  DASHBOARD_URL: z.string().url().default("http://localhost:3000"),
 });
 
 export type Env = z.infer<typeof envSchema>;

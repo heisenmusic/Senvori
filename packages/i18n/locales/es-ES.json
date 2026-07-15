@@ -16,12 +16,44 @@
   "nav": {
     "dashboard": "Panel",
     "fleet": "Flota",
+    "units": "Unidades",
+    "logout": "Cerrar sesión",
     "catalog": "Catálogo",
     "playlists": "Playlists",
     "scheduling": "Programación",
     "campaigns": "Campañas",
     "analytics": "Analytics",
     "settings": "Configuración"
+  },
+  "auth": {
+    "login": {
+      "title": "Entrar en Senvori",
+      "email": "Correo",
+      "password": "Contraseña",
+      "submit": "Entrar",
+      "loading": "Entrando…",
+      "error": "Correo o contraseña inválidos"
+    }
+  },
+  "units": {
+    "title": "Unidades",
+    "subtitle": "Todas las tiendas de tu red.",
+    "search": "Buscar por nombre",
+    "loading": "Cargando unidades…",
+    "empty": "No se encontraron unidades.",
+    "loadMore": "Cargar más",
+    "status": {
+      "all": "Todos los estados",
+      "active": "Activa",
+      "paused": "Pausada",
+      "archived": "Archivada"
+    },
+    "col": {
+      "name": "Nombre",
+      "country": "País",
+      "timezone": "Zona horaria",
+      "status": "Estado"
+    }
   },
   "dashboard": {
     "title": "Panel Senvori",

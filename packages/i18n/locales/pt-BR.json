@@ -16,12 +16,44 @@
   "nav": {
     "dashboard": "Painel",
     "fleet": "Frota",
+    "units": "Unidades",
+    "logout": "Sair",
     "catalog": "Catálogo",
     "playlists": "Playlists",
     "scheduling": "Programação",
     "campaigns": "Campanhas",
     "analytics": "Analytics",
     "settings": "Configurações"
+  },
+  "auth": {
+    "login": {
+      "title": "Entrar na Senvori",
+      "email": "E-mail",
+      "password": "Senha",
+      "submit": "Entrar",
+      "loading": "Entrando…",
+      "error": "E-mail ou senha inválidos"
+    }
+  },
+  "units": {
+    "title": "Unidades",
+    "subtitle": "Todas as lojas da sua rede.",
+    "search": "Buscar por nome",
+    "loading": "Carregando unidades…",
+    "empty": "Nenhuma unidade encontrada.",
+    "loadMore": "Carregar mais",
+    "status": {
+      "all": "Todos os status",
+      "active": "Ativa",
+      "paused": "Pausada",
+      "archived": "Arquivada"
+    },
+    "col": {
+      "name": "Nome",
+      "country": "País",
+      "timezone": "Fuso",
+      "status": "Status"
+    }
   },
   "dashboard": {
     "title": "Painel Senvori",

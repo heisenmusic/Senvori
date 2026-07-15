@@ -1,11 +1,16 @@
 import { Module } from "@nestjs/common";
+import { BrandsController } from "./brands.controller";
+import { GroupsController } from "./groups.controller";
+import { UnitsController } from "./units.controller";
+import { TenancyService } from "./tenancy.service";
 
 /**
- * Tenancy domain module — SENVORI_CORE_DOMAINS.md §2.
- *
- * Foundation phase: module boundary only; entities, business rules and APIs land in
- * later phases. D2 boundary rule: no module imports another module's internals —
- * communication happens through public interfaces or system events only.
+ * Tenancy domain — SENVORI_CORE_DOMAINS.md §2.
+ * CRUD for brands, groups, units and zones with pagination/search/filters,
+ * soft delete, audit and hierarchical permissions.
  */
-@Module({})
+@Module({
+  controllers: [BrandsController, GroupsController, UnitsController],
+  providers: [TenancyService],
+})
 export class TenancyModule {}

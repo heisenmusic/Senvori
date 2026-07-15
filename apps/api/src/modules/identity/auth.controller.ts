@@ -1,11 +1,13 @@
 import { All, Controller, Inject, Req, Res } from "@nestjs/common";
 import type { FastifyReply, FastifyRequest } from "fastify";
+import { Public } from "../../common/auth/public.decorator";
 import { AUTH, type Auth } from "./auth.config";
 
 /**
  * Bridges /v1/auth/* to the Better Auth web handler (§1.6).
  * Fastify request → web Request → auth.handler → web Response → Fastify reply.
  */
+@Public()
 @Controller("auth")
 export class AuthController {
   constructor(@Inject(AUTH) private readonly auth: Auth) {}

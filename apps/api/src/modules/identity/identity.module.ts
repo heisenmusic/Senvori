@@ -1,27 +1,27 @@
 import { Module } from "@nestjs/common";
-import { ConfigService } from "@nestjs/config";
-import { DRIZZLE, type DrizzleDb } from "../../database/database.module";
-import { AUTH, createAuth } from "./auth.config";
 import { AuthController } from "./auth.controller";
+import { MeController } from "./me.controller";
+import { MembersController } from "./members.controller";
+import { InvitationsController } from "./invitations.controller";
+import { RoleAssignmentsController } from "./role-assignments.controller";
+import { AuditLogsController } from "./audit-logs.controller";
+import { IdentityService } from "./identity.service";
 
 /**
  * Identity domain — SENVORI_CORE_DOMAINS.md §1.
- * Foundation phase: authentication (Better Auth) wired; RBAC with hierarchical
- * scopes and audit log arrive with the domain build-out.
+ * Authentication (Better Auth) is bridged by AuthController; the AUTH provider
+ * itself lives in the global AuthModule. This module owns the RBAC-guarded
+ * member/invitation/role/audit endpoints.
  */
 @Module({
-  controllers: [AuthController],
-  providers: [
-    {
-      provide: AUTH,
-      inject: [DRIZZLE, ConfigService],
-      useFactory: (db: DrizzleDb, config: ConfigService) =>
-        createAuth(db, {
-          baseUrl: config.getOrThrow<string>("BETTER_AUTH_URL"),
-          secret: config.getOrThrow<string>("BETTER_AUTH_SECRET"),
-        }),
-    },
+  controllers: [
+    AuthController,
+    MeController,
+    MembersController,
+    InvitationsController,
+    RoleAssignmentsController,
+    AuditLogsController,
   ],
-  exports: [AUTH],
+  providers: [IdentityService],
 })
 export class IdentityModule {}

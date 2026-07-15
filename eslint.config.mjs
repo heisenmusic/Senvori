@@ -11,6 +11,7 @@ export default tseslint.config(
       "**/.next/**",
       "**/.turbo/**",
       "**/drizzle/**",
+      "**/test/**",
       "**/next-env.d.ts",
     ],
   },
@@ -23,6 +24,17 @@ export default tseslint.config(
         { argsIgnorePattern: "^_", varsIgnorePattern: "^_" },
       ],
       "@typescript-eslint/consistent-type-imports": "error",
+    },
+  },
+  {
+    // NestJS API: constructor dependency injection relies on
+    // `emitDecoratorMetadata`, which emits the design:paramtypes for injected
+    // classes as runtime VALUES. `consistent-type-imports` cannot see that and
+    // would rewrite those imports to `import type`, erasing the metadata and
+    // breaking DI at runtime. This is why `nest new` does not ship the rule.
+    files: ["apps/api/**/*.ts"],
+    rules: {
+      "@typescript-eslint/consistent-type-imports": "off",
     },
   },
   {

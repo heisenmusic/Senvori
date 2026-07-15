@@ -16,6 +16,7 @@
     "@senvori/sdk": "workspace:*",
     "@senvori/ui": "workspace:*",
     "@tanstack/react-query": "^5.80.0",
+    "better-auth": "^1.2.0",
     "next": "^15.3.0",
     "next-intl": "^4.1.0",
     "react": "^19.1.0",

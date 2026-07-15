@@ -8,6 +8,12 @@ const bootstrap = async (): Promise<void> => {
 
   // All routes live under /v1 (Core Domains §0.3)
   app.setGlobalPrefix("v1");
+
+  // CORS for the dashboard (cookie sessions require credentials).
+  app.enableCors({
+    origin: (process.env.DASHBOARD_URL ?? "http://localhost:3000").split(","),
+    credentials: true,
+  });
   app.enableShutdownHooks();
 
   const port = Number(process.env.PORT ?? 3001);

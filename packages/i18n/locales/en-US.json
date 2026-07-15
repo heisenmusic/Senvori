@@ -16,12 +16,44 @@
   "nav": {
     "dashboard": "Dashboard",
     "fleet": "Fleet",
+    "units": "Units",
+    "logout": "Sign out",
     "catalog": "Catalog",
     "playlists": "Playlists",
     "scheduling": "Scheduling",
     "campaigns": "Campaigns",
     "analytics": "Analytics",
     "settings": "Settings"
+  },
+  "auth": {
+    "login": {
+      "title": "Sign in to Senvori",
+      "email": "Email",
+      "password": "Password",
+      "submit": "Sign in",
+      "loading": "Signing in…",
+      "error": "Invalid email or password"
+    }
+  },
+  "units": {
+    "title": "Units",
+    "subtitle": "Every store in your network.",
+    "search": "Search by name",
+    "loading": "Loading units…",
+    "empty": "No units found.",
+    "loadMore": "Load more",
+    "status": {
+      "all": "All statuses",
+      "active": "Active",
+      "paused": "Paused",
+      "archived": "Archived"
+    },
+    "col": {
+      "name": "Name",
+      "country": "Country",
+      "timezone": "Timezone",
+      "status": "Status"
+    }
   },
   "dashboard": {
     "title": "Senvori Dashboard",

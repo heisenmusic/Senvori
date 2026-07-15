@@ -10,11 +10,15 @@ import * as schema from "../../database/schema";
  * organization → tenants, member → memberships, invitation → invitations.
  * Devices NEVER authenticate here — device tokens belong to the Fleet domain.
  */
-export const createAuth = (db: DrizzleDb, env: { baseUrl: string; secret: string }) =>
+export const createAuth = (
+  db: DrizzleDb,
+  env: { baseUrl: string; secret: string; trustedOrigins?: string[] },
+) =>
   betterAuth({
     baseURL: env.baseUrl,
     basePath: "/v1/auth",
     secret: env.secret,
+    trustedOrigins: env.trustedOrigins ?? [],
     database: drizzleAdapter(db, {
       provider: "pg",
       schema: {

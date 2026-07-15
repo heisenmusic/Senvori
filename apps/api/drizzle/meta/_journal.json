@@ -29,6 +29,13 @@
       "when": 1784085955234,
       "tag": "0003_force_rls",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1784087677232,
+      "tag": "0004_app_role_grants",
+      "breakpoints": true
     }
   ]
 }
