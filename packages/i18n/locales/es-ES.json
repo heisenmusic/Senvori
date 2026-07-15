@@ -42,6 +42,11 @@
     "loading": "Cargando unidades…",
     "empty": "No se encontraron unidades.",
     "loadMore": "Cargar más",
+    "error": "No pudimos cargar las unidades. Inténtalo de nuevo.",
+    "retry": "Reintentar",
+    "noPermission": "No tienes permiso para ver las unidades.",
+    "noResults": "Ninguna unidad coincide con tu búsqueda.",
+    "filterStatus": "Filtrar por estado",
     "status": {
       "all": "Todos los estados",
       "active": "Activa",

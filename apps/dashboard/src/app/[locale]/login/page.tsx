@@ -67,7 +67,11 @@ const LoginPage = () => {
                   onChange={(e) => setPassword(e.target.value)}
                 />
               </div>
-              {error ? <p className="text-sm text-danger">{error}</p> : null}
+              {error ? (
+                <p className="text-sm text-danger" role="alert">
+                  {error}
+                </p>
+              ) : null}
               <Button type="submit" disabled={loading}>
                 {loading ? t("loading") : t("submit")}
               </Button>

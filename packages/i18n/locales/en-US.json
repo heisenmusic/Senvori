@@ -42,6 +42,11 @@
     "loading": "Loading units…",
     "empty": "No units found.",
     "loadMore": "Load more",
+    "error": "We couldn't load the units. Please try again.",
+    "retry": "Try again",
+    "noPermission": "You don't have permission to view units.",
+    "noResults": "No units match your search.",
+    "filterStatus": "Filter by status",
     "status": {
       "all": "All statuses",
       "active": "Active",
