@@ -13,6 +13,23 @@ export const envSchema = z.object({
   BETTER_AUTH_URL: z.string().url(),
   /** Dashboard origin allowed for CORS + Better Auth trusted origins. */
   DASHBOARD_URL: z.string().url().default("http://localhost:3000"),
+
+  /* --- Catalog media storage (§4, D7) --- */
+  /** `local` = filesystem (dev/test); `r2` = Cloudflare R2 (S3-compatible). */
+  STORAGE_DRIVER: z.enum(["local", "r2"]).default("local"),
+  /** Root directory for the local storage driver. */
+  STORAGE_LOCAL_DIR: z.string().default("./.storage"),
+  /** Hard upload ceiling in bytes (default 500 MB). */
+  CATALOG_MAX_UPLOAD_BYTES: z.coerce.number().int().positive().default(524_288_000),
+  /** Upload ticket / download URL lifetimes (seconds). */
+  CATALOG_UPLOAD_TTL_SECONDS: z.coerce.number().int().positive().default(3600),
+  CATALOG_DOWNLOAD_TTL_SECONDS: z.coerce.number().int().positive().default(300),
+  /** Cloudflare R2 (only required when STORAGE_DRIVER=r2) — never commit real keys. */
+  R2_ENDPOINT: z.string().url().optional(),
+  R2_BUCKET: z.string().optional(),
+  R2_ACCESS_KEY_ID: z.string().optional(),
+  R2_SECRET_ACCESS_KEY: z.string().optional(),
+  R2_REGION: z.string().default("auto"),
 });
 
 export type Env = z.infer<typeof envSchema>;
