@@ -65,11 +65,18 @@ export class ContextAuthGuard implements CanActivate {
     const activeOrg =
       (session.session as { activeOrganizationId?: string | null })?.activeOrganizationId ?? null;
 
+    // Senvori memberships are the source of truth for tenant access; Better
+    // Auth's activeOrganizationId is only a preference pointer (§1.9, §2.1). We
+    // honor it when it maps to an ACTIVE membership, but fall back to a valid
+    // membership otherwise — a stale/suspended active org must never lock a user
+    // out of tenants they are still an active member of. Access is still limited
+    // strictly to tenants the user actually belongs to (deny by default).
     const rows = await this.db
       .select()
       .from(memberships)
       .where(and(eq(memberships.userId, userId), eq(memberships.status, "active")));
-    const membership = activeOrg ? rows.find((m) => m.organizationId === activeOrg) : rows[0];
+    const membership =
+      (activeOrg ? rows.find((m) => m.organizationId === activeOrg) : undefined) ?? rows[0];
     if (!membership) {
       throw new ForbiddenException({
         code: "NO_ACTIVE_MEMBERSHIP",

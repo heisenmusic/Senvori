@@ -58,6 +58,7 @@ const uY_BR = uuidv7();
 const uB = uuidv7();
 
 const cookies: Record<string, string> = {};
+let dualUserId = "";
 
 const req = async (
   method: string,
@@ -273,6 +274,14 @@ beforeAll(async () => {
   // A user with a valid session but NO membership anywhere.
   await signUp("nomember@test.dev");
   await signIn("nomember@test.dev", "nomember");
+
+  // A user with active memberships in BOTH tenants — active-tenant coherence.
+  dualUserId = await signUp("dual@test.dev");
+  await seedDb.insert(schema.memberships).values([
+    { id: uuidv7(), organizationId: tenantA, userId: dualUserId, role: "owner", status: "active" },
+    { id: uuidv7(), organizationId: tenantB, userId: dualUserId, role: "owner", status: "active" },
+  ]);
+  await signIn("dual@test.dev", "dual");
 }, 180_000);
 
 afterAll(async () => {
@@ -486,6 +495,32 @@ describe("Auth edges", () => {
     const r = await req("GET", "/v1/units", "nomember");
     expect(r.status).toBe(403);
     expect(r.json.code).toBe("NO_ACTIVE_MEMBERSHIP");
+  });
+});
+
+describe("Active tenant coherence (memberships are the source of truth)", () => {
+  const setActive = (org: string | null) =>
+    seedDb
+      .update(schema.sessions)
+      .set({ activeOrganizationId: org })
+      .where(eq(schema.sessions.userId, dualUserId));
+
+  it("honors activeOrganizationId when it maps to an active membership", async () => {
+    await setActive(tenantB);
+    const b = await req("GET", "/v1/units", "dual");
+    expect(b.status).toBe(200);
+    expect(b.json.items.every((u: { tenantId: string }) => u.tenantId === tenantB)).toBe(true);
+
+    await setActive(tenantA);
+    const a = await req("GET", "/v1/units", "dual");
+    expect(a.json.items.every((u: { tenantId: string }) => u.tenantId === tenantA)).toBe(true);
+  });
+
+  it("falls back to a valid membership when the active org is stale (no lockout)", async () => {
+    await setActive(uuidv7()); // a tenant the user is not a member of
+    const r = await req("GET", "/v1/units", "dual");
+    expect(r.status).toBe(200); // memberships win — never a lockout
+    expect(r.json.items.length).toBeGreaterThan(0);
   });
 });
 
