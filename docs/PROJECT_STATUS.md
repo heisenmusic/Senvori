@@ -1,5 +1,35 @@
 # SENVORI 2.0 — PROJECT STATUS REPORT
 
+> ## Atualização — Catalog & Media Asset Foundation (PROMPT 04)
+>
+> Construída sobre a fundação Identity + Tenancy. Branch
+> `claude/senvori-catalog-foundation` (a partir do estado aprovado da Sprint 01;
+> não havia `main` e o PR #1 seguia aberto — desvio registrado). Somente fatos
+> comprovados por execução:
+>
+> - **Upload direto seguro:** `POST /v1/catalog/uploads` emite ticket assinado
+>   (blob local ou presigned R2); cliente envia bytes direto ao storage;
+>   `.../confirm` verifica objeto+tamanho e enfileira. Object keys por ID do
+>   sistema (sem traversal), idempotência e claim atômico anti-corrida.
+> - **Storage abstraction:** `StorageProvider` com driver local (filesystem,
+>   dev/test) e R2 (S3-compatible, produção). Buckets privados; URLs efêmeras.
+> - **Processamento assíncrono** (fora do HTTP): worker trigger-driven e
+>   tenant-scoped (roda sob role NOBYPASSRLS), `music-metadata` (JS puro, sem
+>   ffmpeg/shell) extrai codec/duração/sampleRate/canais/bitrate; checksum +
+>   assinatura validados; estados uploading→processing→ready/failed; retry.
+> - **RLS + RBAC** (`catalog:*`, tenant-scoped) + **auditoria transacional**
+>   (mesma transação, before/after, sem segredos) em todas as mutações.
+> - **API/contracts/SDK tipados**; **Dashboard `/library`** ("Biblioteca") com
+>   upload progressivo e todos os estados, i18n pt-BR/en-US/es-ES, acessível.
+> - **Testes:** 27 de integração de Catalog em PostgreSQL real + storage local
+>   (total do repo: 62 testes). Migração aditiva `0005`.
+>
+> Detalhes em [`CATALOG_AND_MEDIA_ASSET_FOUNDATION.md`](./CATALOG_AND_MEDIA_ASSET_FOUNDATION.md).
+> **Licensing NÃO foi implementado** — apenas proveniência declarada e não
+> verificada. Scheduling e Player permanecem não iniciados.
+>
+> ---
+
 > ## Atualização — Identity + Tenancy Runtime concluído (PROMPT 03 + 03D)
 >
 > A "vertical slice de plataforma autenticada" recomendada na seção 13 deste
