@@ -1,5 +1,36 @@
 # SENVORI 2.0 — PROJECT STATUS REPORT
 
+> ## Atualização — Identity + Tenancy Runtime concluído (PROMPT 03 + 03D)
+>
+> A "vertical slice de plataforma autenticada" recomendada na seção 13 deste
+> documento foi **implementada e comprovada**. Identity e Tenancy deixaram de
+> ser "🟨 estrutura" e são agora **🟩 uma vertical funcional** que serve de base
+> para os próximos domínios. Somente fatos comprovados por execução:
+>
+> - **Runtime tenant context (RLS):** `ContextAuthGuard` → `PermissionGuard` →
+>   `TenantContextInterceptor` (AsyncLocalStorage). Toda query de domínio corre
+>   dentro de `withTenantContext` (`app.tenant_id` por transação). A aplicação
+>   conecta como role **não-owner `NOBYPASSRLS`** — RLS comprovada em runtime.
+> - **RBAC hierárquico:** permissão `dominio:recurso:acao` ∧ cobertura de escopo
+>   `tenant→country→brand→group→unit`. Negação por padrão. Matriz de escopos
+>   testada.
+> - **Auditoria transacional:** mutação + `audit_log_entries` na **mesma
+>   transação** (`recordInTx`). Falha de auditoria reverte a mutação; sem órfãos.
+> - **Better Auth + Identity + Tenancy** com fontes de verdade separadas;
+>   `activeOrganizationId` alinhado às memberships (sem lockout).
+> - **Endpoints REST** de Members/Invitations/Role-Assignments/Audit-Logs e
+>   Brands/Groups/Units/Zones (paginação, busca, filtros, soft delete, permissões).
+> - **Dashboard protegido:** login Better Auth, rota protegida, tela de Unidades
+>   com estados (loading/erro/vazio/sem-resultado/sem-permissão/sessão-expirada).
+> - **Testes de integração:** 33 casos em PostgreSQL real (6 core + 27 hardening),
+>   CI verde rodando os testes **antes** do build.
+>
+> Arquitetura detalhada em [`IDENTITY_TENANCY_RUNTIME.md`](./IDENTITY_TENANCY_RUNTIME.md)
+> e papéis de banco em [`DATABASE_ROLES.md`](./DATABASE_ROLES.md). A seção 13
+> abaixo (recomendação original) permanece como registro histórico.
+>
+> ---
+
 Auditoria do estado real do repositório na branch `claude/senvori-core-domains-w10xi8` (5 commits).
 Baseado exclusivamente nos arquivos que existem no projeto. Nenhuma implementação foi inventada.
 
