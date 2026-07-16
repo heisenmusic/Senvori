@@ -1,0 +1,17 @@
+# Senvori Dashboard — multi-stage build (Next.js standalone)
+FROM node:22-alpine AS base
+RUN corepack enable
+WORKDIR /repo
+
+FROM base AS build
+COPY . .
+RUN pnpm install --frozen-lockfile
+RUN pnpm --filter @senvori/dashboard... build
+
+FROM node:22-alpine AS runner
+ENV NODE_ENV=production
+WORKDIR /app
+COPY --from=build /repo/apps/dashboard/.next/standalone ./
+COPY --from=build /repo/apps/dashboard/.next/static ./apps/dashboard/.next/static
+EXPOSE 3000
+CMD ["node", "apps/dashboard/server.js"]

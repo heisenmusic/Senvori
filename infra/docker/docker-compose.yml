@@ -1,0 +1,136 @@
+name: senvori
+
+# Single-command local platform (§7): `docker compose -f infra/docker/docker-compose.yml up`
+# brings up Postgres + Redis + API + Dashboard. Migrations run once via the
+# `migrate` init service before the API starts. The `worker` service is a
+# documented seam (see note on that service) enabled with `--profile workers`.
+#
+# Build context is the repo root so the multi-stage Dockerfiles can install the
+# whole pnpm workspace. Run from the repo root:
+#   docker compose -f infra/docker/docker-compose.yml up --build
+
+x-app-env: &app-env
+  DATABASE_URL: postgres://senvori:senvori@postgres:5432/senvori
+  REDIS_URL: redis://redis:6379
+  BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:-change-me-32-chars-minimum-secret!!}
+  BETTER_AUTH_URL: ${BETTER_AUTH_URL:-http://localhost:3001}
+  DASHBOARD_URL: ${DASHBOARD_URL:-http://localhost:3000}
+  NODE_ENV: production
+  LOG_LEVEL: ${LOG_LEVEL:-info}
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: senvori
+      POSTGRES_PASSWORD: senvori
+      POSTGRES_DB: senvori
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U senvori -d senvori"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # One-shot schema migration; the API waits on this completing successfully.
+  migrate:
+    build:
+      context: ../..
+      dockerfile: infra/docker/Dockerfile.api
+    environment:
+      <<: *app-env
+    command: ["node_modules/.bin/drizzle-kit", "migrate"]
+    working_dir: /app
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "no"
+
+  api:
+    build:
+      context: ../..
+      dockerfile: infra/docker/Dockerfile.api
+    environment:
+      <<: *app-env
+      PORT: "3001"
+      STORAGE_DRIVER: ${STORAGE_DRIVER:-local}
+      STORAGE_LOCAL_DIR: /data/storage
+    ports:
+      - "3001:3001"
+    volumes:
+      - api-storage:/data/storage
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    # Readiness is the orchestrator's routing signal (drains on shutdown).
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://localhost:3001/v1/health/ready').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 20s
+
+  dashboard:
+    build:
+      context: ../..
+      dockerfile: infra/docker/Dockerfile.dashboard
+    environment:
+      NODE_ENV: production
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3001}
+    ports:
+      - "3000:3000"
+    depends_on:
+      api:
+        condition: service_healthy
+
+  # WORKER SEAM (§7). Media processing currently runs IN-PROCESS inside `api`
+  # (catalog/processing.service.ts, driven by the transcode_jobs queue). A
+  # dedicated worker binary (dist/worker.js) is a future extraction (Fleet /
+  # Scheduling sprints). This service is the seam: it is gated behind the
+  # `workers` profile and is NOT started by a plain `docker compose up`. Enable
+  # only once the worker entrypoint exists:
+  #   docker compose --profile workers up
+  worker:
+    profiles: ["workers"]
+    build:
+      context: ../..
+      dockerfile: infra/docker/Dockerfile.api
+    environment:
+      <<: *app-env
+      SENVORI_ROLE: worker
+    command: ["node", "dist/worker.js"] # placeholder entrypoint — not yet implemented
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+volumes:
+  postgres-data:
+  redis-data:
+  api-storage:

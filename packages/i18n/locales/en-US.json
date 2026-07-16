@@ -1,0 +1,369 @@
+{
+  "common": {
+    "appName": "Senvori",
+    "loading": "Loading…",
+    "save": "Save",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "delete": "Delete",
+    "edit": "Edit",
+    "create": "Create",
+    "search": "Search",
+    "language": "Language",
+    "notFound": "Page not found",
+    "error": "Something went wrong"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "fleet": "Fleet",
+    "units": "Units",
+    "logout": "Sign out",
+    "catalog": "Catalog",
+    "playlists": "Playlists",
+    "scheduling": "Scheduling",
+    "campaigns": "Campaigns",
+    "analytics": "Analytics",
+    "settings": "Settings",
+    "library": "Library",
+    "programs": "Programming"
+  },
+  "auth": {
+    "login": {
+      "title": "Sign in to Senvori",
+      "email": "Email",
+      "password": "Password",
+      "submit": "Sign in",
+      "loading": "Signing in…",
+      "error": "Invalid email or password"
+    }
+  },
+  "units": {
+    "title": "Units",
+    "subtitle": "Every store in your network.",
+    "search": "Search by name",
+    "loading": "Loading units…",
+    "empty": "No units found.",
+    "loadMore": "Load more",
+    "error": "We couldn't load the units. Please try again.",
+    "retry": "Try again",
+    "noPermission": "You don't have permission to view units.",
+    "noResults": "No units match your search.",
+    "filterStatus": "Filter by status",
+    "status": {
+      "all": "All statuses",
+      "active": "Active",
+      "paused": "Paused",
+      "archived": "Archived"
+    },
+    "col": {
+      "name": "Name",
+      "country": "Country",
+      "timezone": "Timezone",
+      "status": "Status"
+    }
+  },
+  "dashboard": {
+    "title": "Senvori Dashboard",
+    "subtitle": "The global platform for brand experience, retail media and in-store audio.",
+    "foundation": {
+      "title": "Phase 0 — Foundation",
+      "description": "Monorepo, contracts, design system, i18n and core schema are in place. Domain features arrive in Phase 1.",
+      "docs": "Foundation documents live in the docs directory."
+    }
+  },
+  "site": {
+    "title": "Senvori",
+    "tagline": "Brand experience, retail media and AI-powered in-store content — for every store, in every country.",
+    "cta": "Coming soon"
+  },
+  "library": {
+    "title": "Library",
+    "subtitle": "All of your brand's audio content.",
+    "add": "Add content",
+    "search": "Search by title",
+    "filterType": "Filter by type",
+    "filterStatus": "Filter by status",
+    "loading": "Loading content…",
+    "empty": "Your library is still empty.",
+    "emptyHint": "Add music, idents, spots or other audio content.",
+    "noResults": "No content matches your search.",
+    "error": "We couldn't load the library. Please try again.",
+    "retry": "Try again",
+    "noPermission": "You don't have permission to view the library.",
+    "loadMore": "Load more",
+    "type": {
+      "all": "All types",
+      "track": "Music",
+      "announcement": "Voice"
+    },
+    "status": {
+      "all": "All statuses",
+      "uploading": "Uploading",
+      "processing": "Preparing",
+      "ready": "Ready",
+      "failed": "Failed",
+      "archived": "Archived"
+    },
+    "origin": {
+      "tenant_upload": "Your content",
+      "senvori_catalog": "Senvori Originals",
+      "marketplace": "Marketplace",
+      "ai_generated": "AI generated"
+    },
+    "language": {
+      "ptBR": "Portuguese (BR)",
+      "enUS": "English (US)",
+      "esES": "Spanish (ES)"
+    },
+    "country": {
+      "BR": "Brazil",
+      "US": "United States"
+    },
+    "item": {
+      "untitled": "Untitled",
+      "duration": "Duration",
+      "origin": "Origin",
+      "download": "Download",
+      "retry": "Try again"
+    },
+    "form": {
+      "file": "Audio file",
+      "title": "Title",
+      "type": "Type",
+      "language": "Language",
+      "origin": "Country of origin",
+      "submit": "Upload",
+      "sending": "Uploading…",
+      "cancel": "Cancel"
+    },
+    "upload": {
+      "invalidType": "Unsupported audio format. Use WAV, MP3, AAC or FLAC.",
+      "failed": "We couldn't upload this file. Check the format and try again."
+    }
+  },
+  "programs": {
+    "title": "Programming",
+    "subtitle": "Create and publish the music experience for your stores.",
+    "new": "New program",
+    "backToList": "Back to programs",
+    "none": "—",
+    "states": {
+      "loading": "Loading…",
+      "error": "Something went wrong. Please try again.",
+      "retry": "Try again",
+      "noPermission": "You don't have permission to access this area.",
+      "sessionExpired": "Your session has expired. Please sign in again.",
+      "notFound": "Program not found.",
+      "saving": "Saving…",
+      "saved": "Changes saved."
+    },
+    "list": {
+      "search": "Search by name",
+      "filterStatus": "Filter by status",
+      "loading": "Loading programs…",
+      "empty": "You don't have any programs yet.",
+      "emptyHint": "Create your first program to define the music for your stores.",
+      "noResults": "No program matches your search.",
+      "error": "We couldn't load your programs. Please try again.",
+      "loadMore": "Load more",
+      "open": "Open",
+      "col": {
+        "name": "Name",
+        "status": "Status",
+        "content": "Content",
+        "version": "Version",
+        "updated": "Last updated"
+      }
+    },
+    "status": {
+      "all": "All statuses",
+      "draft": "Draft",
+      "published": "Published",
+      "archived": "Archived"
+    },
+    "type": {
+      "manual": "Sequence you define",
+      "smart": "Generated automatically"
+    },
+    "count": {
+      "items": "{count, plural, =0 {No content} one {# item} other {# items}}",
+      "selected": "{count, plural, =0 {Nothing selected} one {# selected} other {# selected}}",
+      "version": "Version {n}"
+    },
+    "create": {
+      "title": "New program",
+      "subtitle": "Start with the essentials. You can adjust everything later.",
+      "step": "Step {n} of {total}",
+      "next": "Continue",
+      "back": "Back",
+      "submit": "Create program",
+      "creating": "Creating…",
+      "error": "We couldn't create the program. Please try again.",
+      "identity": {
+        "title": "Identity",
+        "name": "Program name",
+        "namePlaceholder": "e.g. Store — Daytime",
+        "nameHint": "How you'll recognize this program.",
+        "description": "What it represents",
+        "descriptionPlaceholder": "e.g. A warm mood for business hours.",
+        "type": "How content will be organized",
+        "nameRequired": "Give it a name to continue."
+      },
+      "content": {
+        "title": "Content",
+        "subtitle": "Pick the music and content from your Library.",
+        "skipHint": "You can also add content later."
+      }
+    },
+    "detail": {
+      "createdAt": "Created on",
+      "updatedAt": "Updated on",
+      "publishedVersion": "Published version",
+      "notPublished": "Not published yet",
+      "edit": "Edit",
+      "editName": "Edit name and description",
+      "archive": "Archive",
+      "archiveConfirm": "Archive this program? It can no longer be edited or published.",
+      "archived": "This program is archived. It cannot be edited or published.",
+      "sections": {
+        "content": "Content",
+        "rules": "Rotation rules",
+        "scope": "Where it's used",
+        "preview": "Day preview",
+        "versions": "Version history"
+      }
+    },
+    "content": {
+      "title": "Content",
+      "subtitle": "The music and content that feed this program.",
+      "edit": "Edit content",
+      "save": "Save content",
+      "cancel": "Cancel",
+      "empty": "No content yet.",
+      "search": "Search the Library",
+      "available": "Available in the Library",
+      "selected": "In this program",
+      "add": "Add",
+      "remove": "Remove",
+      "moveUp": "Move up",
+      "moveDown": "Move down",
+      "unavailable": "Unavailable",
+      "onlyReady": "Only ready content can be played.",
+      "loadMore": "Load more",
+      "saved": "Content updated.",
+      "error": "We couldn't save the content. Please try again.",
+      "totalDuration": "Approx. duration: {duration}"
+    },
+    "rules": {
+      "title": "Rotation rules",
+      "subtitle": "These rules apply across your whole account and prevent close repeats.",
+      "trackGap": "Avoid repeating the same song for",
+      "trackGapHint": "Minimum time before the same song can play again.",
+      "artistGap": "Avoid repeating the same artist for",
+      "artistGapHint": "Minimum time before the same artist can play again.",
+      "maxPlays": "Daily play limit (optional)",
+      "maxPlaysHint": "Leave blank for no limit.",
+      "minutes": "minutes",
+      "edit": "Edit rules",
+      "save": "Save rules",
+      "cancel": "Cancel",
+      "saved": "Rules updated.",
+      "error": "We couldn't save the rules. Please try again."
+    },
+    "scope": {
+      "title": "Where it's used",
+      "subtitle": "Assign this program to a brand, group or unit.",
+      "target": "Location or scope",
+      "targetType": "Type",
+      "assign": "Assign",
+      "assigning": "Assigning…",
+      "assigned": "Program assigned.",
+      "error": "We couldn't assign it. Check your permissions and try again.",
+      "selectUnit": "Select a unit",
+      "types": {
+        "tenant": "Entire account",
+        "country": "Country",
+        "brand": "Brand",
+        "group": "Group",
+        "unit": "Unit",
+        "zone": "Zone"
+      }
+    },
+    "preview": {
+      "title": "Day preview",
+      "subtitle": "See the sequence and times generated for a date.",
+      "unit": "Unit",
+      "unitHint": "Sets the time zone and the sequence variation.",
+      "unitNone": "None (account default)",
+      "date": "Date",
+      "timezone": "Time zone",
+      "windowStart": "Start",
+      "windowEnd": "End",
+      "version": "Base",
+      "versionDraft": "Current draft",
+      "generate": "Generate preview",
+      "generating": "Generating preview…",
+      "regenerate": "Generate again",
+      "empty": "Pick a date and generate the day preview.",
+      "error": "We couldn't generate the preview. Check the content and try again.",
+      "resultTitle": "Day sequence",
+      "totalItems": "{count, plural, =0 {No items} one {# item} other {# items}}",
+      "totalDuration": "Total duration: {duration}",
+      "identifier": "Version identifier",
+      "identifierHint": "The same configuration and date always produce the same identifier.",
+      "col": {
+        "time": "Time",
+        "title": "Content",
+        "artist": "Artist",
+        "duration": "Duration"
+      },
+      "silence": "Silence",
+      "untitled": "Untitled",
+      "warningsTitle": "Heads up about this program",
+      "warnings": {
+        "empty_program": "This program has no content yet.",
+        "insufficient_catalog": "There are few songs available to meet all the rules.",
+        "track_gap_relaxed": "A song-repeat rule had to be relaxed to fill the period.",
+        "artist_gap_relaxed": "An artist-repeat rule had to be relaxed to fill the period.",
+        "fallback_used": "Safety content was used to complete the program.",
+        "window_not_filled": "We couldn't find enough content for the whole period.",
+        "generic": "There's something to review in this program."
+      }
+    },
+    "publish": {
+      "action": "Publish version",
+      "title": "Publish a new version",
+      "subtitle": "Review before publishing. A published version cannot be changed.",
+      "summaryName": "Program",
+      "summaryContent": "Content",
+      "summaryRules": "Rules",
+      "summaryScope": "Where it's used",
+      "confirm": "Publish",
+      "publishing": "Publishing…",
+      "cancel": "Cancel",
+      "error": "We couldn't publish. Check the content and your permissions.",
+      "noContent": "Add at least one ready item before publishing.",
+      "successTitle": "Version published",
+      "successBody": "Version {n} has been published and is ready for the next distribution steps.",
+      "rulesSummary": "Same song: {track} min · Same artist: {artist} min"
+    },
+    "versions": {
+      "title": "Version history",
+      "subtitle": "Every publish creates an immutable, recorded version.",
+      "empty": "No versions published yet.",
+      "error": "We couldn't load the history. Please try again.",
+      "view": "View",
+      "col": {
+        "version": "Version",
+        "date": "Published on",
+        "author": "Published by",
+        "identifier": "Identifier",
+        "compiler": "System",
+        "items": "Content"
+      },
+      "identifierLabel": "Identifier",
+      "identifierHint": "A unique reference for this version, used in the next distribution steps.",
+      "immutable": "Immutable"
+    }
+  }
+}

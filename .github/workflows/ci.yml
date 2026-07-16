@@ -1,0 +1,112 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+
+    # Real PostgreSQL for the runtime integration tests (RLS, tenant context,
+    # RBAC, audit). The `senvori` superuser owns migrations; the tests provision
+    # a separate non-owner, NOBYPASSRLS application role to prove RLS at runtime.
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: senvori
+          POSTGRES_PASSWORD: senvori
+          POSTGRES_DB: senvori
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U senvori"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgres://senvori:senvori@localhost:5432/senvori
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Format check
+        run: pnpm format:check
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      # Integration tests run before the build and gate the pipeline: a failing
+      # test, lint or typecheck fails CI. Drizzle migrations run inside the test
+      # provisioning (fresh DB per suite), so no separate migration step or extra
+      # service (storage uses the local filesystem driver) is needed.
+      - name: Integration tests
+        run: pnpm test
+
+      - name: Build
+        run: pnpm build
+
+  # Docker images are built only after verify (lint/typecheck/test/build) is
+  # green, and the built images are uploaded as artifacts. Any failure here
+  # fails the pipeline.
+  docker:
+    needs: verify
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Build API image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: infra/docker/Dockerfile.api
+          tags: senvori-api:${{ github.sha }}
+          load: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build Dashboard image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: infra/docker/Dockerfile.dashboard
+          tags: senvori-dashboard:${{ github.sha }}
+          load: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Export images
+        run: |
+          docker save senvori-api:${{ github.sha }} | gzip > senvori-api.tar.gz
+          docker save senvori-dashboard:${{ github.sha }} | gzip > senvori-dashboard.tar.gz
+
+      - name: Upload image artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: senvori-images-${{ github.sha }}
+          path: |
+            senvori-api.tar.gz
+            senvori-dashboard.tar.gz
+          retention-days: 7

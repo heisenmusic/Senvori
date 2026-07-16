@@ -1,0 +1,30 @@
+{
+  "name": "@senvori/i18n",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Internationalization: supported locales, message catalogs and TMS pipeline (D8).",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./locales/*": "./locales/*"
+  },
+  "files": [
+    "dist",
+    "locales"
+  ],
+  "scripts": {
+    "build": "tsup src/index.ts --format esm,cjs --dts --clean",
+    "dev": "tsup src/index.ts --format esm,cjs --dts --watch",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "tsup": "^8.5.0",
+    "typescript": "^5.8.3"
+  }
+}

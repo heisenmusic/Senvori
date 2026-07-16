@@ -1,0 +1,39 @@
+{
+  "name": "@senvori/dashboard",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Senvori operations dashboard — Next.js, pt-BR / en-US / es-ES.",
+  "scripts": {
+    "build": "next build",
+    "dev": "next dev --port 3000",
+    "start": "next start",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@senvori/contracts": "workspace:*",
+    "@senvori/i18n": "workspace:*",
+    "@senvori/sdk": "workspace:*",
+    "@senvori/ui": "workspace:*",
+    "@tanstack/react-query": "^5.80.0",
+    "better-auth": "^1.2.0",
+    "next": "^15.3.0",
+    "next-intl": "^4.1.0",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.1.0",
+    "@testing-library/dom": "^10.4.0",
+    "@testing-library/react": "^16.3.0",
+    "@types/node": "^22.15.0",
+    "@types/react": "^19.1.0",
+    "@types/react-dom": "^19.1.0",
+    "@vitejs/plugin-react": "^4.4.0",
+    "jsdom": "^26.0.0",
+    "tailwindcss": "^4.1.0",
+    "typescript": "^5.8.3",
+    "vitest": "^3.2.7"
+  }
+}

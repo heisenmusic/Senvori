@@ -1,0 +1,369 @@
+{
+  "common": {
+    "appName": "Senvori",
+    "loading": "Cargando…",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "confirm": "Confirmar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "create": "Crear",
+    "search": "Buscar",
+    "language": "Idioma",
+    "notFound": "Página no encontrada",
+    "error": "Algo salió mal"
+  },
+  "nav": {
+    "dashboard": "Panel",
+    "fleet": "Flota",
+    "units": "Unidades",
+    "logout": "Cerrar sesión",
+    "catalog": "Catálogo",
+    "playlists": "Playlists",
+    "scheduling": "Programación",
+    "campaigns": "Campañas",
+    "analytics": "Analytics",
+    "settings": "Configuración",
+    "library": "Biblioteca",
+    "programs": "Programación"
+  },
+  "auth": {
+    "login": {
+      "title": "Entrar en Senvori",
+      "email": "Correo",
+      "password": "Contraseña",
+      "submit": "Entrar",
+      "loading": "Entrando…",
+      "error": "Correo o contraseña inválidos"
+    }
+  },
+  "units": {
+    "title": "Unidades",
+    "subtitle": "Todas las tiendas de tu red.",
+    "search": "Buscar por nombre",
+    "loading": "Cargando unidades…",
+    "empty": "No se encontraron unidades.",
+    "loadMore": "Cargar más",
+    "error": "No pudimos cargar las unidades. Inténtalo de nuevo.",
+    "retry": "Reintentar",
+    "noPermission": "No tienes permiso para ver las unidades.",
+    "noResults": "Ninguna unidad coincide con tu búsqueda.",
+    "filterStatus": "Filtrar por estado",
+    "status": {
+      "all": "Todos los estados",
+      "active": "Activa",
+      "paused": "Pausada",
+      "archived": "Archivada"
+    },
+    "col": {
+      "name": "Nombre",
+      "country": "País",
+      "timezone": "Zona horaria",
+      "status": "Estado"
+    }
+  },
+  "dashboard": {
+    "title": "Panel Senvori",
+    "subtitle": "La plataforma global de brand experience, retail media y audio para tiendas.",
+    "foundation": {
+      "title": "Fase 0 — Fundación",
+      "description": "Monorepo, contratos, design system, i18n y esquema núcleo listos. Las features de dominio llegan en la Fase 1.",
+      "docs": "Los documentos de la fundación están en el directorio docs."
+    }
+  },
+  "site": {
+    "title": "Senvori",
+    "tagline": "Brand experience, retail media y contenido con IA para tiendas — en cualquier tienda, en cualquier país.",
+    "cta": "Muy pronto"
+  },
+  "library": {
+    "title": "Biblioteca",
+    "subtitle": "Todo el contenido de audio de tu marca.",
+    "add": "Añadir contenido",
+    "search": "Buscar por título",
+    "filterType": "Filtrar por tipo",
+    "filterStatus": "Filtrar por estado",
+    "loading": "Cargando contenido…",
+    "empty": "Tu biblioteca aún está vacía.",
+    "emptyHint": "Añade música, cuñas, spots u otro contenido de audio.",
+    "noResults": "Ningún contenido coincide con tu búsqueda.",
+    "error": "No pudimos cargar la biblioteca. Inténtalo de nuevo.",
+    "retry": "Reintentar",
+    "noPermission": "No tienes permiso para ver la biblioteca.",
+    "loadMore": "Cargar más",
+    "type": {
+      "all": "Todos los tipos",
+      "track": "Música",
+      "announcement": "Locución"
+    },
+    "status": {
+      "all": "Todos los estados",
+      "uploading": "Subiendo",
+      "processing": "Preparando",
+      "ready": "Listo",
+      "failed": "Falló",
+      "archived": "Archivado"
+    },
+    "origin": {
+      "tenant_upload": "Tu contenido",
+      "senvori_catalog": "Senvori Originals",
+      "marketplace": "Marketplace",
+      "ai_generated": "Generado por IA"
+    },
+    "language": {
+      "ptBR": "Portugués (BR)",
+      "enUS": "Inglés (EE. UU.)",
+      "esES": "Español (ES)"
+    },
+    "country": {
+      "BR": "Brasil",
+      "US": "Estados Unidos"
+    },
+    "item": {
+      "untitled": "Sin título",
+      "duration": "Duración",
+      "origin": "Origen",
+      "download": "Descargar",
+      "retry": "Reintentar"
+    },
+    "form": {
+      "file": "Archivo de audio",
+      "title": "Título",
+      "type": "Tipo",
+      "language": "Idioma",
+      "origin": "País de origen",
+      "submit": "Subir",
+      "sending": "Subiendo…",
+      "cancel": "Cancelar"
+    },
+    "upload": {
+      "invalidType": "Formato de audio no compatible. Usa WAV, MP3, AAC o FLAC.",
+      "failed": "No pudimos subir este archivo. Comprueba el formato e inténtalo de nuevo."
+    }
+  },
+  "programs": {
+    "title": "Programación",
+    "subtitle": "Crea y publica la experiencia musical de tus tiendas.",
+    "new": "Nueva programación",
+    "backToList": "Volver a programaciones",
+    "none": "—",
+    "states": {
+      "loading": "Cargando…",
+      "error": "Algo salió mal. Inténtalo de nuevo.",
+      "retry": "Reintentar",
+      "noPermission": "No tienes permiso para acceder a esta área.",
+      "sessionExpired": "Tu sesión ha expirado. Inicia sesión de nuevo.",
+      "notFound": "Programación no encontrada.",
+      "saving": "Guardando…",
+      "saved": "Cambios guardados."
+    },
+    "list": {
+      "search": "Buscar por nombre",
+      "filterStatus": "Filtrar por estado",
+      "loading": "Cargando programaciones…",
+      "empty": "Todavía no tienes programaciones.",
+      "emptyHint": "Crea tu primera programación para definir la música de tus tiendas.",
+      "noResults": "Ninguna programación coincide con tu búsqueda.",
+      "error": "No pudimos cargar tus programaciones. Inténtalo de nuevo.",
+      "loadMore": "Cargar más",
+      "open": "Abrir",
+      "col": {
+        "name": "Nombre",
+        "status": "Estado",
+        "content": "Contenidos",
+        "version": "Versión",
+        "updated": "Última modificación"
+      }
+    },
+    "status": {
+      "all": "Todos los estados",
+      "draft": "Borrador",
+      "published": "Publicada",
+      "archived": "Archivada"
+    },
+    "type": {
+      "manual": "Secuencia que defines tú",
+      "smart": "Generada automáticamente"
+    },
+    "count": {
+      "items": "{count, plural, =0 {Sin contenido} one {# contenido} other {# contenidos}}",
+      "selected": "{count, plural, =0 {Nada seleccionado} one {# seleccionado} other {# seleccionados}}",
+      "version": "Versión {n}"
+    },
+    "create": {
+      "title": "Nueva programación",
+      "subtitle": "Empieza por lo esencial. Podrás ajustar todo después.",
+      "step": "Paso {n} de {total}",
+      "next": "Continuar",
+      "back": "Atrás",
+      "submit": "Crear programación",
+      "creating": "Creando…",
+      "error": "No pudimos crear la programación. Inténtalo de nuevo.",
+      "identity": {
+        "title": "Identidad",
+        "name": "Nombre de la programación",
+        "namePlaceholder": "Ej.: Tienda — Día",
+        "nameHint": "Cómo reconocerás esta programación.",
+        "description": "Qué representa",
+        "descriptionPlaceholder": "Ej.: Un ambiente acogedor para el horario comercial.",
+        "type": "Cómo se organizará el contenido",
+        "nameRequired": "Ponle un nombre para continuar."
+      },
+      "content": {
+        "title": "Contenidos",
+        "subtitle": "Elige la música y los contenidos de tu Biblioteca.",
+        "skipHint": "También puedes añadir contenidos después."
+      }
+    },
+    "detail": {
+      "createdAt": "Creada el",
+      "updatedAt": "Actualizada el",
+      "publishedVersion": "Versión publicada",
+      "notPublished": "Aún no publicada",
+      "edit": "Editar",
+      "editName": "Editar nombre y descripción",
+      "archive": "Archivar",
+      "archiveConfirm": "¿Archivar esta programación? Ya no podrá editarse ni publicarse.",
+      "archived": "Esta programación está archivada. No se puede editar ni publicar.",
+      "sections": {
+        "content": "Contenidos",
+        "rules": "Reglas de rotación",
+        "scope": "Dónde se usa",
+        "preview": "Vista previa del día",
+        "versions": "Historial de versiones"
+      }
+    },
+    "content": {
+      "title": "Contenidos",
+      "subtitle": "La música y los contenidos que alimentan esta programación.",
+      "edit": "Editar contenidos",
+      "save": "Guardar contenidos",
+      "cancel": "Cancelar",
+      "empty": "Todavía no hay contenidos.",
+      "search": "Buscar en la Biblioteca",
+      "available": "Disponibles en la Biblioteca",
+      "selected": "En esta programación",
+      "add": "Añadir",
+      "remove": "Quitar",
+      "moveUp": "Subir",
+      "moveDown": "Bajar",
+      "unavailable": "No disponible",
+      "onlyReady": "Solo puede reproducirse el contenido listo.",
+      "loadMore": "Cargar más",
+      "saved": "Contenidos actualizados.",
+      "error": "No pudimos guardar los contenidos. Inténtalo de nuevo.",
+      "totalDuration": "Duración aprox.: {duration}"
+    },
+    "rules": {
+      "title": "Reglas de rotación",
+      "subtitle": "Estas reglas se aplican a toda tu cuenta y evitan repeticiones cercanas.",
+      "trackGap": "Evita repetir la misma canción durante",
+      "trackGapHint": "Tiempo mínimo hasta que la misma canción pueda sonar de nuevo.",
+      "artistGap": "Evita repetir el mismo artista durante",
+      "artistGapHint": "Tiempo mínimo hasta que el mismo artista pueda sonar de nuevo.",
+      "maxPlays": "Límite de reproducciones por día (opcional)",
+      "maxPlaysHint": "Déjalo en blanco para no limitar.",
+      "minutes": "minutos",
+      "edit": "Editar reglas",
+      "save": "Guardar reglas",
+      "cancel": "Cancelar",
+      "saved": "Reglas actualizadas.",
+      "error": "No pudimos guardar las reglas. Inténtalo de nuevo."
+    },
+    "scope": {
+      "title": "Dónde se usa",
+      "subtitle": "Asocia esta programación a una marca, grupo o unidad.",
+      "target": "Ubicación o ámbito",
+      "targetType": "Tipo",
+      "assign": "Asociar",
+      "assigning": "Asociando…",
+      "assigned": "Programación asociada.",
+      "error": "No pudimos asociarla. Comprueba tus permisos e inténtalo de nuevo.",
+      "selectUnit": "Selecciona una unidad",
+      "types": {
+        "tenant": "Toda la cuenta",
+        "country": "País",
+        "brand": "Marca",
+        "group": "Grupo",
+        "unit": "Unidad",
+        "zone": "Zona"
+      }
+    },
+    "preview": {
+      "title": "Vista previa del día",
+      "subtitle": "Consulta la secuencia y los horarios generados para una fecha.",
+      "unit": "Unidad",
+      "unitHint": "Define la zona horaria y la variación de la secuencia.",
+      "unitNone": "Ninguna (predeterminada de la cuenta)",
+      "date": "Fecha",
+      "timezone": "Zona horaria",
+      "windowStart": "Inicio",
+      "windowEnd": "Fin",
+      "version": "Base",
+      "versionDraft": "Borrador actual",
+      "generate": "Generar vista previa",
+      "generating": "Generando vista previa…",
+      "regenerate": "Generar de nuevo",
+      "empty": "Elige una fecha y genera la vista previa del día.",
+      "error": "No pudimos generar la vista previa. Comprueba los contenidos e inténtalo de nuevo.",
+      "resultTitle": "Secuencia del día",
+      "totalItems": "{count, plural, =0 {Sin elementos} one {# elemento} other {# elementos}}",
+      "totalDuration": "Duración total: {duration}",
+      "identifier": "Identificador de la versión",
+      "identifierHint": "La misma configuración y fecha generan siempre el mismo identificador.",
+      "col": {
+        "time": "Hora",
+        "title": "Contenido",
+        "artist": "Artista",
+        "duration": "Duración"
+      },
+      "silence": "Silencio",
+      "untitled": "Sin título",
+      "warningsTitle": "Atención en esta programación",
+      "warnings": {
+        "empty_program": "Esta programación todavía no tiene contenidos.",
+        "insufficient_catalog": "Hay pocas canciones disponibles para cumplir todas las reglas.",
+        "track_gap_relaxed": "Una regla de repetición de canciones tuvo que flexibilizarse para completar el periodo.",
+        "artist_gap_relaxed": "Una regla de repetición de artistas tuvo que flexibilizarse para completar el periodo.",
+        "fallback_used": "Se utilizó contenido de seguridad para completar la programación.",
+        "window_not_filled": "No pudimos encontrar suficiente contenido para todo el periodo.",
+        "generic": "Hay algo que revisar en esta programación."
+      }
+    },
+    "publish": {
+      "action": "Publicar versión",
+      "title": "Publicar una nueva versión",
+      "subtitle": "Revisa antes de publicar. Una versión publicada no puede modificarse.",
+      "summaryName": "Programación",
+      "summaryContent": "Contenidos",
+      "summaryRules": "Reglas",
+      "summaryScope": "Dónde se usa",
+      "confirm": "Publicar",
+      "publishing": "Publicando…",
+      "cancel": "Cancelar",
+      "error": "No pudimos publicar. Comprueba los contenidos y tus permisos.",
+      "noContent": "Añade al menos un contenido listo antes de publicar.",
+      "successTitle": "Versión publicada",
+      "successBody": "La versión {n} se ha publicado y está lista para las siguientes etapas de distribución.",
+      "rulesSummary": "Misma canción: {track} min · Mismo artista: {artist} min"
+    },
+    "versions": {
+      "title": "Historial de versiones",
+      "subtitle": "Cada publicación crea una versión inmutable y registrada.",
+      "empty": "Aún no hay versiones publicadas.",
+      "error": "No pudimos cargar el historial. Inténtalo de nuevo.",
+      "view": "Ver",
+      "col": {
+        "version": "Versión",
+        "date": "Publicada el",
+        "author": "Responsable",
+        "identifier": "Identificador",
+        "compiler": "Sistema",
+        "items": "Contenidos"
+      },
+      "identifierLabel": "Identificador",
+      "identifierHint": "Referencia única de esta versión, usada en las siguientes etapas de distribución.",
+      "immutable": "Inmutable"
+    }
+  }
+}
