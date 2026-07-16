@@ -62,6 +62,10 @@ export const assets = pgTable(
     /** sha256 of the source media — dedup + integrity chain (D6/D7). */
     sourceHash: text("source_hash"),
     explicit: boolean("explicit").notNull().default(false),
+    /** Technical metadata extracted by processing (codec, sampleRate, …). */
+    mediaInfo: jsonb("media_info"),
+    /** Minimal DECLARED provenance — unverified, never a licensing assertion (§4/§5). */
+    declaredRights: jsonb("declared_rights"),
     /** New version of a corrected asset (§4.9 rule 2). */
     supersedesId: uuid("supersedes_id"),
     createdBy: uuid("created_by").references(() => users.id),
@@ -131,13 +135,28 @@ export const uploads = pgTable(
       .notNull()
       .default("pending"),
     parts: jsonb("parts").notNull().default([]),
+    /** Storage object key the client uploads to (system-generated, never user input). */
+    storageKey: text("storage_key"),
+    /** Original filename — metadata only, never used to build the object key. */
+    fileName: text("file_name"),
+    contentType: text("content_type"),
+    sizeBytes: bigint("size_bytes", { mode: "number" }),
+    /** Client-declared sha-256, re-verified on confirm. */
+    checksumSha256: text("checksum_sha256"),
+    /** Idempotency key for create-upload (unique per tenant). */
+    idempotencyKey: text("idempotency_key"),
+    error: text("error"),
     expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
     createdBy: uuid("created_by")
       .notNull()
       .references(() => users.id),
     ...auditFields(),
   },
-  (t) => [index("uploads_tenant_status_idx").on(t.tenantId, t.status), tenantIsolation("uploads")],
+  (t) => [
+    index("uploads_tenant_status_idx").on(t.tenantId, t.status),
+    uniqueIndex("uploads_tenant_idempotency_idx").on(t.tenantId, t.idempotencyKey),
+    tenantIsolation("uploads"),
+  ],
 ).enableRLS();
 
 /** Media pipeline queue item (§4.2 TranscodeJob) — BullMQ mirror for audit. */

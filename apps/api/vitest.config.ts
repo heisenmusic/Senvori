@@ -1,4 +1,8 @@
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { defineConfig } from "vitest/config";
+
+const storageDir = join(tmpdir(), "senvori-catalog-test-storage");
 
 /**
  * Integration tests run against a real PostgreSQL, serially (single DB), and
@@ -26,6 +30,8 @@ export default defineConfig({
       BETTER_AUTH_SECRET: "0123456789abcdef0123456789abcdef",
       BETTER_AUTH_URL: "http://localhost:3001",
       DASHBOARD_URL: "http://localhost:3000",
+      STORAGE_DRIVER: "local",
+      STORAGE_LOCAL_DIR: storageDir,
     },
   },
 });

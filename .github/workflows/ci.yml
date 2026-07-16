@@ -47,6 +47,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Format check
+        run: pnpm format:check
+
       - name: Lint
         run: pnpm lint
 
@@ -54,12 +57,11 @@ jobs:
         run: pnpm typecheck
 
       # Integration tests run before the build and gate the pipeline: a failing
-      # test, lint, or typecheck fails CI (P11 + P12).
+      # test, lint or typecheck fails CI. Drizzle migrations run inside the test
+      # provisioning (fresh DB per suite), so no separate migration step or extra
+      # service (storage uses the local filesystem driver) is needed.
       - name: Integration tests
         run: pnpm test
 
       - name: Build
         run: pnpm build
-
-      - name: Format check
-        run: pnpm format:check

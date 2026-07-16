@@ -2,10 +2,14 @@ import type {
   AssignRoleInput,
   AuditLogEntryDto,
   BrandDto,
+  CatalogItemDto,
+  CatalogItemListQuery,
   CreateBrandInput,
   CreateUnitInput,
+  CreateUploadInput,
   CreateZoneInput,
   CurrentUserDto,
+  DownloadTicket,
   GroupDto,
   InviteMemberInput,
   MembershipWithUserDto,
@@ -13,7 +17,9 @@ import type {
   RoleAssignmentDto,
   UnitDto,
   UnitListQuery,
+  UpdateCatalogItemInput,
   UpdateUnitInput,
+  UploadTicket,
   ZoneDto,
 } from "@senvori/contracts";
 
@@ -49,6 +55,7 @@ export class SenvoriClient {
   readonly auth: AuthClient;
   readonly identity: IdentityClient;
   readonly tenancy: TenancyClient;
+  readonly catalog: CatalogClient;
 
   constructor(options: SenvoriClientOptions) {
     this.baseUrl = options.baseUrl.replace(/\/$/, "");
@@ -57,6 +64,12 @@ export class SenvoriClient {
     this.auth = new AuthClient(this);
     this.identity = new IdentityClient(this);
     this.tenancy = new TenancyClient(this);
+    this.catalog = new CatalogClient(this);
+  }
+
+  /** Low-level fetch (used by the storage direct-upload step). */
+  get rawFetch(): typeof globalThis.fetch {
+    return this.fetchImpl;
   }
 
   async request<T>(
@@ -185,5 +198,60 @@ class TenancyClient {
   }
   createZone(unitId: string, input: CreateZoneInput): Promise<ZoneDto> {
     return this.c.request("POST", `/v1/units/${unitId}/zones`, { body: input });
+  }
+}
+
+/**
+ * Catalog domain (§4). Product-level operations only — storage details (object
+ * keys, presigned URLs) never leak into the API surface.
+ */
+class CatalogClient {
+  constructor(private readonly c: SenvoriClient) {}
+
+  createUpload(input: CreateUploadInput, idempotencyKey?: string): Promise<UploadTicket> {
+    return this.c.request("POST", "/v1/catalog/uploads", { body: input, idempotencyKey });
+  }
+  confirmUpload(uploadId: string): Promise<CatalogItemDto> {
+    return this.c.request("POST", `/v1/catalog/uploads/${uploadId}/confirm`);
+  }
+  /** Full upload: reserve a session, send the bytes to storage, then confirm. */
+  async uploadFile(
+    input: CreateUploadInput,
+    body: BodyInit,
+    idempotencyKey?: string,
+  ): Promise<CatalogItemDto> {
+    const ticket = await this.createUpload(input, idempotencyKey);
+    const res = await this.c.rawFetch(ticket.url, {
+      method: ticket.method,
+      headers: ticket.headers,
+      body,
+    });
+    if (!res.ok) {
+      throw new SenvoriApiError(
+        { type: "about:blank", title: "Upload failed", status: res.status, code: "UPLOAD_FAILED" },
+        res.status,
+      );
+    }
+    return this.confirmUpload(ticket.uploadId);
+  }
+  listCatalogItems(
+    query: Partial<CatalogItemListQuery> = {},
+  ): Promise<{ items: CatalogItemDto[]; nextCursor: string | null }> {
+    return this.c.request("GET", "/v1/catalog/items", { query });
+  }
+  getCatalogItem(id: string): Promise<CatalogItemDto> {
+    return this.c.request("GET", `/v1/catalog/items/${id}`);
+  }
+  updateCatalogItem(id: string, input: UpdateCatalogItemInput): Promise<CatalogItemDto> {
+    return this.c.request("PATCH", `/v1/catalog/items/${id}`, { body: input });
+  }
+  archiveCatalogItem(id: string): Promise<void> {
+    return this.c.request("POST", `/v1/catalog/items/${id}/archive`);
+  }
+  reprocessCatalogItem(id: string): Promise<CatalogItemDto> {
+    return this.c.request("POST", `/v1/catalog/items/${id}/reprocess`);
+  }
+  downloadUrl(id: string): Promise<DownloadTicket> {
+    return this.c.request("GET", `/v1/catalog/items/${id}/download`);
   }
 }

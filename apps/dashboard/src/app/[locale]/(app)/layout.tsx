@@ -25,7 +25,10 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
     router.replace("/login");
   };
 
-  const navItems = [{ href: "/units", label: t("nav.fleet") }];
+  const navItems = [
+    { href: "/units", label: t("nav.units") },
+    { href: "/library", label: t("nav.library") },
+  ];
 
   return (
     <div className="flex min-h-svh">
@@ -40,13 +43,14 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
               <Link
                 key={item.href}
                 href={item.href}
+                aria-current={active ? "page" : undefined}
                 className={
                   active
                     ? "rounded-md bg-brand-600 px-3 py-2 text-sm font-medium text-neutral-0"
-                    : "rounded-md px-3 py-2 text-sm font-medium text-foreground hover:bg-muted"
+                    : "rounded-md px-3 py-2 text-sm font-medium text-foreground hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
                 }
               >
-                {t("nav.units")}
+                {item.label}
               </Link>
             );
           })}
