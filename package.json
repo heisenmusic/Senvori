@@ -1,8 +1,8 @@
 {
   "name": "senvori",
   "private": true,
-  "version": "0.0.0",
-  "description": "Senvori — global platform for brand experience, retail media, corporate audio, digital signage, content marketplace and AI content.",
+  "version": "0.1.0",
+  "description": "Senvori \u2014 global platform for brand experience, retail media, corporate audio, digital signage, content marketplace and AI content.",
   "packageManager": "pnpm@10.33.0",
   "engines": {
     "node": ">=22"

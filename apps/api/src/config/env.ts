@@ -14,6 +14,21 @@ export const envSchema = z.object({
   /** Dashboard origin allowed for CORS + Better Auth trusted origins. */
   DASHBOARD_URL: z.string().url().default("http://localhost:3000"),
 
+  /* --- Production readiness (§9) --- */
+  /** Structured-log verbosity (pino levels). */
+  LOG_LEVEL: z.enum(["fatal", "error", "warn", "info", "debug", "trace", "silent"]).default("info"),
+  /** Trust `X-Forwarded-*` (enable only behind a known proxy/LB, for real client IPs). */
+  TRUST_PROXY: z
+    .enum(["true", "false"])
+    .default("false")
+    .transform((v) => v === "true"),
+  /** Per-IP request ceiling within RATE_LIMIT_WINDOW (health probes are exempt). */
+  RATE_LIMIT_MAX: z.coerce.number().int().positive().default(300),
+  /** Rate-limit window (@fastify/rate-limit time string, e.g. "1 minute"). */
+  RATE_LIMIT_WINDOW: z.string().min(1).default("1 minute"),
+  /** Drain grace window before close() on SIGTERM/SIGINT (ms). */
+  SHUTDOWN_GRACE_MS: z.coerce.number().int().nonnegative().default(5000),
+
   /* --- Catalog media storage (§4, D7) --- */
   /** `local` = filesystem (dev/test); `r2` = Cloudflare R2 (S3-compatible). */
   STORAGE_DRIVER: z.enum(["local", "r2"]).default("local"),
