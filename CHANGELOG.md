@@ -3,6 +3,27 @@
 All notable changes to Senvori. Format based on [Keep a Changelog](https://keepachangelog.com/);
 versioning is [SemVer](https://semver.org/). Dates are UTC.
 
+## [Unreleased]
+
+### Added — Programming foundation (Sprint 06, in progress: F1–F4)
+
+- **Deterministic compiler** (`apps/api/src/modules/playlists/compiler/`, pure): seed +
+  PRNG, IANA/DST-correct timezone resolution, rotation rules (track/artist gap),
+  progressive relaxation, safety fallback, silence, bounded iterations, warnings,
+  explainability and a canonical plan hash. 16 unit tests.
+- **Migration 0006** (additive): `plan_hash`, `compiler_version`, `published_by` on
+  `playlist_versions`. Validated clean + existing DB.
+- **Programming API** (`/v1/programs`): program CRUD, items, tenant rotation policy,
+  deterministic **preview** (ephemeral), **immutable version publish** (plan hash +
+  publisher), version listing, scope **assignment**. Tenant from context; RLS + RBAC
+  deny-by-default; transactional audit on every mutation. Contracts + concrete
+  `playlists:program:*` / `scheduling:program:assign` permissions. 12 integration tests.
+- **Docs:** MEDIA_EXECUTION_ARCHITECTURE (+7 ADRs), PROGRAMMING_COMPILER,
+  PROGRAMMING_DOMAIN, sprint-06 pre-implementation audit.
+
+Still pending in Sprint 06: SDK methods, Programming dashboard (Programação + Prévia do
+dia) with i18n/a11y, and the end-to-end demonstrable flow (§35). **Not a release.**
+
 ## [0.1.0] — 2026-07-16
 
 First consolidated foundation. Not a customer-facing release: it establishes a single
