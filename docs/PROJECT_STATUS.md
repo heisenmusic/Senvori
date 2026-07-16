@@ -29,6 +29,9 @@
 > - **Qualidade:** lint, format, typecheck, build (incl. `next build` das rotas
 >   `/programs`) verdes. **Suíte total: 137 testes** (API **93** em PG real · SDK 22
 >   · Dashboard 22). Migração `0006` inalterada (validada limpa `0000→0006`).
+> - **Encerramento:** commit final validado **`5256aa4`**; **CI run #13 verde**
+>   (`verify` + `docker`). Sprint 06 **concluída**. Sprint 07 (Intelligent Programming
+>   Engine) só inicia sob novo Master Prompt.
 >
 > Documentação: [`PROGRAMMING_DOMAIN.md`](./PROGRAMMING_DOMAIN.md),
 > [`PROGRAMMING_UX.md`](./PROGRAMMING_UX.md) (SDK + Dashboard),

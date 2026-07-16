@@ -50,7 +50,7 @@
 | Migrations (banco limpo + existente) | ✅ 0000→0006                                    |
 | Docker compose config                | ✅ válido                                       |
 | Smoke boot (health/headers/IDs)      | ✅                                              |
-| CI verde                             | ⏳ validar após push                            |
+| CI verde                             | ✅ #13 (`5256aa4`) — verify + docker            |
 
 ## Dívida aberta (topo)
 

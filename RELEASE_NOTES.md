@@ -1,3 +1,23 @@
+# Release Notes
+
+> ## Post-v0.1.0 addendum — Programming foundation (Sprint 06 · unreleased)
+>
+> **Date:** 2026-07-16 · **Type:** Feature increment on the trunk — **not** a versioned
+> release (see `CHANGELOG.md` → Unreleased). **Trunk:** `claude/senvori-core-domains-w10xi8`.
+> **Final validated commit:** `5256aa4`. **CI:** run **#13** green — `verify` + `docker`.
+>
+> The first end-to-end business capability of Senvori: a **Programming** domain a
+> non-technical user can drive from create → configure → **day preview** → publish →
+> audit. Deterministic compiler + immutable versions + RBAC/RLS/transactional audit
+> (F1–F4), a typed SDK (`client.programming.*`, F5), the "Programação" dashboard with
+> the day-preview timeline in pt-BR/en-US/es-ES (F6), and a real-Postgres end-to-end
+> flow (F7). **137 tests** (API 93 · SDK 22 · Dashboard 22); lint/format/typecheck/build
+> and the CI Docker image build all green. Additive only — **no schema/migration change**
+> (`0006` unchanged). **Deferred to Sprint 07:** the Intelligent Programming Engine
+> (cross-day fatigue, advanced rotation, paired-track avoidance, AI personalization).
+>
+> ---
+
 # Release Notes — Senvori v0.1.0
 
 **Date:** 2026-07-16 · **Type:** Foundation / platform consolidation (internal, not
@@ -53,5 +73,6 @@ rolling and drains via readiness.
 
 ## Next
 
-Sprint 06 — **Campaigns backend** (Fase 1), on the promoted trunk. See
-`docs/IMPLEMENTATION_ROADMAP.md` and `docs/PROJECT_MATURITY.md`.
+Sprint 06 (Programming foundation) is complete on the trunk — see the addendum above.
+**Sprint 07 — Intelligent Programming Engine** is next, to begin only under a new Master
+Prompt. See `docs/PROJECT_MATURITY.md` and `docs/PROGRAMMING_UX.md`.
