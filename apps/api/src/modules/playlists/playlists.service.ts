@@ -5,6 +5,7 @@ import type {
   ExecutionPlanDto,
   PreviewRequestInput,
   ProgramDto,
+  ProgramItemDto,
   ProgramListQuery,
   ProgramVersionDto,
   RotationPolicyDto,
@@ -84,7 +85,13 @@ export class PlaylistsService {
     return this.tenantContext.withTenant(async (tx) => {
       const { rows, hasMore } = await this.repo.listPrograms(tx, query);
       const items = await Promise.all(
-        rows.map(async (r) => this.toDto(r, await this.repo.countItems(tx, r.id))),
+        rows.map(async (r) =>
+          this.toDto(
+            r,
+            await this.repo.countItems(tx, r.id),
+            await this.resolvePublishedVersion(tx, r),
+          ),
+        ),
       );
       return { items, nextCursor: hasMore ? (rows[rows.length - 1]?.id ?? null) : null };
     });
@@ -93,7 +100,19 @@ export class PlaylistsService {
   async getProgram(id: string): Promise<ProgramDto> {
     return this.tenantContext.withTenant(async (tx) => {
       const program = await this.requireProgram(tx, id);
-      return this.toDto(program, await this.repo.countItems(tx, id));
+      return this.toDto(
+        program,
+        await this.repo.countItems(tx, id),
+        await this.resolvePublishedVersion(tx, program),
+      );
+    });
+  }
+
+  /** Ordered content of a program, with the Library metadata to display it. */
+  async getItems(id: string): Promise<ProgramItemDto[]> {
+    return this.tenantContext.withTenant(async (tx) => {
+      await this.requireProgram(tx, id);
+      return this.repo.listItems(tx, id);
     });
   }
 
@@ -112,7 +131,11 @@ export class PlaylistsService {
         before: { name: program.name, description: program.description },
         after: { name: updated.name, description: updated.description },
       });
-      return this.toDto(updated, await this.repo.countItems(tx, id));
+      return this.toDto(
+        updated,
+        await this.repo.countItems(tx, id),
+        await this.resolvePublishedVersion(tx, updated),
+      );
     });
   }
 
@@ -127,7 +150,11 @@ export class PlaylistsService {
         resourceId: id,
         after: { count: input.assetIds.length },
       });
-      return this.toDto(program, input.assetIds.length);
+      return this.toDto(
+        program,
+        input.assetIds.length,
+        await this.resolvePublishedVersion(tx, program),
+      );
     });
   }
 
@@ -388,7 +415,18 @@ export class PlaylistsService {
     };
   }
 
-  private toDto(program: ProgramRow, itemCount: number): ProgramDto {
+  /** Drafts never have a published version; otherwise it is the highest one. */
+  private async resolvePublishedVersion(tx: TenantTx, program: ProgramRow): Promise<number | null> {
+    if (program.status === "draft") return null;
+    const v = await this.repo.maxVersion(tx, program.id);
+    return v > 0 ? v : null;
+  }
+
+  private toDto(
+    program: ProgramRow,
+    itemCount: number,
+    publishedVersion: number | null,
+  ): ProgramDto {
     const type = program.type === "smart" ? "smart" : "manual";
     return {
       id: program.id,
@@ -397,7 +435,7 @@ export class PlaylistsService {
       name: program.name,
       description: program.description,
       status: program.status,
-      publishedVersion: null,
+      publishedVersion,
       itemCount,
       createdAt: iso(program.createdAt),
       updatedAt: iso(program.updatedAt),

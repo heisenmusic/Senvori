@@ -17,6 +17,17 @@ export type ProgramRow = typeof playlists.$inferSelect;
 export type ProgramVersionRow = typeof playlistVersions.$inferSelect;
 export type RotationPolicyRow = typeof rotationPolicies.$inferSelect;
 
+/** A program content item joined with its Library metadata (for display). */
+export interface ProgramItemRow {
+  position: number;
+  assetId: string;
+  title: string;
+  artist: string | null;
+  durationMs: number | null;
+  type: string;
+  status: string;
+}
+
 /** A track eligible to be compiled (already status-filtered by the query). */
 export interface CandidateRow {
   assetId: string;
@@ -94,6 +105,34 @@ export class PlaylistsRepository {
       .from(playlistItems)
       .where(eq(playlistItems.playlistId, playlistId));
     return rows.length;
+  }
+
+  /** Ordered content items with their Library metadata (title/artist/status). */
+  async listItems(tx: TenantTx, playlistId: string): Promise<ProgramItemRow[]> {
+    const rows = await tx
+      .select({
+        position: playlistItems.position,
+        assetId: assets.id,
+        title: assets.title,
+        artist: tracks.artist,
+        durationMs: assets.durationMs,
+        type: assets.type,
+        status: assets.status,
+      })
+      .from(playlistItems)
+      .innerJoin(assets, eq(assets.id, playlistItems.assetId))
+      .leftJoin(tracks, eq(tracks.assetId, assets.id))
+      .where(eq(playlistItems.playlistId, playlistId))
+      .orderBy(asc(playlistItems.position));
+    return rows.map((r) => ({
+      position: r.position,
+      assetId: r.assetId,
+      title: r.title,
+      artist: r.artist,
+      durationMs: r.durationMs,
+      type: r.type,
+      status: r.status,
+    }));
   }
 
   /** Eligible candidates = ready music tracks referenced by the program, in order. */

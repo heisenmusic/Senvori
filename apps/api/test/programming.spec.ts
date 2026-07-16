@@ -358,3 +358,125 @@ describe("Programming — insufficient catalog preview (ADR-06-07)", () => {
     expect(p.json.items.some((i: { source: string }) => i.source === "silence")).toBe(true);
   });
 });
+
+describe("Programming — content listing (GET items)", () => {
+  it("returns ordered content with library metadata and is tenant-scoped", async () => {
+    const id = await createProgram("ownerA");
+    await req("PUT", `/v1/programs/${id}/items`, "ownerA", { assetIds: trackIds.slice(0, 3) });
+    const items = await req("GET", `/v1/programs/${id}/items`, "ownerA");
+    expect(items.status).toBe(200);
+    expect(items.json).toHaveLength(3);
+    expect(items.json.map((i: { assetId: string }) => i.assetId)).toEqual(trackIds.slice(0, 3));
+    expect(items.json[0].position).toBe(0);
+    expect(items.json[0].status).toBe("ready");
+    expect(items.json[0].title).toBeTruthy();
+
+    // Another tenant cannot read this program's items (no IDOR).
+    const cross = await req("GET", `/v1/programs/${id}/items`, "ownerB");
+    expect(cross.status).toBe(404);
+  });
+});
+
+describe("Programming — published version surfacing", () => {
+  it("is null while draft and the version number once published", async () => {
+    const id = await createProgram("ownerA");
+    await req("PUT", `/v1/programs/${id}/items`, "ownerA", { assetIds: trackIds.slice(0, 3) });
+    const before = await req("GET", `/v1/programs/${id}`, "ownerA");
+    expect(before.json.publishedVersion).toBeNull();
+    await req("POST", `/v1/programs/${id}/versions`, "ownerA");
+    const after = await req("GET", `/v1/programs/${id}`, "ownerA");
+    expect(after.json.publishedVersion).toBe(1);
+    expect(after.json.status).toBe("published");
+  });
+});
+
+describe("Programming — end-to-end flow (§26)", () => {
+  it("create → content → rules → assign(unit) → preview → publish → immutability → history → audit → re-preview(same hash)", async () => {
+    // A real scope: a brand + unit in tenant A (RLS-scoped seed).
+    const brandId = uuidv7();
+    const unitId = uuidv7();
+    await withTenantContext(seedDb, tenantA, async (tx) => {
+      await tx.insert(schema.brands).values({
+        id: brandId,
+        tenantId: tenantA,
+        name: "Brand E2E",
+        slug: `e2e-${brandId.slice(0, 8)}`,
+      });
+      await tx.insert(schema.units).values({
+        id: unitId,
+        tenantId: tenantA,
+        brandId,
+        countryCode: "BR",
+        name: "Loja Centro",
+        timezone: "America/Sao_Paulo",
+        locale: "pt-BR",
+      });
+    });
+
+    // Create the program and add content.
+    const id = await createProgram("ownerA", "E2E Programa");
+    await req("PUT", `/v1/programs/${id}/items`, "ownerA", { assetIds: trackIds });
+
+    // Configure rotation rules (account-wide).
+    const rules = await req("PUT", "/v1/programs/rotation-policy", "ownerA", {
+      minTrackGapMinutes: 20,
+      minArtistGapMinutes: 10,
+    });
+    expect(rules.status).toBe(200);
+
+    // Assign to the unit scope.
+    const assign = await req("POST", `/v1/programs/${id}/assignments`, "ownerA", {
+      targetType: "unit",
+      targetId: unitId,
+    });
+    expect(assign.status).toBe(201);
+
+    // Preview for a local date; validate timezone resolution + a non-empty sequence.
+    const body = {
+      unitId,
+      timezone: "America/Sao_Paulo",
+      localDate: "2026-06-15",
+      windowStartLocal: "08:00",
+      windowEndLocal: "12:00",
+    };
+    const p1 = await req("POST", `/v1/programs/${id}/preview`, "ownerA", body);
+    expect(p1.status).toBe(200);
+    expect(p1.json.windowStartUtc).toBe("2026-06-15T11:00:00.000Z"); // SP is UTC−3
+    expect(p1.json.items.length).toBeGreaterThan(0);
+    expect(p1.json.totalDurationMs).toBeLessThanOrEqual(4 * 3_600_000);
+
+    // Determinism: the same input yields the same hash and the same sequence.
+    const p1b = await req("POST", `/v1/programs/${id}/preview`, "ownerA", body);
+    expect(p1b.json.planHash).toBe(p1.json.planHash);
+    expect(p1b.json.items.map((i: { assetId: string }) => i.assetId)).toEqual(
+      p1.json.items.map((i: { assetId: string }) => i.assetId),
+    );
+
+    // Publish an immutable version.
+    const v1 = await req("POST", `/v1/programs/${id}/versions`, "ownerA");
+    expect(v1.status).toBe(201);
+    expect(v1.json.version).toBe(1);
+    const versionId = v1.json.id as string;
+    const publishedHash = v1.json.planHash as string;
+
+    // Immutability: change the draft and republish → v2, without altering v1.
+    await req("PUT", `/v1/programs/${id}/items`, "ownerA", { assetIds: trackIds.slice(0, 3) });
+    const v2 = await req("POST", `/v1/programs/${id}/versions`, "ownerA");
+    expect(v2.json.version).toBe(2);
+    const v1again = await req("GET", `/v1/programs/${id}/versions/${versionId}`, "ownerA");
+    expect(v1again.json.planHash).toBe(publishedHash);
+    expect(v1again.json.resolvedItems).toEqual(v1.json.resolvedItems);
+
+    // History lists newest-first.
+    const history = await req("GET", `/v1/programs/${id}/versions`, "ownerA");
+    expect(history.json.items.map((v: { version: number }) => v.version)).toEqual([2, 1]);
+
+    // Audit: assignment and both publishes recorded transactionally for this program.
+    const audits = await withTenantContext(seedDb, tenantA, (tx) =>
+      tx.select().from(schema.auditLogEntries).where(eq(schema.auditLogEntries.tenantId, tenantA)),
+    );
+    const actions = audits.map((a) => a.action);
+    expect(actions).toContain("programming.assignment.created");
+    expect(actions).toContain("programming.version.published");
+  });
+});

@@ -45,6 +45,18 @@ export const setProgramItemsSchema = z.object({
 });
 export type SetProgramItemsInput = z.infer<typeof setProgramItemsSchema>;
 
+/** A content item of a program, with the Library metadata needed to display it. */
+export const programItemSchema = z.object({
+  position: z.number().int(),
+  assetId: uuidSchema,
+  title: z.string(),
+  artist: z.string().nullable(),
+  durationMs: z.number().int().nullable(),
+  type: z.string(),
+  status: z.string(),
+});
+export type ProgramItemDto = z.infer<typeof programItemSchema>;
+
 /** Tenant-level rotation policy (maps to `rotation_policies`, one per tenant). */
 export const upsertRotationPolicySchema = z.object({
   minTrackGapMinutes: z.number().int().min(0).max(1440),

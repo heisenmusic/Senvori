@@ -8,6 +8,7 @@ import {
   type PreviewRequestInput,
   previewRequestSchema,
   type ProgramDto,
+  type ProgramItemDto,
   type ProgramListQuery,
   programListQuerySchema,
   type ProgramVersionDto,
@@ -81,6 +82,12 @@ export class PlaylistsController {
     @Body(new ZodValidationPipe(updateProgramSchema)) input: UpdateProgramInput,
   ): Promise<ProgramDto> {
     return this.service.updateProgram(id, input);
+  }
+
+  @Get(":id/items")
+  @RequirePermission("playlists:program:read")
+  getItems(@Param("id") id: string): Promise<ProgramItemDto[]> {
+    return this.service.getItems(id);
   }
 
   @Put(":id/items")
