@@ -7,7 +7,10 @@ FROM base AS build
 COPY . .
 RUN pnpm install --frozen-lockfile
 RUN pnpm --filter @senvori/api... build
-RUN pnpm --filter @senvori/api --prod deploy /app
+# --legacy: pnpm v10 requires inject-workspace-packages for the default deploy;
+# @senvori/api's only workspace dep (@senvori/contracts) is prebuilt to dist,
+# so the legacy (v9) deploy — copy the pruned prod closure — is exactly right.
+RUN pnpm --filter @senvori/api --prod deploy --legacy /app
 
 FROM node:22-alpine AS runner
 ENV NODE_ENV=production
