@@ -3,6 +3,12 @@
 > The pure, deterministic engine that turns configuration into a plan.
 > Code: `apps/api/src/modules/playlists/compiler/`. Framework-free (no NestJS, no
 > DB, no HTTP, no clock, no random source). Verified by `test/compiler.spec.ts`.
+>
+> **Sprint 07** grew four intelligence layers on top of this foundation
+> (cross-day fatigue, advanced rotation categories, paired-track avoidance,
+> learned personalization) and bumped the compiler to **2.0.0**. This document
+> describes the v1 core; see `docs/PROGRAMMING_ENGINE.md` for the layers. All of
+> them are opt-in and default to no-op, so everything below still holds.
 
 ## Inputs
 

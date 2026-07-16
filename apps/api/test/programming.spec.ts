@@ -390,6 +390,51 @@ describe("Programming — published version surfacing", () => {
   });
 });
 
+describe("Programming — intelligent engine policy (Sprint 07)", () => {
+  it("round-trips the engine knobs and keeps preview deterministic + engine-aware", async () => {
+    const put = await req("PUT", "/v1/programs/rotation-policy", "ownerA", {
+      minTrackGapMinutes: 15,
+      minArtistGapMinutes: 8,
+      maxPlaysPerDay: 5,
+      minCategoryGapMinutes: 25,
+      fatigueWeightPenalty: 0.5,
+      personalizationStrength: 0.4,
+    });
+    expect(put.status).toBe(200);
+    expect(put.json.minCategoryGapMinutes).toBe(25);
+    expect(put.json.fatigueWeightPenalty).toBe(0.5);
+    expect(put.json.personalizationStrength).toBe(0.4);
+
+    const got = await req("GET", "/v1/programs/rotation-policy", "ownerA");
+    expect(got.status).toBe(200);
+    expect(got.json.minCategoryGapMinutes).toBe(25);
+    expect(got.json.fatigueWeightPenalty).toBe(0.5);
+    expect(got.json.personalizationStrength).toBe(0.4);
+
+    // Preview with the engine active: the plan carries the engine stats block
+    // and stays deterministic (same input ⇒ same hash) — v2.0.0 compiler.
+    const id = await createProgram("ownerA", "Engine Programa");
+    await req("PUT", `/v1/programs/${id}/items`, "ownerA", { assetIds: trackIds });
+    const body = {
+      timezone: "America/Sao_Paulo",
+      localDate: "2026-06-15",
+      windowStartLocal: "08:00",
+      windowEndLocal: "10:00",
+    };
+    const a = await req("POST", `/v1/programs/${id}/preview`, "ownerA", body);
+    expect(a.status).toBe(200);
+    expect(a.json.compilerVersion).toBe("2.0.0");
+    expect(a.json.stats.engine).toEqual({
+      fatigueApplied: false,
+      personalizationApplied: false,
+      categoriesApplied: false,
+      avoidPairBlocks: 0,
+    });
+    const b = await req("POST", `/v1/programs/${id}/preview`, "ownerA", body);
+    expect(b.json.planHash).toBe(a.json.planHash);
+  });
+});
+
 describe("Programming — end-to-end flow (§26)", () => {
   it("create → content → rules → assign(unit) → preview → publish → immutability → history → audit → re-preview(same hash)", async () => {
     // A real scope: a brand + unit in tenant A (RLS-scoped seed).

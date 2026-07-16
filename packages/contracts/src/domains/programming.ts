@@ -57,11 +57,21 @@ export const programItemSchema = z.object({
 });
 export type ProgramItemDto = z.infer<typeof programItemSchema>;
 
-/** Tenant-level rotation policy (maps to `rotation_policies`, one per tenant). */
+/**
+ * Tenant-level rotation policy (maps to `rotation_policies`, one per tenant).
+ * Sprint 07 adds the Intelligent Programming Engine knobs — all optional and
+ * off (null) by default, so existing policies keep their exact behaviour.
+ */
 export const upsertRotationPolicySchema = z.object({
   minTrackGapMinutes: z.number().int().min(0).max(1440),
   minArtistGapMinutes: z.number().int().min(0).max(1440),
   maxPlaysPerDay: z.number().int().min(1).max(10000).nullable().optional(),
+  /** Minutes between two tracks sharing a category; null/0 ⇒ off (Sprint 07). */
+  minCategoryGapMinutes: z.number().int().min(0).max(1440).nullable().optional(),
+  /** Cross-day fatigue penalty; 0/null ⇒ off (Sprint 07). */
+  fatigueWeightPenalty: z.number().min(0).max(10).nullable().optional(),
+  /** Learned-personalization strength in [0,1]; 0/null ⇒ off (Sprint 07). */
+  personalizationStrength: z.number().min(0).max(1).nullable().optional(),
 });
 export type UpsertRotationPolicyInput = z.infer<typeof upsertRotationPolicySchema>;
 
@@ -69,6 +79,9 @@ export const rotationPolicySchema = z.object({
   minTrackGapMinutes: z.number().int(),
   minArtistGapMinutes: z.number().int(),
   maxPlaysPerDay: z.number().int().nullable(),
+  minCategoryGapMinutes: z.number().int().nullable(),
+  fatigueWeightPenalty: z.number().nullable(),
+  personalizationStrength: z.number().nullable(),
 });
 export type RotationPolicyDto = z.infer<typeof rotationPolicySchema>;
 
@@ -129,6 +142,13 @@ export const executionPlanSchema = z.object({
     itemCount: z.number().int(),
     relaxedRules: z.array(z.string()),
     fallbackCount: z.number().int(),
+    /** Which intelligence layers shaped this plan (Sprint 07). */
+    engine: z.object({
+      fatigueApplied: z.boolean(),
+      personalizationApplied: z.boolean(),
+      categoriesApplied: z.boolean(),
+      avoidPairBlocks: z.number().int(),
+    }),
   }),
 });
 export type ExecutionPlanDto = z.infer<typeof executionPlanSchema>;

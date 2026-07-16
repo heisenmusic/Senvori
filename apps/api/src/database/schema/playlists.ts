@@ -1,4 +1,5 @@
 import {
+  doublePrecision,
   index,
   integer,
   jsonb,
@@ -109,6 +110,10 @@ export const rotationPolicies = pgTable(
     minTrackGapMinutes: integer("min_track_gap_minutes").notNull().default(180),
     minArtistGapMinutes: integer("min_artist_gap_minutes").notNull().default(45),
     maxPlaysPerDay: integer("max_plays_per_day"),
+    /* Intelligent Programming Engine knobs (Sprint 07) — null ⇒ layer off. */
+    minCategoryGapMinutes: integer("min_category_gap_minutes"),
+    fatigueWeightPenalty: doublePrecision("fatigue_weight_penalty"),
+    personalizationStrength: doublePrecision("personalization_strength"),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [

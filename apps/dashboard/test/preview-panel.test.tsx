@@ -57,7 +57,18 @@ const plan: ExecutionPlanDto = {
   ],
   warnings: [{ code: "insufficient_catalog", message: "few tracks" }],
   planHash: "a82fdeadbeef19cd",
-  stats: { candidateCount: 3, itemCount: 1, relaxedRules: [], fallbackCount: 0 },
+  stats: {
+    candidateCount: 3,
+    itemCount: 1,
+    relaxedRules: [],
+    fallbackCount: 0,
+    engine: {
+      fatigueApplied: false,
+      personalizationApplied: false,
+      categoriesApplied: false,
+      avoidPairBlocks: 0,
+    },
+  },
 };
 
 beforeEach(() => {

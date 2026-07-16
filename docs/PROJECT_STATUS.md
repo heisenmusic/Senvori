@@ -1,5 +1,34 @@
 # SENVORI 2.0 — PROJECT STATUS REPORT
 
+> ## Atualização — Intelligent Programming Engine (Sprint 07)
+>
+> O compilador determinístico ganhou **quatro camadas de inteligência**, opcionais
+> e sem efeito por padrão, e passou para a versão **2.0.0**. Ele continua uma
+> **função pura** (sem DB/HTTP/relógio/aleatoriedade): o "aprendizado" acontece a
+> montante e aqui é apenas _aplicado_ — a prova de reprodutibilidade (mesmos
+> insumos ⇒ mesmo `planHash`) permanece intacta. Branch
+> `claude/senvori-intelligent-programming-engine`. Apenas fatos comprovados por execução:
+>
+> - **Fadiga entre dias:** `recentPlays` reduz o peso de faixas muito tocadas nos
+>   últimos dias (`peso ÷= 1 + weightPenalty·recentPlays`).
+> - **Categorias de rotação avançadas:** intervalo por categoria (base + overrides)
+>   separa faixas do mesmo gênero/tag; relaxável, com aviso `category_gap_relaxed`.
+>   Categorias vêm de `tracks.genres`. Ordem: estrito → artista → categoria → faixa → fallback.
+> - **Evitar pares:** `avoidPairs` mantêm pares de assets afastados — restrição
+>   **rígida** em todos os níveis, contabilizada em `stats.engine.avoidPairBlocks`.
+> - **Personalização aprendida:** `affinity ∈ [0,1]` modula o peso efetivo
+>   (`×(1 + strength·(2·affinity − 1))`), aplicada deterministicamente.
+> - **Persistência + superfície:** migração `0007_programming_engine_policy`
+>   (aditiva, nullable) adiciona `min_category_gap_minutes`, `fatigue_weight_penalty`,
+>   `personalization_strength` a `rotation_policies`; contracts, tipos do SDK e o
+>   editor de regras do Dashboard (pt-BR/en-US/es-ES) expõem os controles (`0` ⇒ desligado).
+> - **Explicabilidade:** `reason` por item e um bloco `stats.engine` no plano.
+> - **Verificado:** format · lint · typecheck · build verdes; **150 testes**
+>   (API 106 em Postgres real — +12 unit do motor, +1 round-trip da política;
+>   SDK 22 · Dashboard 22). Docs: `PROGRAMMING_ENGINE.md`. **Não é um release.**
+>
+> ---
+>
 > ## Atualização — Programming Foundation completa: SDK + Dashboard + E2E (Sprint 06 · F5–F7)
 >
 > A fundação de programação (F1–F4: compilador determinístico, migração `0006`,

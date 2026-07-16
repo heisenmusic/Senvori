@@ -194,6 +194,9 @@ export class PlaylistsService {
         minTrackGapMinutes: input.minTrackGapMinutes,
         minArtistGapMinutes: input.minArtistGapMinutes,
         maxPlaysPerDay: input.maxPlaysPerDay ?? null,
+        minCategoryGapMinutes: input.minCategoryGapMinutes ?? null,
+        fatigueWeightPenalty: input.fatigueWeightPenalty ?? null,
+        personalizationStrength: input.personalizationStrength ?? null,
       });
       await this.audit.recordInTx(tx, {
         action: "programming.rotation_policy.updated",
@@ -403,15 +406,28 @@ export class PlaylistsService {
         artist: r.artist,
         source,
         weight: 1,
+        // Rotation categories from the Library's genre tags (Sprint 07). Play
+        // history (recentPlays) and learned affinity are fed by upstream
+        // signals; they arrive undefined here until that pipeline lands, at
+        // which point the engine already honours them.
+        categories: r.genres.length > 0 ? r.genres : undefined,
       }));
   }
 
   private toRules(policy: RotationPolicyRow | undefined): RotationRules {
+    const categoryGap = policy?.minCategoryGapMinutes ?? null;
+    const fatigue = policy?.fatigueWeightPenalty ?? null;
+    const personalization = policy?.personalizationStrength ?? null;
     return {
       minTrackGapMinutes: policy?.minTrackGapMinutes ?? DEFAULT_TRACK_GAP,
       minArtistGapMinutes: policy?.minArtistGapMinutes ?? DEFAULT_ARTIST_GAP,
       maxPlaysPerTrack: policy?.maxPlaysPerDay ?? null,
-      relaxable: { trackGap: true, artistGap: true },
+      ...(categoryGap !== null && categoryGap > 0 ? { minCategoryGapMinutes: categoryGap } : {}),
+      ...(fatigue !== null && fatigue > 0 ? { fatigue: { weightPenalty: fatigue } } : {}),
+      ...(personalization !== null && personalization > 0
+        ? { personalization: { strength: personalization } }
+        : {}),
+      relaxable: { trackGap: true, artistGap: true, categoryGap: true },
     };
   }
 
@@ -461,6 +477,9 @@ export class PlaylistsService {
       minTrackGapMinutes: policy?.minTrackGapMinutes ?? DEFAULT_TRACK_GAP,
       minArtistGapMinutes: policy?.minArtistGapMinutes ?? DEFAULT_ARTIST_GAP,
       maxPlaysPerDay: policy?.maxPlaysPerDay ?? null,
+      minCategoryGapMinutes: policy?.minCategoryGapMinutes ?? null,
+      fatigueWeightPenalty: policy?.fatigueWeightPenalty ?? null,
+      personalizationStrength: policy?.personalizationStrength ?? null,
     };
   }
 

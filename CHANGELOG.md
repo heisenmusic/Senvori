@@ -5,6 +5,38 @@ versioning is [SemVer](https://semver.org/). Dates are UTC.
 
 ## [Unreleased]
 
+### Added — Intelligent Programming Engine (Sprint 07)
+
+Four deterministic intelligence layers on top of the Sprint 06 compiler, which is
+bumped to **2.0.0**. Each is opt-in and defaults to no-op; the compiler stays a
+pure function (no DB/HTTP/clock/random), so the reproducibility proof (same
+inputs ⇒ same `planHash`) is untouched — the "learning" happens upstream and is
+only *applied* here.
+
+- **Cross-day fatigue:** a per-candidate `recentPlays` signal de-weights tracks
+  played heavily on recent days (`effectiveWeight ÷= 1 + weightPenalty·recentPlays`).
+- **Advanced rotation categories:** a category gap (base + per-category overrides)
+  keeps tracks sharing a genre/tag apart; relaxable, with a `category_gap_relaxed`
+  warning. Categories come from `tracks.genres`. New relaxation order:
+  strict → artist → category → track → fallback.
+- **Paired-track avoidance:** `avoidPairs` keep configured asset pairs apart — a
+  hard constraint at every relaxation level, counted in `stats.engine.avoidPairBlocks`.
+- **Learned personalization:** an upstream `affinity ∈ [0,1]` score modulates
+  effective weight (`×(1 + strength·(2·affinity − 1))`), applied deterministically.
+- **Explainability:** per-item reasons gain engine bits (`audience-preferred`,
+  `rotation-balanced across days`, …) and the plan reports a `stats.engine`
+  block (`fatigueApplied`, `personalizationApplied`, `categoriesApplied`,
+  `avoidPairBlocks`).
+- **Persistence & surface:** migration `0007_programming_engine_policy` (additive,
+  nullable) adds `min_category_gap_minutes`, `fatigue_weight_penalty`,
+  `personalization_strength` to `rotation_policies`; contracts, SDK types and the
+  Dashboard rotation-rules editor (pt-BR/en-US/es-ES) carry the knobs (`0` ⇒ off).
+- **Docs:** `PROGRAMMING_ENGINE.md`; `PROGRAMMING_COMPILER.md` cross-reference.
+
+Verified: format · lint · typecheck · build green; **150 tests** (API 106 on real
+Postgres — +12 engine unit, +1 policy round-trip; SDK 22 · Dashboard 22).
+**Not a release.**
+
 ### Added — Programming foundation (Sprint 06: F1–F7)
 
 - **Deterministic compiler** (`apps/api/src/modules/playlists/compiler/`, pure): seed +
@@ -34,9 +66,9 @@ versioning is [SemVer](https://semver.org/). Dates are UTC.
   audit.
 
 Verified: lint · format · typecheck · build green; **137 tests** (API 93 on real
-Postgres · SDK 22 · Dashboard 22). **Not a release.** Deferred to the next sprint
-(Intelligent Programming Engine): cross-day fatigue, advanced rotation categories,
-paired-track avoidance, learned/AI personalization.
+Postgres · SDK 22 · Dashboard 22). **Not a release.** The deferred items
+(cross-day fatigue, advanced rotation categories, paired-track avoidance,
+learned/AI personalization) are delivered in Sprint 07 above.
 
 ## [0.1.0] — 2026-07-16
 
