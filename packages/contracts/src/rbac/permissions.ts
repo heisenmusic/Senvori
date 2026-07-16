@@ -37,6 +37,14 @@ export const PERMISSIONS = [
   "catalog:metadata:manage",
   "catalog:rights:read",
   "catalog:rights:manage",
+  // Programming (Sprint 06) — reuses the playlists/scheduling domains
+  "playlists:program:read",
+  "playlists:program:create",
+  "playlists:program:update",
+  "playlists:program:publish",
+  "playlists:program:preview",
+  "playlists:program:archive",
+  "scheduling:program:assign",
   // Fleet (§3.8) — used by later sprints, catalogued now
   "fleet:device:read",
   "fleet:device:pair",

@@ -13,5 +13,6 @@ export * from "./events/envelope.js";
 export * from "./domains/identity.js";
 export * from "./domains/tenancy.js";
 export * from "./domains/catalog.js";
+export * from "./domains/programming.js";
 export * from "./rbac/permissions.js";
 export * from "./openapi/index.js";

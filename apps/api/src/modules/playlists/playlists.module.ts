@@ -1,11 +1,18 @@
 import { Module } from "@nestjs/common";
+import { PlaylistsController } from "./playlists.controller";
+import { PlaylistsRepository } from "./playlists.repository";
+import { PlaylistsService } from "./playlists.service";
 
 /**
- * Playlists domain module — SENVORI_CORE_DOMAINS.md §6.
+ * Playlists / Programming domain module — SENVORI_CORE_DOMAINS.md §6, Sprint 06.
  *
- * Foundation phase: module boundary only; entities, business rules and APIs land in
- * later phases. D2 boundary rule: no module imports another module's internals —
- * communication happens through public interfaces or system events only.
+ * Declarative programs (over the playlists schema) + the deterministic compiler
+ * for preview and immutable version publishing. Depends on the global
+ * Common/Database modules (tenant context, RBAC, transactional audit). The pure
+ * compiler lives in ./compiler and is imported by the service — no NestJS coupling.
  */
-@Module({})
+@Module({
+  controllers: [PlaylistsController],
+  providers: [PlaylistsService, PlaylistsRepository],
+})
 export class PlaylistsModule {}
