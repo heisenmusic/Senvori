@@ -2,7 +2,7 @@
 
 > Estado real por módulo. Atualizar ao fim de cada sprint. Percentuais são estimativas
 > honestas de "código funcional e verificado", não aspiração. Última atualização:
-> **2026-07-16 — pós Sprint 05B (consolidação + production readiness)**.
+> **2026-07-16 — pós Sprint 06 (programming foundation: compiler + API + SDK + dashboard + E2E)**.
 
 ## Resumo
 
@@ -11,10 +11,11 @@
 | Infraestrutura / plataforma     | ~80%        | ▲ (05B: consolidação, prod-readiness, Docker, CI docker) |
 | Backend (core runtime)          | ~85%        | =                                                        |
 | Catalog                         | ~75%        | ▲ (agora integrado no trunk + verificado)                |
-| Dashboard                       | ~20%        | =                                                        |
+| Programming (Playlists)         | ~55%        | ▲ (Sprint 06: compiler + API + SDK + dashboard + E2E)    |
+| Dashboard                       | ~32%        | ▲ (05B: library · 06: Programação + Prévia do dia)       |
 | Demais domínios de negócio      | ~1–5%       | = (stubs)                                                |
 | Especificação de produto        | ~95%        | =                                                        |
-| **Produto construído (global)** | **~18–22%** | ▲                                                        |
+| **Produto construído (global)** | **~24–28%** | ▲                                                        |
 
 ## Por módulo
 
@@ -25,7 +26,8 @@
 | **Identity**        | 80% | members/invites/roles/audit/me + auth                                                                                                                                                                                         | —                                                                                                        | —                                          | —                                           | runtime                    |
 | **Tenancy**         | 75% | brands/groups/units/zones; settings parcial                                                                                                                                                                                   | settings (marcas/idiomas/som base) incompleto                                                            | Completar settings (Fase 2)                | —                                           | Identity                   |
 | **Catalog**         | 75% | upload→confirm→process, storage local+R2, worker in-process, 27 testes; migration 0005; SDK + dashboard `/library`                                                                                                            | Worker é in-process (sem binário dedicado); reprocessamento em escala não validado                       | —                                          | —                                           | runtime, storage           |
-| **Dashboard**       | 20% | login + units + library; i18n (pt/en/es); design tokens                                                                                                                                                                       | 13 telas especificadas, ~2–3 implementadas                                                               | Construir telas Fase 1                     | Backends de Campaigns/Scheduling            | SDK                        |
+| **Programming**     | 55% | compiler determinístico (16 t) · API `/programs` (preview/publish imutável/versões/assignment) · SDK tipado (22 t) · dashboard "Programação" + Prévia do dia (22 t) · fluxo E2E (§26); migração 0006 aditiva                  | Intelligent Programming Engine (fadiga/rotação avançada entre dias) fora do escopo                       | Sprint 07 (Intelligent Programming Engine) | —                                           | Catalog, Tenancy           |
+| **Dashboard**       | 32% | login + units + library + **Programação** (lista/criação/detalhe/Prévia do dia/publicação/histórico); i18n (pt/en/es); a11y; design tokens                                                                                    | 13 telas especificadas, ~2–3 implementadas                                                               | Construir telas Fase 1                     | Backends de Campaigns/Scheduling            | SDK                        |
 | **Scheduling**      | 3%  | stub                                                                                                                                                                                                                          | fallback som base / conflitos ainda não codados                                                          | Fase 1 (backend)                           | —                                           | Catalog, Campaigns         |
 | **Campaigns**       | 3%  | stub                                                                                                                                                                                                                          | máquina de estados / publicação por escopo                                                               | Fase 1 (backend)                           | —                                           | Catalog, Tenancy           |
 | **Fleet**           | 3%  | stub; permissões `fleet:*` declaradas                                                                                                                                                                                         | heartbeat/sync confiável                                                                                 | Fase 2                                     | —                                           | Scheduling                 |
@@ -37,18 +39,18 @@
 | **AI**              | 1%  | stub; padrão de UX especificado                                                                                                                                                                                               | explicabilidade / ação com humano no laço                                                                | Fase 4                                     | Dados Fases 1–3                             | tudo                       |
 | **Digital Signage** | 0%  | inexistente                                                                                                                                                                                                                   | —                                                                                                        | pós-Fase 4                                 | —                                           | Fleet/Player               |
 
-## Gates de qualidade (trunk, pós-05B)
+## Gates de qualidade (trunk, pós-06)
 
-| Gate                                 | Estado               |
-| ------------------------------------ | -------------------- |
-| Typecheck                            | ✅ 10/10             |
-| Lint                                 | ✅ 10/10             |
-| Build                                | ✅ 6/6               |
-| Testes (integração, Postgres real)   | ✅ 62/62             |
-| Migrations (banco limpo + existente) | ✅ 0000→0005         |
-| Docker compose config                | ✅ válido            |
-| Smoke boot (health/headers/IDs)      | ✅                   |
-| CI verde                             | ⏳ validar após push |
+| Gate                                 | Estado                                          |
+| ------------------------------------ | ----------------------------------------------- |
+| Typecheck                            | ✅ 10/10                                        |
+| Lint                                 | ✅ 10/10                                        |
+| Build                                | ✅ 6/6                                          |
+| Testes (total)                       | ✅ 137 (API 93 PG real · SDK 22 · Dashboard 22) |
+| Migrations (banco limpo + existente) | ✅ 0000→0006                                    |
+| Docker compose config                | ✅ válido                                       |
+| Smoke boot (health/headers/IDs)      | ✅                                              |
+| CI verde                             | ⏳ validar após push                            |
 
 ## Dívida aberta (topo)
 

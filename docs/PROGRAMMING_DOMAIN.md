@@ -3,6 +3,8 @@
 > Entities, states, versions, assignments, permissions and API of the programming
 > foundation. Product-language "program" is backed by the existing `playlists`
 > schema (audit: `docs/sprint-06/PRE_IMPLEMENTATION_AUDIT.md`). Audio-first.
+> The typed SDK and the "Programação" dashboard that consume this API are
+> documented in [`PROGRAMMING_UX.md`](./PROGRAMMING_UX.md).
 
 ## Entities (reused schema + additive migration)
 
@@ -80,8 +82,9 @@ Roles already grant coverage via wildcards: `curator`/`admin` have `playlists:*`
 | ------- | ------------------------------------------------- | ------------------------------------ |
 | POST    | `/programs`                                       | create                               |
 | GET     | `/programs`                                       | read (cursor + `status`/`q` filters) |
-| GET     | `/programs/:id`                                   | read                                 |
+| GET     | `/programs/:id`                                   | read (incl. `publishedVersion`)      |
 | PATCH   | `/programs/:id`                                   | update                               |
+| GET     | `/programs/:id/items`                             | read (ordered content + metadata)    |
 | PUT     | `/programs/:id/items`                             | update                               |
 | GET/PUT | `/programs/rotation-policy`                       | read / update                        |
 | POST    | `/programs/:id/archive`                           | archive (204)                        |

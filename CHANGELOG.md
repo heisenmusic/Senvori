@@ -5,7 +5,7 @@ versioning is [SemVer](https://semver.org/). Dates are UTC.
 
 ## [Unreleased]
 
-### Added — Programming foundation (Sprint 06, in progress: F1–F4)
+### Added — Programming foundation (Sprint 06: F1–F7)
 
 - **Deterministic compiler** (`apps/api/src/modules/playlists/compiler/`, pure): seed +
   PRNG, IANA/DST-correct timezone resolution, rotation rules (track/artist gap),
@@ -13,16 +13,30 @@ versioning is [SemVer](https://semver.org/). Dates are UTC.
   explainability and a canonical plan hash. 16 unit tests.
 - **Migration 0006** (additive): `plan_hash`, `compiler_version`, `published_by` on
   `playlist_versions`. Validated clean + existing DB.
-- **Programming API** (`/v1/programs`): program CRUD, items, tenant rotation policy,
+- **Programming API** (`/v1/programs`): program CRUD, items (incl. `GET :id/items` with
+  Library metadata), `publishedVersion` on the program DTO, tenant rotation policy,
   deterministic **preview** (ephemeral), **immutable version publish** (plan hash +
   publisher), version listing, scope **assignment**. Tenant from context; RLS + RBAC
   deny-by-default; transactional audit on every mutation. Contracts + concrete
-  `playlists:program:*` / `scheduling:program:assign` permissions. 12 integration tests.
+  `playlists:program:*` / `scheduling:program:assign` permissions.
+- **SDK** (`@senvori/sdk` · `client.programming.*`): typed methods for programs,
+  content, rotation policy, cancellable **preview**, **versions** and **assignments**;
+  shared contracts, typed errors (401/403/404/409/422). 22 tests.
+- **Dashboard "Programação"** (`/programs`): list, staged create, detail (edit,
+  content, rules, scope), **Day preview** timeline (DST-correct, translated warnings,
+  abbreviated identifier), conscious **publish** (accessible modal) and **version
+  history**. i18n pt-BR/en-US/es-ES, accessible, design system reused. 22 tests.
+- **End-to-end flow** (§26, real Postgres): create → content → rules → assign(unit) →
+  preview (timezone validated) → same input ⇒ same hash + sequence → publish →
+  immutability → history → transactional audit.
 - **Docs:** MEDIA_EXECUTION_ARCHITECTURE (+7 ADRs), PROGRAMMING_COMPILER,
-  PROGRAMMING_DOMAIN, sprint-06 pre-implementation audit.
+  PROGRAMMING_DOMAIN, PROGRAMMING_UX (SDK + Dashboard), sprint-06 pre-implementation
+  audit.
 
-Still pending in Sprint 06: SDK methods, Programming dashboard (Programação + Prévia do
-dia) with i18n/a11y, and the end-to-end demonstrable flow (§35). **Not a release.**
+Verified: lint · format · typecheck · build green; **137 tests** (API 93 on real
+Postgres · SDK 22 · Dashboard 22). **Not a release.** Deferred to the next sprint
+(Intelligent Programming Engine): cross-day fatigue, advanced rotation categories,
+paired-track avoidance, learned/AI personalization.
 
 ## [0.1.0] — 2026-07-16
 

@@ -1,5 +1,44 @@
 # SENVORI 2.0 — PROJECT STATUS REPORT
 
+> ## Atualização — Programming Foundation completa: SDK + Dashboard + E2E (Sprint 06 · F5–F7)
+>
+> A fundação de programação (F1–F4: compilador determinístico, migração `0006`,
+> contracts, API, preview, publicação imutável, assignments, RBAC/RLS/auditoria)
+> passou a ser uma **capacidade de negócio utilizável de ponta a ponta**. Branch
+> `claude/senvori-core-domains-w10xi8`. Apenas fatos comprovados por execução:
+>
+> - **SDK oficial** (`@senvori/sdk` · `client.programming.*`): métodos tipados para
+>   programas (CRUD + arquivar), conteúdos (`listItems`/`setItems`), política de
+>   rotação, **preview** determinístico (cancelável via `AbortSignal`), **versões**
+>   (publicar/listar/buscar, com hash/compiler/publisher) e **assignments**. Zero
+>   HTTP direto no Dashboard; contracts compartilhados; erros tipados
+>   (`SenvoriApiError` 401/403/404/409/422). **22 testes**.
+> - **Dashboard "Programação"** (`/programs`): lista (busca, filtro, paginação,
+>   todos os estados), criação em etapas (identidade → conteúdos da Biblioteca),
+>   detalhe (editar rascunho, conteúdos, regras, escopo), **Prévia do dia**
+>   (timeline acessível com horários locais/DST, warnings traduzidos, identificador
+>   abreviado), **publicação** consciente (modal com focus-trap) e **histórico de
+>   versões**. i18n pt-BR/en-US/es-ES, acessível, design system reutilizado.
+>   **22 testes** (helpers puros + comportamento do PreviewPanel).
+> - **API aditiva** (sem migração): `GET /v1/programs/:id/items` (conteúdo ordenado
+>   com metadados) e `publishedVersion` no DTO do programa.
+> - **Fluxo E2E comprovado** (§26, PostgreSQL real): criar → conteúdos → regras →
+>   assignment (unidade real) → preview (timezone SP UTC−3 validado) → **mesmo input
+>   gera o mesmo hash e a mesma sequência** → publicar → imutabilidade (v2 não altera
+>   v1) → histórico → auditoria transacional confirmada.
+> - **Qualidade:** lint, format, typecheck, build (incl. `next build` das rotas
+>   `/programs`) verdes. **Suíte total: 137 testes** (API **93** em PG real · SDK 22
+>   · Dashboard 22). Migração `0006` inalterada (validada limpa `0000→0006`).
+>
+> Documentação: [`PROGRAMMING_DOMAIN.md`](./PROGRAMMING_DOMAIN.md),
+> [`PROGRAMMING_UX.md`](./PROGRAMMING_UX.md) (SDK + Dashboard),
+> [`PROGRAMMING_COMPILER.md`](./PROGRAMMING_COMPILER.md),
+> [`MEDIA_EXECUTION_ARCHITECTURE.md`](./MEDIA_EXECUTION_ARCHITECTURE.md). **Fora do
+> escopo (próxima Sprint):** Intelligent Programming Engine (fadiga/rotação avançada
+> entre dias), Player, Fleet, manifesto assinado, Scheduling runtime.
+>
+> ---
+
 > ## Atualização — Catalog & Media Asset Foundation (PROMPT 04)
 >
 > Construída sobre a fundação Identity + Tenancy. Branch
