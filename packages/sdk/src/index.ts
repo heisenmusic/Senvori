@@ -4,24 +4,43 @@ import type {
   BrandDto,
   CatalogItemDto,
   CatalogItemListQuery,
+  CreateAssignmentInput,
   CreateBrandInput,
+  CreateProgramInput,
   CreateUnitInput,
   CreateUploadInput,
   CreateZoneInput,
   CurrentUserDto,
   DownloadTicket,
+  ExecutionPlanDto,
   GroupDto,
   InviteMemberInput,
   MembershipWithUserDto,
+  PreviewRequestInput,
   ProblemDetails,
+  ProgramDto,
+  ProgramItemDto,
+  ProgramListQuery,
+  ProgramVersionDto,
   RoleAssignmentDto,
+  RotationPolicyDto,
+  SetProgramItemsInput,
   UnitDto,
   UnitListQuery,
   UpdateCatalogItemInput,
+  UpdateProgramInput,
   UpdateUnitInput,
   UploadTicket,
+  UpsertRotationPolicyInput,
   ZoneDto,
 } from "@senvori/contracts";
+
+/** Result of assigning a program to a scope (`POST /programs/:id/assignments`). */
+export interface AssignmentResultDto {
+  id: string;
+  targetType: string;
+  targetId: string;
+}
 
 /**
  * @senvori/sdk — typed client for the Senvori API (§0.3 conventions).
@@ -56,6 +75,7 @@ export class SenvoriClient {
   readonly identity: IdentityClient;
   readonly tenancy: TenancyClient;
   readonly catalog: CatalogClient;
+  readonly programming: ProgrammingClient;
 
   constructor(options: SenvoriClientOptions) {
     this.baseUrl = options.baseUrl.replace(/\/$/, "");
@@ -65,6 +85,7 @@ export class SenvoriClient {
     this.identity = new IdentityClient(this);
     this.tenancy = new TenancyClient(this);
     this.catalog = new CatalogClient(this);
+    this.programming = new ProgrammingClient(this);
   }
 
   /** Low-level fetch (used by the storage direct-upload step). */
@@ -253,5 +274,87 @@ class CatalogClient {
   }
   downloadUrl(id: string): Promise<DownloadTicket> {
     return this.c.request("GET", `/v1/catalog/items/${id}/download`);
+  }
+}
+
+/**
+ * Programming domain (Sprint 06 · §18). Product-language "programs" over the
+ * playlists schema: draft CRUD, content items, tenant rotation policy, a
+ * deterministic ephemeral preview, immutable version publish and scope
+ * assignment. The tenant is always the authenticated context — never a
+ * parameter. Errors surface as {@link SenvoriApiError} (401/403/404/409/422).
+ */
+class ProgrammingClient {
+  constructor(private readonly c: SenvoriClient) {}
+
+  /* --------------------------------------------------------------- programs */
+
+  createProgram(input: CreateProgramInput): Promise<ProgramDto> {
+    return this.c.request("POST", "/v1/programs", { body: input });
+  }
+  listPrograms(
+    query: Partial<ProgramListQuery> = {},
+    signal?: AbortSignal,
+  ): Promise<{ items: ProgramDto[]; nextCursor: string | null }> {
+    return this.c.request("GET", "/v1/programs", { query, signal });
+  }
+  getProgram(id: string): Promise<ProgramDto> {
+    return this.c.request("GET", `/v1/programs/${id}`);
+  }
+  updateProgram(id: string, input: UpdateProgramInput): Promise<ProgramDto> {
+    return this.c.request("PATCH", `/v1/programs/${id}`, { body: input });
+  }
+  archiveProgram(id: string): Promise<void> {
+    return this.c.request("POST", `/v1/programs/${id}/archive`);
+  }
+
+  /* ---------------------------------------------------------------- content */
+
+  /** Ordered content of a program, with Library metadata to display it. */
+  listItems(id: string): Promise<ProgramItemDto[]> {
+    return this.c.request("GET", `/v1/programs/${id}/items`);
+  }
+
+  /**
+   * Replace the full ordered content of a manual program. Add, remove and
+   * reorder are all expressed by sending the complete desired `assetIds` list.
+   */
+  setItems(id: string, input: SetProgramItemsInput): Promise<ProgramDto> {
+    return this.c.request("PUT", `/v1/programs/${id}/items`, { body: input });
+  }
+
+  /* ------------------------------------------------------------------ rules */
+
+  getRotationPolicy(): Promise<RotationPolicyDto> {
+    return this.c.request("GET", "/v1/programs/rotation-policy");
+  }
+  upsertRotationPolicy(input: UpsertRotationPolicyInput): Promise<RotationPolicyDto> {
+    return this.c.request("PUT", "/v1/programs/rotation-policy", { body: input });
+  }
+
+  /* ---------------------------------------------------------------- preview */
+
+  /** Deterministic day preview. Ephemeral — never persisted. Cancellable. */
+  preview(id: string, input: PreviewRequestInput, signal?: AbortSignal): Promise<ExecutionPlanDto> {
+    return this.c.request("POST", `/v1/programs/${id}/preview`, { body: input, signal });
+  }
+
+  /* --------------------------------------------------------------- versions */
+
+  /** Publish an immutable version snapshot of the current program. */
+  publish(id: string): Promise<ProgramVersionDto> {
+    return this.c.request("POST", `/v1/programs/${id}/versions`);
+  }
+  listVersions(id: string): Promise<{ items: ProgramVersionDto[]; nextCursor: string | null }> {
+    return this.c.request("GET", `/v1/programs/${id}/versions`);
+  }
+  getVersion(id: string, versionId: string): Promise<ProgramVersionDto> {
+    return this.c.request("GET", `/v1/programs/${id}/versions/${versionId}`);
+  }
+
+  /* ------------------------------------------------------------- assignment */
+
+  createAssignment(id: string, input: CreateAssignmentInput): Promise<AssignmentResultDto> {
+    return this.c.request("POST", `/v1/programs/${id}/assignments`, { body: input });
   }
 }
