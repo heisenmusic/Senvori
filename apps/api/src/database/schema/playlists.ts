@@ -177,6 +177,11 @@ export const playlistVersions = pgTable(
     /** Resolution context: unit, territory, licensing snapshot time. */
     context: jsonb("context").notNull().default({}),
     resolvedAt: timestamp("resolved_at", { withTimezone: true }).notNull().defaultNow(),
+    /** Determinism/audit (Sprint 06 · ADR-06-06): canonical plan hash + compiler id. */
+    planHash: text("plan_hash"),
+    compilerVersion: text("compiler_version"),
+    /** Who published this immutable version (§9.3). */
+    publishedBy: uuid("published_by").references(() => users.id),
   },
   (t) => [
     uniqueIndex("playlist_versions_playlist_version_idx").on(t.playlistId, t.version),
