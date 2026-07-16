@@ -24,7 +24,8 @@
     "campaigns": "Campanhas",
     "analytics": "Analytics",
     "settings": "Configurações",
-    "library": "Biblioteca"
+    "library": "Biblioteca",
+    "programs": "Programação"
   },
   "auth": {
     "login": {
@@ -138,6 +139,231 @@
     "upload": {
       "invalidType": "Formato de áudio não suportado. Use WAV, MP3, AAC ou FLAC.",
       "failed": "Não foi possível enviar este arquivo. Verifique o formato e tente novamente."
+    }
+  },
+  "programs": {
+    "title": "Programação",
+    "subtitle": "Crie e publique a experiência musical das suas lojas.",
+    "new": "Nova programação",
+    "backToList": "Voltar para programações",
+    "none": "—",
+    "states": {
+      "loading": "Carregando…",
+      "error": "Algo deu errado. Tente novamente.",
+      "retry": "Tentar novamente",
+      "noPermission": "Você não tem permissão para acessar esta área.",
+      "sessionExpired": "Sua sessão expirou. Entre novamente.",
+      "notFound": "Programação não encontrada.",
+      "saving": "Salvando…",
+      "saved": "Alterações salvas."
+    },
+    "list": {
+      "search": "Buscar por nome",
+      "filterStatus": "Filtrar por status",
+      "loading": "Carregando programações…",
+      "empty": "Você ainda não tem programações.",
+      "emptyHint": "Crie sua primeira programação para definir a música das suas lojas.",
+      "noResults": "Nenhuma programação corresponde à sua busca.",
+      "error": "Não foi possível carregar as programações. Tente novamente.",
+      "loadMore": "Carregar mais",
+      "open": "Abrir",
+      "col": {
+        "name": "Nome",
+        "status": "Status",
+        "content": "Conteúdos",
+        "version": "Versão",
+        "updated": "Última alteração"
+      }
+    },
+    "status": {
+      "all": "Todos os status",
+      "draft": "Rascunho",
+      "published": "Publicada",
+      "archived": "Arquivada"
+    },
+    "type": {
+      "manual": "Sequência definida por você",
+      "smart": "Gerada automaticamente"
+    },
+    "count": {
+      "items": "{count, plural, =0 {Nenhum conteúdo} one {# conteúdo} other {# conteúdos}}",
+      "selected": "{count, plural, =0 {Nada selecionado} one {# selecionado} other {# selecionados}}",
+      "version": "Versão {n}"
+    },
+    "create": {
+      "title": "Nova programação",
+      "subtitle": "Comece pelo essencial. Você poderá ajustar tudo depois.",
+      "step": "Etapa {n} de {total}",
+      "next": "Continuar",
+      "back": "Voltar",
+      "submit": "Criar programação",
+      "creating": "Criando…",
+      "error": "Não foi possível criar a programação. Tente novamente.",
+      "identity": {
+        "title": "Identidade",
+        "name": "Nome da programação",
+        "namePlaceholder": "Ex.: Loja — Dia",
+        "nameHint": "Como você vai reconhecer esta programação.",
+        "description": "O que ela representa",
+        "descriptionPlaceholder": "Ex.: Clima acolhedor para o horário comercial.",
+        "type": "Como o conteúdo será organizado",
+        "nameRequired": "Dê um nome para continuar."
+      },
+      "content": {
+        "title": "Conteúdos",
+        "subtitle": "Escolha as músicas e conteúdos da sua Biblioteca.",
+        "skipHint": "Você também pode adicionar conteúdos depois."
+      }
+    },
+    "detail": {
+      "createdAt": "Criada em",
+      "updatedAt": "Atualizada em",
+      "publishedVersion": "Versão publicada",
+      "notPublished": "Ainda não publicada",
+      "edit": "Editar",
+      "editName": "Editar nome e descrição",
+      "archive": "Arquivar",
+      "archiveConfirm": "Arquivar esta programação? Ela não poderá mais ser editada ou publicada.",
+      "archived": "Esta programação está arquivada. Não é possível editá-la ou publicá-la.",
+      "sections": {
+        "content": "Conteúdos",
+        "rules": "Regras de rotação",
+        "scope": "Onde será usada",
+        "preview": "Prévia do dia",
+        "versions": "Histórico de versões"
+      }
+    },
+    "content": {
+      "title": "Conteúdos",
+      "subtitle": "As músicas e conteúdos que alimentam esta programação.",
+      "edit": "Editar conteúdos",
+      "save": "Salvar conteúdos",
+      "cancel": "Cancelar",
+      "empty": "Nenhum conteúdo ainda.",
+      "search": "Buscar na Biblioteca",
+      "available": "Disponíveis na Biblioteca",
+      "selected": "Nesta programação",
+      "add": "Adicionar",
+      "remove": "Remover",
+      "moveUp": "Mover para cima",
+      "moveDown": "Mover para baixo",
+      "unavailable": "Indisponível",
+      "onlyReady": "Somente conteúdos prontos podem ser reproduzidos.",
+      "loadMore": "Carregar mais",
+      "saved": "Conteúdos atualizados.",
+      "error": "Não foi possível salvar os conteúdos. Tente novamente.",
+      "totalDuration": "Duração aproximada: {duration}"
+    },
+    "rules": {
+      "title": "Regras de rotação",
+      "subtitle": "Estas regras valem para toda a sua conta e evitam repetições próximas.",
+      "trackGap": "Evite repetir a mesma música por",
+      "trackGapHint": "Tempo mínimo até a mesma música poder tocar de novo.",
+      "artistGap": "Evite repetir o mesmo artista por",
+      "artistGapHint": "Tempo mínimo até o mesmo artista poder tocar de novo.",
+      "maxPlays": "Limite de execuções por dia (opcional)",
+      "maxPlaysHint": "Deixe em branco para não limitar.",
+      "minutes": "minutos",
+      "edit": "Editar regras",
+      "save": "Salvar regras",
+      "cancel": "Cancelar",
+      "saved": "Regras atualizadas.",
+      "error": "Não foi possível salvar as regras. Tente novamente."
+    },
+    "scope": {
+      "title": "Onde será usada",
+      "subtitle": "Associe esta programação a uma marca, grupo ou unidade.",
+      "target": "Local ou escopo",
+      "targetType": "Tipo",
+      "assign": "Associar",
+      "assigning": "Associando…",
+      "assigned": "Programação associada.",
+      "error": "Não foi possível associar. Verifique suas permissões e tente novamente.",
+      "selectUnit": "Selecione uma unidade",
+      "types": {
+        "tenant": "Toda a conta",
+        "country": "País",
+        "brand": "Marca",
+        "group": "Grupo",
+        "unit": "Unidade",
+        "zone": "Zona"
+      }
+    },
+    "preview": {
+      "title": "Prévia do dia",
+      "subtitle": "Veja a sequência e os horários gerados para uma data.",
+      "unit": "Unidade",
+      "unitHint": "Define o fuso horário e a variação da sequência.",
+      "unitNone": "Nenhuma (padrão da conta)",
+      "date": "Data",
+      "timezone": "Fuso horário",
+      "windowStart": "Início",
+      "windowEnd": "Fim",
+      "version": "Base",
+      "versionDraft": "Rascunho atual",
+      "generate": "Gerar prévia",
+      "generating": "Gerando prévia…",
+      "regenerate": "Gerar novamente",
+      "empty": "Selecione uma data e gere a prévia do dia.",
+      "error": "Não foi possível gerar a prévia. Verifique os conteúdos e tente novamente.",
+      "resultTitle": "Sequência do dia",
+      "totalItems": "{count, plural, =0 {Nenhum item} one {# item} other {# itens}}",
+      "totalDuration": "Duração total: {duration}",
+      "identifier": "Identificador da versão",
+      "identifierHint": "Mesma configuração e mesma data geram sempre o mesmo identificador.",
+      "col": {
+        "time": "Horário",
+        "title": "Conteúdo",
+        "artist": "Artista",
+        "duration": "Duração"
+      },
+      "silence": "Silêncio",
+      "untitled": "Sem título",
+      "warningsTitle": "Atenção na programação",
+      "warnings": {
+        "empty_program": "Esta programação ainda não tem conteúdos.",
+        "insufficient_catalog": "Há poucas músicas disponíveis para cumprir todas as regras.",
+        "track_gap_relaxed": "Uma regra de repetição de músicas precisou ser flexibilizada para completar o período.",
+        "artist_gap_relaxed": "Uma regra de repetição de artistas precisou ser flexibilizada para completar o período.",
+        "fallback_used": "O conteúdo de segurança foi utilizado para completar a programação.",
+        "window_not_filled": "Não foi possível encontrar conteúdo suficiente para todo o período.",
+        "generic": "Há um ponto de atenção nesta programação."
+      }
+    },
+    "publish": {
+      "action": "Publicar versão",
+      "title": "Publicar nova versão",
+      "subtitle": "Revise antes de publicar. Uma versão publicada não pode ser alterada.",
+      "summaryName": "Programação",
+      "summaryContent": "Conteúdos",
+      "summaryRules": "Regras",
+      "summaryScope": "Onde será usada",
+      "confirm": "Publicar",
+      "publishing": "Publicando…",
+      "cancel": "Cancelar",
+      "error": "Não foi possível publicar. Verifique os conteúdos e suas permissões.",
+      "noContent": "Adicione ao menos um conteúdo pronto antes de publicar.",
+      "successTitle": "Versão publicada",
+      "successBody": "A versão {n} foi publicada e está pronta para as próximas etapas de distribuição.",
+      "rulesSummary": "Mesma música: {track} min · Mesmo artista: {artist} min"
+    },
+    "versions": {
+      "title": "Histórico de versões",
+      "subtitle": "Cada publicação gera uma versão imutável e registrada.",
+      "empty": "Nenhuma versão publicada ainda.",
+      "error": "Não foi possível carregar o histórico. Tente novamente.",
+      "view": "Visualizar",
+      "col": {
+        "version": "Versão",
+        "date": "Publicada em",
+        "author": "Responsável",
+        "identifier": "Identificador",
+        "compiler": "Sistema",
+        "items": "Conteúdos"
+      },
+      "identifierLabel": "Identificador",
+      "identifierHint": "Referência única desta versão, usada nas próximas etapas de distribuição.",
+      "immutable": "Imutável"
     }
   }
 }

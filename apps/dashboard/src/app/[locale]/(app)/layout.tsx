@@ -28,6 +28,7 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
   const navItems = [
     { href: "/units", label: t("nav.units") },
     { href: "/library", label: t("nav.library") },
+    { href: "/programs", label: t("nav.programs") },
   ];
 
   return (
@@ -38,7 +39,7 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
         </div>
         <nav className="flex flex-1 flex-col gap-1 px-3">
           {navItems.map((item) => {
-            const active = pathname === item.href;
+            const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
             return (
               <Link
                 key={item.href}
