@@ -52,3 +52,58 @@ export const scheduleAssignments = pgTable(
     tenantIsolation("schedule_assignments"),
   ],
 ).enableRLS();
+
+/**
+ * Local events — Sprint 08 (§9/§10). A *local event* layers over the resolved
+ * base program for a target scope within a local-time trigger window: it can
+ * `insert` an asset at an offset, `overlay` (mix, optionally ducking the base),
+ * or `interrupt` (replace the base for its duration). Three categories share the
+ * mechanism — an editorial `local_event`, a `campaign_slot`, and an `emergency`
+ * (which overrides everything else). Events map to deterministic effective-plan
+ * overlays by the pure `local-events` resolver — no audio is produced here (§35).
+ */
+
+const eventTargetTypes = ["tenant", "group", "sync_group", "unit"] as const;
+const eventKinds = ["insert", "overlay", "interrupt"] as const;
+const eventCategories = ["local_event", "campaign_slot", "emergency"] as const;
+
+export const localEvents = pgTable(
+  "local_events",
+  {
+    id: id(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => tenants.id, { onDelete: "cascade" }),
+    /** The asset injected/overlaid/interrupted with; null ⇒ base ducking only. */
+    assetId: uuid("asset_id"),
+    targetType: text("target_type", { enum: eventTargetTypes }).notNull(),
+    targetId: text("target_id").notNull(),
+    kind: text("kind", { enum: eventKinds }).notNull(),
+    category: text("category", { enum: eventCategories }).notNull().default("local_event"),
+    /** Higher wins when two events collide at the same offset. */
+    priority: integer("priority").notNull().default(0),
+    /** Local weekdays 0=Sun…6=Sat; empty ⇒ every day. */
+    daysOfWeek: integer("days_of_week").array().notNull().default([]),
+    /** Local trigger window "HH:mm"; the event is in effect when now ∈ [start,end). */
+    startTimeLocal: text("start_time_local").notNull().default("00:00"),
+    endTimeLocal: text("end_time_local").notNull().default("23:59"),
+    /** Overlay geometry within the effective plan (ms). */
+    startOffsetMs: integer("start_offset_ms").notNull().default(0),
+    durationMs: integer("duration_ms").notNull().default(0),
+    /** For `overlay`: attenuation applied to the base bed, in negative dB. */
+    duckingDb: integer("ducking_db"),
+    validFrom: date("valid_from", { mode: "string" }),
+    validUntil: date("valid_until", { mode: "string" }),
+    active: boolean("active").notNull().default(true),
+    createdBy: uuid("created_by").references(() => users.id),
+    updatedBy: uuid("updated_by").references(() => users.id),
+    ...auditFields(),
+    archivedAt: archivedAt(),
+  },
+  (t) => [
+    index("local_events_tenant_target_idx").on(t.tenantId, t.targetType, t.targetId),
+    index("local_events_tenant_active_idx").on(t.tenantId, t.active),
+    index("local_events_category_idx").on(t.tenantId, t.category),
+    tenantIsolation("local_events"),
+  ],
+).enableRLS();

@@ -1,9 +1,16 @@
 import { Injectable } from "@nestjs/common";
 import { and, asc, desc, eq, isNull, max } from "drizzle-orm";
 import type { TenantTx } from "../../database/tenant-context";
-import { playlists, playlistVersions, scheduleAssignments } from "../../database/schema";
+import {
+  assets,
+  localEvents,
+  playlists,
+  playlistVersions,
+  scheduleAssignments,
+} from "../../database/schema";
 
 export type ScheduleAssignmentRow = typeof scheduleAssignments.$inferSelect;
+export type LocalEventRow = typeof localEvents.$inferSelect;
 
 /**
  * Scheduling Runtime data access (Sprint 08). Every method takes a tenant-scoped
@@ -76,6 +83,70 @@ export class SchedulingRepository {
       .select({ id: playlists.id })
       .from(playlists)
       .where(eq(playlists.id, programId));
+    return row !== undefined;
+  }
+
+  /* ------------------------------------------------------- local events -- */
+
+  async listLocalEvents(tx: TenantTx, tenantId: string): Promise<LocalEventRow[]> {
+    return tx
+      .select()
+      .from(localEvents)
+      .where(and(eq(localEvents.tenantId, tenantId), isNull(localEvents.archivedAt)))
+      .orderBy(desc(localEvents.priority), asc(localEvents.id));
+  }
+
+  /** Active, non-archived local events — overlay input (stable order). */
+  async loadActiveLocalEvents(tx: TenantTx, tenantId: string): Promise<LocalEventRow[]> {
+    return tx
+      .select()
+      .from(localEvents)
+      .where(
+        and(
+          eq(localEvents.tenantId, tenantId),
+          eq(localEvents.active, true),
+          isNull(localEvents.archivedAt),
+        ),
+      )
+      .orderBy(asc(localEvents.id));
+  }
+
+  async findLocalEvent(tx: TenantTx, id: string): Promise<LocalEventRow | undefined> {
+    const [row] = await tx.select().from(localEvents).where(eq(localEvents.id, id));
+    return row;
+  }
+
+  async insertLocalEvent(
+    tx: TenantTx,
+    values: typeof localEvents.$inferInsert,
+  ): Promise<LocalEventRow> {
+    const [row] = await tx.insert(localEvents).values(values).returning();
+    return row as LocalEventRow;
+  }
+
+  async updateLocalEvent(
+    tx: TenantTx,
+    id: string,
+    patch: Partial<typeof localEvents.$inferInsert>,
+  ): Promise<LocalEventRow | undefined> {
+    const [row] = await tx
+      .update(localEvents)
+      .set({ ...patch, updatedAt: new Date() })
+      .where(eq(localEvents.id, id))
+      .returning();
+    return row;
+  }
+
+  async archiveLocalEvent(tx: TenantTx, id: string): Promise<void> {
+    await tx
+      .update(localEvents)
+      .set({ archivedAt: new Date(), active: false, updatedAt: new Date() })
+      .where(eq(localEvents.id, id));
+  }
+
+  /** RLS-scoped asset existence check (prevents referencing a foreign asset). */
+  async assetExists(tx: TenantTx, assetId: string): Promise<boolean> {
+    const [row] = await tx.select({ id: assets.id }).from(assets).where(eq(assets.id, assetId));
     return row !== undefined;
   }
 

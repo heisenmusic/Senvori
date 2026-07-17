@@ -1,23 +1,35 @@
 import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
 import type {
+  CreateLocalEventInput,
   CreateScheduleAssignmentInput,
   EffectivePlanDto,
+  LocalEventDto,
   ScheduleAssignmentDto,
   ScheduleResolutionDto,
   ScheduleResolveRequestInput,
+  UpdateLocalEventInput,
   UpdateScheduleAssignmentInput,
 } from "@senvori/contracts";
 import { uuidv7 } from "uuidv7";
 import { AuditLogService } from "../../common/audit/audit-log.service";
 import type { RequestContext } from "../../common/context/request-context";
 import { TenantContextService } from "../../common/context/tenant-context.service";
-import { SchedulingRepository, type ScheduleAssignmentRow } from "./scheduling.repository";
+import {
+  type LocalEventRow,
+  SchedulingRepository,
+  type ScheduleAssignmentRow,
+} from "./scheduling.repository";
 import {
   assembleEffectivePlan,
   resolveSchedule,
   type ResolverAssignment,
   type ScheduleResolutionInput,
 } from "./resolver/resolver";
+import {
+  type LocalEventContext,
+  type ResolverLocalEvent,
+  selectLocalEventOverlays,
+} from "./resolver/local-events";
 
 const iso = (d: Date | null | undefined): string => (d ?? new Date()).toISOString();
 
@@ -148,6 +160,117 @@ export class SchedulingService {
     });
   }
 
+  /* -------------------------------------------------------- local events -- */
+
+  async listLocalEvents(
+    ctx: RequestContext,
+  ): Promise<{ items: LocalEventDto[]; nextCursor: null }> {
+    return this.tenantContext.withTenant(async (tx) => {
+      const rows = await this.repo.listLocalEvents(tx, ctx.tenantId);
+      return { items: rows.map((r) => this.toEventDto(r)), nextCursor: null };
+    });
+  }
+
+  async createLocalEvent(
+    ctx: RequestContext,
+    input: CreateLocalEventInput,
+  ): Promise<LocalEventDto> {
+    return this.tenantContext.withTenant(async (tx) => {
+      if (input.assetId && !(await this.repo.assetExists(tx, input.assetId))) {
+        throw new BadRequestException({ code: "ASSET_NOT_FOUND", title: "Unknown asset" });
+      }
+      const row = await this.repo.insertLocalEvent(tx, {
+        id: uuidv7(),
+        tenantId: ctx.tenantId,
+        assetId: input.assetId ?? null,
+        targetType: input.targetType,
+        targetId: input.targetId,
+        kind: input.kind,
+        category: input.category,
+        priority: input.priority,
+        daysOfWeek: input.daysOfWeek,
+        startTimeLocal: input.startTimeLocal,
+        endTimeLocal: input.endTimeLocal,
+        startOffsetMs: input.startOffsetMs,
+        durationMs: input.durationMs,
+        duckingDb: input.duckingDb ?? null,
+        validFrom: input.validFrom ?? null,
+        validUntil: input.validUntil ?? null,
+        active: input.active,
+        createdBy: ctx.userId,
+        updatedBy: ctx.userId,
+      });
+      await this.audit.recordInTx(tx, {
+        action: "scheduling.local_event.created",
+        resourceType: "local_event",
+        resourceId: row.id,
+        after: this.toEventDto(row),
+      });
+      return this.toEventDto(row);
+    });
+  }
+
+  async updateLocalEvent(
+    ctx: RequestContext,
+    id: string,
+    input: UpdateLocalEventInput,
+  ): Promise<LocalEventDto> {
+    return this.tenantContext.withTenant(async (tx) => {
+      const before = await this.repo.findLocalEvent(tx, id);
+      if (!before) {
+        throw new NotFoundException({ code: "EVENT_NOT_FOUND", title: "Local event not found" });
+      }
+      const start = input.startTimeLocal ?? before.startTimeLocal;
+      const end = input.endTimeLocal ?? before.endTimeLocal;
+      if (start >= end) {
+        throw new BadRequestException({
+          code: "INVALID_WINDOW",
+          title: "startTimeLocal must be before endTimeLocal",
+        });
+      }
+      const row = await this.repo.updateLocalEvent(tx, id, {
+        ...(input.priority !== undefined ? { priority: input.priority } : {}),
+        ...(input.daysOfWeek !== undefined ? { daysOfWeek: input.daysOfWeek } : {}),
+        ...(input.startTimeLocal !== undefined ? { startTimeLocal: input.startTimeLocal } : {}),
+        ...(input.endTimeLocal !== undefined ? { endTimeLocal: input.endTimeLocal } : {}),
+        ...(input.startOffsetMs !== undefined ? { startOffsetMs: input.startOffsetMs } : {}),
+        ...(input.durationMs !== undefined ? { durationMs: input.durationMs } : {}),
+        ...(input.duckingDb !== undefined ? { duckingDb: input.duckingDb } : {}),
+        ...(input.validFrom !== undefined ? { validFrom: input.validFrom } : {}),
+        ...(input.validUntil !== undefined ? { validUntil: input.validUntil } : {}),
+        ...(input.active !== undefined ? { active: input.active } : {}),
+        updatedBy: ctx.userId,
+      });
+      if (!row) {
+        throw new NotFoundException({ code: "EVENT_NOT_FOUND", title: "Local event not found" });
+      }
+      await this.audit.recordInTx(tx, {
+        action: "scheduling.local_event.updated",
+        resourceType: "local_event",
+        resourceId: id,
+        before: this.toEventDto(before),
+        after: this.toEventDto(row),
+      });
+      return this.toEventDto(row);
+    });
+  }
+
+  async deleteLocalEvent(ctx: RequestContext, id: string): Promise<void> {
+    return this.tenantContext.withTenant(async (tx) => {
+      const before = await this.repo.findLocalEvent(tx, id);
+      if (!before) {
+        throw new NotFoundException({ code: "EVENT_NOT_FOUND", title: "Local event not found" });
+      }
+      await this.repo.archiveLocalEvent(tx, id);
+      await this.audit.recordInTx(tx, {
+        action: "scheduling.local_event.archived",
+        resourceType: "local_event",
+        resourceId: id,
+        before: this.toEventDto(before),
+      });
+    });
+  }
+
   /* ----------------------------------------------------------- resolve -- */
 
   async resolve(input: ScheduleResolveRequestInput): Promise<ScheduleResolutionDto> {
@@ -174,15 +297,27 @@ export class SchedulingService {
         basePlanHash = await this.repo.currentPlanHash(tx, resolution.selectedProgramId);
       }
 
-      // Overlays (local events / campaigns / emergencies) are Prepared — none in
-      // this phase, so the effective plan derives from the base alone.
+      // Local events (editorial / campaign / emergency) become ordered overlays
+      // on top of the base plan — the effective plan hash changes iff any apply.
+      const eventRows = await this.repo.loadActiveLocalEvents(tx, ctx.tenantId);
+      const selection = selectLocalEventOverlays(eventRows.map(toResolverEvent), {
+        tenantId: ctx.tenantId,
+        unitId: input.unitId,
+        syncGroupId: input.syncGroupId ?? null,
+        groupIds: input.groupIds,
+        localDate: input.localDate,
+        localTime: input.localTime,
+      } satisfies LocalEventContext);
+
       return assembleEffectivePlan({
         unitId: input.unitId,
         localDate: input.localDate,
         timezone: input.timezone,
         resolution,
         basePlanHash,
-        overlays: [],
+        overlays: selection.overlays,
+        emergencyActive: selection.emergencyActive,
+        overlayWarnings: selection.warnings,
       });
     });
   }
@@ -238,4 +373,47 @@ export class SchedulingService {
       updatedAt: iso(row.updatedAt),
     };
   }
+
+  private toEventDto(row: LocalEventRow): LocalEventDto {
+    return {
+      id: row.id,
+      assetId: row.assetId,
+      targetType: row.targetType,
+      targetId: row.targetId,
+      kind: row.kind,
+      category: row.category,
+      priority: row.priority,
+      daysOfWeek: row.daysOfWeek,
+      startTimeLocal: row.startTimeLocal,
+      endTimeLocal: row.endTimeLocal,
+      startOffsetMs: row.startOffsetMs,
+      durationMs: row.durationMs,
+      duckingDb: row.duckingDb,
+      validFrom: row.validFrom,
+      validUntil: row.validUntil,
+      active: row.active,
+      createdAt: iso(row.createdAt),
+      updatedAt: iso(row.updatedAt),
+    };
+  }
 }
+
+/** Map a persisted local-event row to the pure resolver's view. */
+const toResolverEvent = (row: LocalEventRow): ResolverLocalEvent => ({
+  id: row.id,
+  assetId: row.assetId,
+  targetType: row.targetType,
+  targetId: row.targetId,
+  kind: row.kind,
+  category: row.category,
+  priority: row.priority,
+  daysOfWeek: row.daysOfWeek,
+  startTimeLocal: row.startTimeLocal,
+  endTimeLocal: row.endTimeLocal,
+  startOffsetMs: row.startOffsetMs,
+  durationMs: row.durationMs,
+  duckingDb: row.duckingDb,
+  validFrom: row.validFrom,
+  validUntil: row.validUntil,
+  active: row.active,
+});

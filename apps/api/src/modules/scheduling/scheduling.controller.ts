@@ -1,12 +1,17 @@
 import { Body, Controller, Delete, Get, HttpCode, Param, Patch, Post } from "@nestjs/common";
 import {
+  type CreateLocalEventInput,
+  createLocalEventSchema,
   type CreateScheduleAssignmentInput,
   createScheduleAssignmentSchema,
   type EffectivePlanDto,
+  type LocalEventDto,
   type ScheduleAssignmentDto,
   type ScheduleResolutionDto,
   type ScheduleResolveRequestInput,
   scheduleResolveRequestSchema,
+  type UpdateLocalEventInput,
+  updateLocalEventSchema,
   type UpdateScheduleAssignmentInput,
   updateScheduleAssignmentSchema,
 } from "@senvori/contracts";
@@ -62,6 +67,45 @@ export class SchedulingController {
     @Param("id") id: string,
   ): Promise<void> {
     await this.service.deleteAssignment(ctx, id);
+  }
+
+  /* --------------------------------------------------------- local events -- */
+
+  @Get("local-events")
+  @RequirePermission("scheduling:event:read")
+  listLocalEvents(
+    @CurrentContext() ctx: RequestContext,
+  ): Promise<{ items: LocalEventDto[]; nextCursor: string | null }> {
+    return this.service.listLocalEvents(ctx);
+  }
+
+  @Post("local-events")
+  @RequirePermission("scheduling:event:manage")
+  createLocalEvent(
+    @CurrentContext() ctx: RequestContext,
+    @Body(new ZodValidationPipe(createLocalEventSchema)) input: CreateLocalEventInput,
+  ): Promise<LocalEventDto> {
+    return this.service.createLocalEvent(ctx, input);
+  }
+
+  @Patch("local-events/:id")
+  @RequirePermission("scheduling:event:manage")
+  updateLocalEvent(
+    @CurrentContext() ctx: RequestContext,
+    @Param("id") id: string,
+    @Body(new ZodValidationPipe(updateLocalEventSchema)) input: UpdateLocalEventInput,
+  ): Promise<LocalEventDto> {
+    return this.service.updateLocalEvent(ctx, id, input);
+  }
+
+  @Delete("local-events/:id")
+  @RequirePermission("scheduling:event:manage")
+  @HttpCode(204)
+  async deleteLocalEvent(
+    @CurrentContext() ctx: RequestContext,
+    @Param("id") id: string,
+  ): Promise<void> {
+    await this.service.deleteLocalEvent(ctx, id);
   }
 
   /** Resolve the active program for a unit at a local date/time. */

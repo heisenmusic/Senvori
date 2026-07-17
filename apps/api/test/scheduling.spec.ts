@@ -350,3 +350,115 @@ describe("Scheduling — resolution & effective plan", () => {
     await req("DELETE", `/v1/scheduling/assignments/${create.json.id}`, "managerA");
   });
 });
+
+const localEvent = (over: Record<string, unknown> = {}) => ({
+  assetId: null,
+  targetType: "unit",
+  targetId: unitId,
+  kind: "insert",
+  category: "local_event",
+  priority: 0,
+  daysOfWeek: [],
+  startTimeLocal: "08:00",
+  endTimeLocal: "18:00",
+  startOffsetMs: 60_000,
+  durationMs: 30_000,
+  active: true,
+  ...over,
+});
+
+describe("Scheduling — local events", () => {
+  it("a manager creates, lists, updates and archives a local event; all audited", async () => {
+    const create = await req("POST", "/v1/scheduling/local-events", "managerA", localEvent());
+    expect(create.status).toBe(201);
+    const id = create.json.id as string;
+
+    const list = await req("GET", "/v1/scheduling/local-events", "managerA");
+    expect(list.json.items.map((e: { id: string }) => e.id)).toContain(id);
+
+    const patch = await req("PATCH", `/v1/scheduling/local-events/${id}`, "managerA", {
+      priority: 5,
+    });
+    expect(patch.status).toBe(200);
+    expect(patch.json.priority).toBe(5);
+
+    const del = await req("DELETE", `/v1/scheduling/local-events/${id}`, "managerA");
+    expect(del.status).toBe(204);
+
+    const audits = await withTenantContext(seedDb, tenantA, (tx) =>
+      tx.select().from(schema.auditLogEntries).where(eq(schema.auditLogEntries.tenantId, tenantA)),
+    );
+    const actions = audits.map((a) => a.action);
+    expect(actions).toContain("scheduling.local_event.created");
+    expect(actions).toContain("scheduling.local_event.updated");
+    expect(actions).toContain("scheduling.local_event.archived");
+  });
+
+  it("rejects a local event referencing an unknown/foreign asset (400)", async () => {
+    const res = await req(
+      "POST",
+      "/v1/scheduling/local-events",
+      "managerA",
+      localEvent({ assetId: uuidv7() }),
+    );
+    expect(res.status).toBe(400);
+  });
+
+  it("a read-only analyst cannot manage local events (403)", async () => {
+    const res = await req("POST", "/v1/scheduling/local-events", "analystA", localEvent());
+    expect(res.status).toBe(403);
+  });
+
+  it("an in-effect local event overlays the effective plan and shifts the hash", async () => {
+    const asn = await req(
+      "POST",
+      "/v1/scheduling/assignments",
+      "managerA",
+      assignment({ programVersionId: publishedVersionId }),
+    );
+    const bare = await req("POST", "/v1/scheduling/effective-plan", "managerA", resolveBody());
+    expect(bare.json.overlays).toHaveLength(0);
+
+    const ev = await req("POST", "/v1/scheduling/local-events", "managerA", localEvent());
+    const withEvent = await req("POST", "/v1/scheduling/effective-plan", "managerA", resolveBody());
+    expect(withEvent.json.overlays).toHaveLength(1);
+    expect(withEvent.json.overlays[0].sourceReference).toBe(`local_event:${ev.json.id}`);
+    // Same base plan, but the overlay changes the effective hash.
+    expect(withEvent.json.basePlanHash).toBe(bare.json.basePlanHash);
+    expect(withEvent.json.effectivePlanHash).not.toBe(bare.json.effectivePlanHash);
+    // Deterministic across calls.
+    const again = await req("POST", "/v1/scheduling/effective-plan", "managerA", resolveBody());
+    expect(again.json.effectivePlanHash).toBe(withEvent.json.effectivePlanHash);
+
+    await req("DELETE", `/v1/scheduling/local-events/${ev.json.id}`, "managerA");
+    await req("DELETE", `/v1/scheduling/assignments/${asn.json.id}`, "managerA");
+  });
+
+  it("an emergency event marks the effective plan emergencyActive", async () => {
+    const asn = await req(
+      "POST",
+      "/v1/scheduling/assignments",
+      "managerA",
+      assignment({ programVersionId: publishedVersionId }),
+    );
+    const ev = await req(
+      "POST",
+      "/v1/scheduling/local-events",
+      "managerA",
+      localEvent({ category: "emergency", kind: "interrupt", durationMs: 120_000 }),
+    );
+    const plan = await req("POST", "/v1/scheduling/effective-plan", "managerA", resolveBody());
+    expect(plan.json.emergencyActive).toBe(true);
+    expect(plan.json.overlays[0].reasonCode).toBe("emergency_override");
+
+    await req("DELETE", `/v1/scheduling/local-events/${ev.json.id}`, "managerA");
+    await req("DELETE", `/v1/scheduling/assignments/${asn.json.id}`, "managerA");
+  });
+
+  it("does not leak local events across tenants", async () => {
+    const create = await req("POST", "/v1/scheduling/local-events", "managerA", localEvent());
+    const listB = await req("GET", "/v1/scheduling/local-events", "ownerB");
+    expect(listB.json.items).toHaveLength(0);
+    await req("DELETE", `/v1/scheduling/local-events/${create.json.id}`, "managerA");
+  });
+});

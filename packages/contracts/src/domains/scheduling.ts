@@ -73,6 +73,80 @@ export const scheduleAssignmentListSchema = z.object({
   nextCursor: z.string().nullable(),
 });
 
+/* ---------------------------------------------------------- local events -- */
+
+export const localEventKindSchema = z.enum(["insert", "overlay", "interrupt"]);
+export type LocalEventKind = z.infer<typeof localEventKindSchema>;
+
+export const localEventCategorySchema = z.enum(["local_event", "campaign_slot", "emergency"]);
+export type LocalEventCategory = z.infer<typeof localEventCategorySchema>;
+
+export const createLocalEventSchema = z
+  .object({
+    assetId: uuidSchema.nullable().optional(),
+    targetType: scheduleTargetTypeSchema,
+    targetId: z.string().min(1),
+    kind: localEventKindSchema,
+    category: localEventCategorySchema.default("local_event"),
+    priority: z.number().int().min(0).max(1000).default(0),
+    daysOfWeek: z.array(weekday).max(7).default([]),
+    startTimeLocal: localTime.default("00:00"),
+    endTimeLocal: localTime.default("23:59"),
+    startOffsetMs: z.number().int().min(0).default(0),
+    durationMs: z.number().int().min(0).max(86_400_000).default(0),
+    duckingDb: z.number().int().min(-60).max(0).nullable().optional(),
+    validFrom: localDate.nullable().optional(),
+    validUntil: localDate.nullable().optional(),
+    active: z.boolean().default(true),
+  })
+  .refine((o) => o.startTimeLocal < o.endTimeLocal, {
+    message: "startTimeLocal must be before endTimeLocal (no cross-midnight windows in v1)",
+  });
+export type CreateLocalEventInput = z.infer<typeof createLocalEventSchema>;
+
+export const updateLocalEventSchema = z
+  .object({
+    priority: z.number().int().min(0).max(1000).optional(),
+    daysOfWeek: z.array(weekday).max(7).optional(),
+    startTimeLocal: localTime.optional(),
+    endTimeLocal: localTime.optional(),
+    startOffsetMs: z.number().int().min(0).optional(),
+    durationMs: z.number().int().min(0).max(86_400_000).optional(),
+    duckingDb: z.number().int().min(-60).max(0).nullable().optional(),
+    validFrom: localDate.nullable().optional(),
+    validUntil: localDate.nullable().optional(),
+    active: z.boolean().optional(),
+  })
+  .refine((o) => Object.keys(o).length > 0, { message: "at least one field is required" });
+export type UpdateLocalEventInput = z.infer<typeof updateLocalEventSchema>;
+
+export const localEventSchema = z.object({
+  id: uuidSchema,
+  assetId: uuidSchema.nullable(),
+  targetType: scheduleTargetTypeSchema,
+  targetId: z.string(),
+  kind: localEventKindSchema,
+  category: localEventCategorySchema,
+  priority: z.number().int(),
+  daysOfWeek: z.array(weekday),
+  startTimeLocal: z.string(),
+  endTimeLocal: z.string(),
+  startOffsetMs: z.number().int(),
+  durationMs: z.number().int(),
+  duckingDb: z.number().int().nullable(),
+  validFrom: z.string().nullable(),
+  validUntil: z.string().nullable(),
+  active: z.boolean(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
+export type LocalEventDto = z.infer<typeof localEventSchema>;
+
+export const localEventListSchema = z.object({
+  items: z.array(localEventSchema),
+  nextCursor: z.string().nullable(),
+});
+
 /* --------------------------------------------------- resolution & preview -- */
 
 export const scheduleResolveRequestSchema = z.object({
@@ -119,6 +193,7 @@ export const effectivePlanSchema = z.object({
   resolution: scheduleResolutionSchema,
   basePlanHash: z.string().nullable(),
   effectivePlanHash: z.string(),
+  emergencyActive: z.boolean(),
   overlays: z.array(effectiveOverlaySchema),
   warnings: z.array(schedulingWarningSchema),
 });

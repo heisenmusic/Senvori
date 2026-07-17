@@ -241,6 +241,8 @@ export interface EffectivePlan {
   basePlanHash: string | null;
   /** Base + deterministically-ordered overlays. Differs from base iff overlays exist. */
   effectivePlanHash: string;
+  /** True when an emergency overlay is in effect for this unit + local time. */
+  emergencyActive: boolean;
   overlays: EffectiveOverlay[];
   warnings: ScheduleWarning[];
 }
@@ -264,12 +266,17 @@ export const assembleEffectivePlan = (params: {
   resolution: ScheduleResolution;
   basePlanHash: string | null;
   overlays: EffectiveOverlay[];
+  emergencyActive?: boolean;
+  /** Overlay-selection warnings to merge with the resolution's own. */
+  overlayWarnings?: ScheduleWarning[];
 }): EffectivePlan => {
   const overlays = [...params.overlays].sort(overlayOrder);
+  const emergencyActive = params.emergencyActive ?? false;
   const effectivePlanHash = hashPlan({
     basePlanHash: params.basePlanHash,
     selectedAssignmentId: params.resolution.selectedAssignmentId,
     selectedProgramVersionId: params.resolution.selectedProgramVersionId,
+    emergencyActive,
     overlays,
   });
   return {
@@ -279,7 +286,8 @@ export const assembleEffectivePlan = (params: {
     resolution: params.resolution,
     basePlanHash: params.basePlanHash,
     effectivePlanHash,
+    emergencyActive,
     overlays,
-    warnings: params.resolution.warnings,
+    warnings: [...params.resolution.warnings, ...(params.overlayWarnings ?? [])],
   };
 };

@@ -51,6 +51,8 @@ export const PERMISSIONS = [
   // Scheduling Runtime (Sprint 08)
   "scheduling:assignment:read",
   "scheduling:assignment:manage",
+  "scheduling:event:read",
+  "scheduling:event:manage",
   "scheduling:plan:read",
   // Fleet (§3.8) — used by later sprints, catalogued now
   "fleet:device:read",
