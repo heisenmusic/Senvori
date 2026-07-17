@@ -230,7 +230,8 @@
         "rules": "Regras de rotação",
         "scope": "Onde será usada",
         "preview": "Prévia do dia",
-        "versions": "Histórico de versões"
+        "versions": "Histórico de versões",
+        "pairs": "Pares recorrentes"
       }
     },
     "content": {
@@ -274,7 +275,16 @@
       "save": "Salvar regras",
       "cancel": "Cancelar",
       "saved": "Regras atualizadas.",
-      "error": "Não foi possível salvar as regras. Tente novamente."
+      "error": "Não foi possível salvar as regras. Tente novamente.",
+      "memory": "Memória da programação",
+      "lookback": "Histórico considerado (dias)",
+      "lookbackHint": "Quantos dias recentes de programação planejada pesar para variar entre dias. 0 desliga o histórico.",
+      "continuity": "Continuidade entre dias",
+      "continuityHint": "Evita abrir o dia com a faixa que encerrou o dia anterior quando o catálogo permite.",
+      "days": "dias",
+      "on": "Ligada",
+      "off": "Desligada",
+      "historyNote": "O histórico usa planos publicados anteriormente. Histórico planejado não é comprovação de reprodução."
     },
     "scope": {
       "title": "Onde será usada",
@@ -370,6 +380,26 @@
       "identifierLabel": "Identificador",
       "identifierHint": "Referência única desta versão, usada nas próximas etapas de distribuição.",
       "immutable": "Imutável"
+    },
+    "pairs": {
+      "subtitle": "Impeça que duas faixas toquem próximas em toda a conta.",
+      "trackA": "Faixa A",
+      "trackB": "Faixa B",
+      "gap": "Intervalo mínimo",
+      "add": "Adicionar par",
+      "addError": "Não foi possível adicionar este par. Ele pode já existir.",
+      "empty": "Nenhum par configurado ainda.",
+      "status": "Status",
+      "actions": "Ações",
+      "active": "Ativo",
+      "inactive": "Inativo",
+      "disable": "Desativar",
+      "enable": "Ativar",
+      "remove": "Remover",
+      "minutes": "min",
+      "choose": "Escolha uma faixa",
+      "error": "Não foi possível carregar os pares.",
+      "retry": "Tentar novamente"
     }
   }
 }

@@ -72,6 +72,10 @@ export const upsertRotationPolicySchema = z.object({
   fatigueWeightPenalty: z.number().min(0).max(10).nullable().optional(),
   /** Affinity-aware weighting strength in [0,1]; 0/null ⇒ off (Sprint 07). */
   affinityStrength: z.number().min(0).max(1).nullable().optional(),
+  /** Cross-day fatigue look-back, in local days; null ⇒ service default (Sprint 07B). */
+  historyLookbackDays: z.number().int().min(0).max(90).nullable().optional(),
+  /** Carry the previous day's tail across the seam; null ⇒ service default (Sprint 07B). */
+  crossDayContinuity: z.boolean().nullable().optional(),
 });
 export type UpsertRotationPolicyInput = z.infer<typeof upsertRotationPolicySchema>;
 
@@ -82,8 +86,49 @@ export const rotationPolicySchema = z.object({
   minCategoryGapMinutes: z.number().int().nullable(),
   fatigueWeightPenalty: z.number().nullable(),
   affinityStrength: z.number().nullable(),
+  historyLookbackDays: z.number().int().nullable(),
+  crossDayContinuity: z.boolean().nullable(),
 });
 export type RotationPolicyDto = z.infer<typeof rotationPolicySchema>;
+
+/* ------------------------------------------------------- rotation pairs -- */
+
+/** A configured avoid-pair (Sprint 07B · §11) — tenant-wide, bidirectional. */
+export const rotationPairSchema = z.object({
+  id: uuidSchema,
+  assetA: uuidSchema,
+  assetB: uuidSchema,
+  assetATitle: z.string().nullable(),
+  assetBTitle: z.string().nullable(),
+  minGapMinutes: z.number().int(),
+  active: z.boolean(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
+export type RotationPairDto = z.infer<typeof rotationPairSchema>;
+
+export const createRotationPairSchema = z
+  .object({
+    assetA: uuidSchema,
+    assetB: uuidSchema,
+    minGapMinutes: z.number().int().min(1).max(1440).default(60),
+    active: z.boolean().default(true),
+  })
+  .refine((o) => o.assetA !== o.assetB, { message: "a pair needs two different tracks" });
+export type CreateRotationPairInput = z.infer<typeof createRotationPairSchema>;
+
+export const updateRotationPairSchema = z
+  .object({
+    minGapMinutes: z.number().int().min(1).max(1440).optional(),
+    active: z.boolean().optional(),
+  })
+  .refine((o) => Object.keys(o).length > 0, { message: "at least one field is required" });
+export type UpdateRotationPairInput = z.infer<typeof updateRotationPairSchema>;
+
+export const rotationPairListSchema = z.object({
+  items: z.array(rotationPairSchema),
+  nextCursor: z.string().nullable(),
+});
 
 /** Assignment of a program to a scope (maps to `schedules`). */
 export const createAssignmentSchema = z.object({

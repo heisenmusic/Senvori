@@ -5,6 +5,43 @@ versioning is [SemVer](https://semver.org/). Dates are UTC.
 
 ## [Unreleased]
 
+### Added — Historical Programming Runtime (Sprint 07B)
+
+Gives the deterministic engine **operational memory** — the radio no longer
+restarts from zero each day — while keeping the compiler a pure function. Three
+Sprint 07 "Prepared" capabilities become **Complete**; affinity stays Prepared.
+
+- **Planned history (`buildPlannedHistory`, pure):** deterministically re-compiles
+  the program for prior **local dates** (DST-agnostic date math; fatigue OFF ⇒ no
+  recursion) to derive `recentPlays`, recent-artist counts and the previous-day
+  tail. Named `planned_history` (a projection, **not** Proof-of-Play); a
+  `verified_playback_history` provider can slot in later unchanged. `playback_events`
+  has no producer and is deliberately not used.
+- **Cross-day fatigue — Complete.** `recentPlays` now comes from planned history;
+  with a penalty set, heavily-played tracks lose share (proven in a 14-day sim).
+- **Cross-day continuity (`carryOver`) — Complete.** The previous day's tail seeds
+  the seam with a wall-clock gap (0 for 24 h windows, large for partial ones), so
+  a day never opens with yesterday's closing track when the catalog allows.
+- **Paired-track avoidance — Complete.** Migration `0008` `rotation_pairs` (RLS +
+  FORCE, order-normalised unique index, `a<>b` check, audit cols); REST CRUD under
+  `playlists:rotation_pair:*` with transactional audit + `409` on duplicates; SDK
+  methods; a Dashboard "Recurring pairs" editor. Active pairs feed preview + publish.
+- **Config:** `rotation_policies` gains `history_lookback_days` + `cross_day_continuity`
+  (additive; defaults 7 / on). Publish records the history runtime + active pairs in
+  the immutable version context and fingerprint. A Dashboard "Programming memory"
+  panel with honest copy (planned history ≠ proof of playback). i18n pt/en/es.
+- **Docs:** `PROGRAMMING_HISTORY.md`; `PROGRAMMING_ENGINE.md` capability matrix updated.
+
+Closure verification also fixed a determinism defect (active pairs are now loaded
+in a stable order so the published `planHash` never depends on physical row order)
+and added cross-tenant security tests (no pairing another tenant's asset; no
+cross-tenant update/delete) plus DST-boundary and thin-catalog history tests.
+
+Verified: format · lint · typecheck · build green; **195 tests** (API 144 on real
+Postgres — pairs CRUD/RLS/RBAC/audit + cross-tenant, history unit incl. DST, 14-day
+simulation; SDK 26 · Dashboard 25). **Not a release.** Affinity weighting remains
+**Prepared** (no score source); real Proof-of-Play is future work.
+
 ### Added — Intelligent Programming Engine (Sprint 07)
 
 The Sprint 06 compiler grew four deterministic capabilities and is bumped to

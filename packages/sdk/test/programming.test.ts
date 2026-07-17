@@ -183,6 +183,8 @@ describe("ProgrammingClient — content & rules", () => {
       minCategoryGapMinutes: null,
       fatigueWeightPenalty: null,
       affinityStrength: null,
+      historyLookbackDays: null,
+      crossDayContinuity: null,
     };
     const { client, last } = makeClient(() => ({ status: 200, json: policy }));
     const out = await client.programming.getRotationPolicy();
@@ -198,6 +200,8 @@ describe("ProgrammingClient — content & rules", () => {
       minCategoryGapMinutes: 30,
       fatigueWeightPenalty: 0.5,
       affinityStrength: 0.3,
+      historyLookbackDays: 14,
+      crossDayContinuity: true,
     };
     const { client, last } = makeClient(() => ({ status: 200, json: policy }));
     await client.programming.upsertRotationPolicy({
@@ -212,6 +216,53 @@ describe("ProgrammingClient — content & rules", () => {
       minArtistGapMinutes: 20,
       maxPlaysPerDay: 3,
     });
+  });
+});
+
+describe("ProgrammingClient — rotation pairs (Sprint 07B)", () => {
+  it("listRotationPairs GETs the static rotation-pairs route", async () => {
+    const { client, last } = makeClient(() => ({
+      status: 200,
+      json: { items: [], nextCursor: null },
+    }));
+    await client.programming.listRotationPairs();
+    const req = last();
+    expect(req.method).toBe("GET");
+    expect(req.url).toBe("https://api.senvori.test/v1/programs/rotation-pairs");
+  });
+
+  it("createRotationPair POSTs the pair body", async () => {
+    const { client, last } = makeClient(() => ({ status: 201, json: {} }));
+    await client.programming.createRotationPair({
+      assetA: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+      assetB: "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
+      minGapMinutes: 90,
+      active: true,
+    });
+    const req = last();
+    expect(req.method).toBe("POST");
+    expect(req.url).toBe("https://api.senvori.test/v1/programs/rotation-pairs");
+    expect(req.body).toMatchObject({ minGapMinutes: 90, active: true });
+  });
+
+  it("updateRotationPair PATCHes a pair by id", async () => {
+    const { client, last } = makeClient(() => ({ status: 200, json: {} }));
+    await client.programming.updateRotationPair("cccccccc-cccc-cccc-cccc-cccccccccccc", {
+      active: false,
+    });
+    const req = last();
+    expect(req.method).toBe("PATCH");
+    expect(req.url).toBe(
+      "https://api.senvori.test/v1/programs/rotation-pairs/cccccccc-cccc-cccc-cccc-cccccccccccc",
+    );
+    expect(req.body).toEqual({ active: false });
+  });
+
+  it("deleteRotationPair DELETEs a pair and tolerates 204", async () => {
+    const { client, last } = makeClient(() => ({ status: 204 }));
+    const out = await client.programming.deleteRotationPair("dddddddd-dddd-dddd-dddd-dddddddddddd");
+    expect(out).toBeUndefined();
+    expect(last().method).toBe("DELETE");
   });
 });
 

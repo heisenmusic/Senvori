@@ -44,6 +44,9 @@ export const PERMISSIONS = [
   "playlists:program:publish",
   "playlists:program:preview",
   "playlists:program:archive",
+  // Historical Programming Runtime (Sprint 07B)
+  "playlists:rotation_pair:read",
+  "playlists:rotation_pair:manage",
   "scheduling:program:assign",
   // Fleet (§3.8) — used by later sprints, catalogued now
   "fleet:device:read",

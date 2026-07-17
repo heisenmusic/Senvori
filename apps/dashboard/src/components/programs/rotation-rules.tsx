@@ -32,6 +32,8 @@ export const RotationRules = () => {
   const [categoryGap, setCategoryGap] = useState(0);
   const [fatigue, setFatigue] = useState(0);
   const [affinity, setAffinity] = useState(0);
+  const [lookback, setLookback] = useState(7);
+  const [continuity, setContinuity] = useState(true);
 
   // Seed the form from the loaded policy whenever we enter edit mode.
   useEffect(() => {
@@ -42,6 +44,8 @@ export const RotationRules = () => {
       setCategoryGap(query.data.minCategoryGapMinutes ?? 0);
       setFatigue(query.data.fatigueWeightPenalty ?? 0);
       setAffinity(query.data.affinityStrength ?? 0);
+      setLookback(query.data.historyLookbackDays ?? 7);
+      setContinuity(query.data.crossDayContinuity ?? true);
     }
   }, [editing, query.data]);
 
@@ -55,6 +59,8 @@ export const RotationRules = () => {
         minCategoryGapMinutes: categoryGap > 0 ? categoryGap : null,
         fatigueWeightPenalty: fatigue > 0 ? fatigue : null,
         affinityStrength: affinity > 0 ? affinity : null,
+        historyLookbackDays: lookback,
+        crossDayContinuity: continuity,
       }),
     onSuccess: (data) => {
       queryClient.setQueryData(["rotation-policy"], data);
@@ -122,7 +128,20 @@ export const RotationRules = () => {
               {policy.affinityStrength ?? "—"}
             </dd>
           </div>
+          <div>
+            <dt className="text-xs text-muted-foreground">{t("lookback")}</dt>
+            <dd className="text-sm font-medium text-foreground">
+              {policy.historyLookbackDays ?? 7} {t("days")}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-xs text-muted-foreground">{t("continuity")}</dt>
+            <dd className="text-sm font-medium text-foreground">
+              {(policy.crossDayContinuity ?? true) ? t("on") : t("off")}
+            </dd>
+          </div>
         </dl>
+        <p className="text-xs text-muted-foreground">{t("historyNote")}</p>
         <div>
           <Button variant="secondary" size="sm" onClick={() => setEditing(true)}>
             {t("edit")}
@@ -237,6 +256,41 @@ export const RotationRules = () => {
           </p>
         </div>
       </div>
+
+      <fieldset className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <legend className="mb-1 text-sm font-medium text-foreground">{t("memory")}</legend>
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="rr-lookback">{t("lookback")}</Label>
+          <Input
+            id="rr-lookback"
+            type="number"
+            min={0}
+            max={90}
+            value={lookback}
+            onChange={(e) => setLookback(Number(e.target.value))}
+            aria-describedby="rr-lookback-hint"
+          />
+          <p id="rr-lookback-hint" className="text-xs text-muted-foreground">
+            {t("lookbackHint")}
+          </p>
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="rr-continuity">{t("continuity")}</Label>
+          <label className="flex items-center gap-2 text-sm text-foreground">
+            <input
+              id="rr-continuity"
+              type="checkbox"
+              checked={continuity}
+              onChange={(e) => setContinuity(e.target.checked)}
+              aria-describedby="rr-continuity-hint"
+            />
+            {continuity ? t("on") : t("off")}
+          </label>
+          <p id="rr-continuity-hint" className="text-xs text-muted-foreground">
+            {t("continuityHint")}
+          </p>
+        </div>
+      </fieldset>
 
       {mutation.isError ? (
         <p className="text-sm text-danger" role="alert">

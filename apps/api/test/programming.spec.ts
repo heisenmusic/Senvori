@@ -424,8 +424,11 @@ describe("Programming — intelligent engine policy (Sprint 07)", () => {
     const a = await req("POST", `/v1/programs/${id}/preview`, "ownerA", body);
     expect(a.status).toBe(200);
     expect(a.json.compilerVersion).toBe("2.0.0");
+    // Sprint 07B: fatigue is now WIRED — planned history feeds recentPlays, and
+    // with a penalty configured the layer is genuinely active. Affinity has no
+    // source yet (Prepared) and this program has no genres/pairs.
     expect(a.json.stats.engine).toEqual({
-      fatigueApplied: false,
+      fatigueApplied: true,
       affinityApplied: false,
       categoriesApplied: false,
       avoidPairBlocks: 0,
@@ -498,6 +501,132 @@ describe("Programming — intelligent engine policy (Sprint 07)", () => {
       if (prev !== undefined) expect(item.startOffsetMs - prev).toBeGreaterThanOrEqual(8 * 60_000);
       lastByGenre.set(genre, item.startOffsetMs);
     }
+  });
+});
+
+describe("Programming — rotation pairs (Sprint 07B · §11)", () => {
+  it("CRUD + audit: owner creates, updates and removes a pair, all audited", async () => {
+    const create = await req("POST", "/v1/programs/rotation-pairs", "ownerA", {
+      assetA: trackIds[0],
+      assetB: trackIds[1],
+      minGapMinutes: 90,
+      active: true,
+    });
+    expect(create.status).toBe(201);
+    expect(create.json.minGapMinutes).toBe(90);
+    const pairId = create.json.id as string;
+
+    const list = await req("GET", "/v1/programs/rotation-pairs", "ownerA");
+    expect(list.json.items.map((p: { id: string }) => p.id)).toContain(pairId);
+
+    const patch = await req("PATCH", `/v1/programs/rotation-pairs/${pairId}`, "ownerA", {
+      active: false,
+    });
+    expect(patch.status).toBe(200);
+    expect(patch.json.active).toBe(false);
+
+    const del = await req("DELETE", `/v1/programs/rotation-pairs/${pairId}`, "ownerA");
+    expect(del.status).toBe(204);
+
+    const audits = await withTenantContext(seedDb, tenantA, (tx) =>
+      tx.select().from(schema.auditLogEntries).where(eq(schema.auditLogEntries.tenantId, tenantA)),
+    );
+    const actions = audits.map((a) => a.action);
+    expect(actions).toContain("programming.rotation_pair.created");
+    expect(actions).toContain("programming.rotation_pair.updated");
+    expect(actions).toContain("programming.rotation_pair.deleted");
+  });
+
+  it("rejects a duplicate (and its inversion) with 409", async () => {
+    const a = await req("POST", "/v1/programs/rotation-pairs", "ownerA", {
+      assetA: trackIds[2],
+      assetB: trackIds[3],
+    });
+    expect(a.status).toBe(201);
+    // Same pair inverted ⇒ order-normalised ⇒ unique violation.
+    const dup = await req("POST", "/v1/programs/rotation-pairs", "ownerA", {
+      assetA: trackIds[3],
+      assetB: trackIds[2],
+    });
+    expect(dup.status).toBe(409);
+    await req("DELETE", `/v1/programs/rotation-pairs/${a.json.id}`, "ownerA");
+  });
+
+  it("RBAC: a read-only analyst cannot manage pairs", async () => {
+    const res = await req("POST", "/v1/programs/rotation-pairs", "analystA", {
+      assetA: trackIds[0],
+      assetB: trackIds[1],
+    });
+    expect(res.status).toBe(403);
+  });
+
+  it("tenant isolation: another tenant never sees the pair", async () => {
+    const created = await req("POST", "/v1/programs/rotation-pairs", "ownerA", {
+      assetA: trackIds[4],
+      assetB: trackIds[5],
+    });
+    expect(created.status).toBe(201);
+    const listB = await req("GET", "/v1/programs/rotation-pairs", "ownerB");
+    expect(listB.json.items).toHaveLength(0);
+    await req("DELETE", `/v1/programs/rotation-pairs/${created.json.id}`, "ownerA");
+  });
+
+  it("an active pair separates the two tracks in a preview", async () => {
+    const created = await req("POST", "/v1/programs/rotation-pairs", "ownerA", {
+      assetA: trackIds[0],
+      assetB: trackIds[1],
+      minGapMinutes: 45,
+    });
+    expect(created.status).toBe(201);
+    const id = await createProgram("ownerA", "Pairs Programa");
+    await req("PUT", `/v1/programs/${id}/items`, "ownerA", { assetIds: trackIds });
+    const preview = await req("POST", `/v1/programs/${id}/preview`, "ownerA", {
+      timezone: "America/Sao_Paulo",
+      localDate: "2026-06-15",
+      windowStartLocal: "08:00",
+      windowEndLocal: "12:00",
+    });
+    expect(preview.status).toBe(200);
+    const starts = (id0: string) =>
+      (preview.json.items as { assetId: string | null; startOffsetMs: number }[])
+        .filter((i) => i.assetId === id0)
+        .map((i) => i.startOffsetMs);
+    const a = starts(trackIds[0]);
+    const b = starts(trackIds[1]);
+    for (const x of a)
+      for (const y of b) expect(Math.abs(x - y)).toBeGreaterThanOrEqual(45 * 60_000);
+    await req("DELETE", `/v1/programs/rotation-pairs/${created.json.id}`, "ownerA");
+  });
+
+  it("cannot pair another tenant's asset (RLS-scoped validation)", async () => {
+    // A ready track that belongs to tenant B — invisible to tenant A under RLS.
+    const foreign = await seedTrack(tenantB, "Foreign", 180_000);
+    const res = await req("POST", "/v1/programs/rotation-pairs", "ownerA", {
+      assetA: trackIds[0],
+      assetB: foreign,
+    });
+    expect(res.status).toBe(400); // both tracks must be ready tenant tracks
+  });
+
+  it("cannot update or delete another tenant's pair (404, no cross-tenant leak)", async () => {
+    const created = await req("POST", "/v1/programs/rotation-pairs", "ownerA", {
+      assetA: trackIds[2],
+      assetB: trackIds[4],
+    });
+    expect(created.status).toBe(201);
+    const patch = await req("PATCH", `/v1/programs/rotation-pairs/${created.json.id}`, "ownerB", {
+      active: false,
+    });
+    expect(patch.status).toBe(404);
+    const del = await req("DELETE", `/v1/programs/rotation-pairs/${created.json.id}`, "ownerB");
+    expect(del.status).toBe(404);
+    // The owner can still delete it (proves it still exists, untouched).
+    const ownerDel = await req(
+      "DELETE",
+      `/v1/programs/rotation-pairs/${created.json.id}`,
+      "ownerA",
+    );
+    expect(ownerDel.status).toBe(204);
   });
 });
 
