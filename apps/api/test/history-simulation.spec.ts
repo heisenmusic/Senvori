@@ -232,3 +232,16 @@ describe("history-simulation — fatigue (penalty on)", () => {
     expect(plan.warnings.map((w) => w.code)).toContain("window_not_filled");
   });
 });
+
+describe("history-simulation — continuity toggle", () => {
+  it("with continuity OFF, the seam is not enforced and plans stay deterministic", () => {
+    const off = runFortnight(rules(), 7, false);
+    const again = runFortnight(rules(), 7, false);
+    // Deterministic regardless of the toggle.
+    expect(again.map((d) => d.hash)).toEqual(off.map((d) => d.hash));
+    // No carryOver supplied ⇒ the cross-day seam is not enforced. (Turning
+    // continuity back on changes the plans — the seam does real work.)
+    const on = runFortnight(rules(), 7, true);
+    expect(on.map((d) => d.hash)).not.toEqual(off.map((d) => d.hash));
+  });
+});

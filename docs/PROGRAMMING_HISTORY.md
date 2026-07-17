@@ -68,10 +68,12 @@ the Sprint 07 layer, now fed by real history instead of a test fixture.
 
 ## Local dates & DST (§18)
 
-"The previous day" is computed on the **local calendar** (`shiftLocalDate`), never
-by subtracting 24 h from an instant — correct across month/year boundaries and DST.
-Each date's window is then resolved to UTC by the compiler's existing IANA/DST
-logic, so a 23 h or 25 h DST day resolves correctly.
+The runtime is **local calendar-date based**: "the previous day" is a civil-date
+shift (`shiftLocalDate`), never a `−24 h` subtraction from an instant. The
+timezone offset only matters when a date + time is resolved to a UTC instant —
+which the compiler already does per date with the platform IANA database — so a
+23 h or 25 h DST day, a leap day, and month/year boundaries all resolve
+correctly. A change of offset never changes the identity of the civil date.
 
 ## Paired-track avoidance (§11)
 
@@ -82,8 +84,13 @@ Now a full product vertical, not just an engine input:
   `min_gap_minutes`, an `active` flag, audit columns. **RLS + FORCE**, tenant
   isolation, `a <> b` check.
 - **API**: `GET/POST /v1/programs/rotation-pairs`, `PATCH/DELETE .../:pairId`,
-  guarded by `playlists:rotation_pair:read|manage`, transactional audit on every
-  mutation, `409` on duplicates.
+  guarded by two permissions — `playlists:rotation_pair:read` and
+  `playlists:rotation_pair:manage` (create/update/delete). A single `manage`
+  permission (rather than separate `create`/`update`/`delete`) is a deliberate
+  least-surface choice: every role that may create a pair may also edit and remove
+  it, so splitting them would add three grants that always move together. Owner,
+  admin and curator receive both via `playlists:*`. Transactional audit on every
+  mutation; `409` on duplicates.
 - **SDK + Dashboard**: typed client methods and a "Recurring pairs" editor.
 - Active pairs feed the compiler for **preview and publish** (hard constraint,
   counted in `stats.engine.avoidPairBlocks`).
@@ -106,21 +113,51 @@ until they opt in. Fatigue and affinity default off; affinity remains **Prepared
 
 ## Tests
 
-- **`programming-history.spec.ts`** (8) — local-date/DST arithmetic, seam gap,
-  deterministic aggregation, zero look-back, partial-window seam.
-- **`history-simulation.spec.ts`** (8) — a 14-day simulation over the real
+- **`programming-history.spec.ts`** (11) — local calendar-date arithmetic
+  (month/year/leap/DST-boundary shifts), seam gap, deterministic aggregation,
+  zero look-back, partial-window seam, DST-day determinism, single-track and
+  single-artist thin catalogs.
+- **`history-simulation.spec.ts`** (9) — a 14-day simulation over the real
   `buildPlannedHistory` path: per-date determinism, controlled daily variation,
   strict seam (last ≠ first), first-track variety, avoid-pair + category
-  separation, no fallback, fatigue frequency spread, safe termination. Emits
-  fortnight metrics (cross-day overlap, track/artist frequency, first-track
-  repetition, last-to-first collisions, relaxed/fallback days).
-- **`programming.spec.ts`** — real-Postgres pairs CRUD + audit + `409` + RBAC deny
-  - tenant isolation + preview separation.
+  separation, no fallback, fatigue frequency spread, safe termination, and the
+  continuity toggle (off ⇒ seam not enforced, still deterministic). Emits
+  fortnight metrics (see below).
+- **`programming.spec.ts`** — real-Postgres pairs CRUD, transactional audit, `409`
+  duplicates, RBAC denial, tenant isolation (list plus no cross-tenant
+  create/update/delete), and preview separation.
+
+## Metrics interpretation (§17)
+
+The 14-day simulation prints fortnight metrics; read them with the setup in mind
+(a full-day 00:00–24:00 window over a rich catalog):
+
+- **`avgCrossDayOverlapPct` ~99.9%** — this is a **Jaccard of the day's asset
+  _sets_**. With a 24 h window and a catalog that comfortably fits, nearly every
+  track plays every day, so the _set_ overlap is ~100% **by construction** — it is
+  **not** evidence of good variety. The real variety lives in the **order**
+  (distinct `planHash` per day, `firstTrackRepetitions` low, `lastToFirstCollisions`
+  = 0), which the other metrics measure. Narrow the window or the catalog and this
+  number drops. It is kept as a sanity bound (0 < x < 100), not a quality target.
+- **`trackFreq` / `artistFreq` (min–max)** — spread of plays; a wide-but-bounded
+  range under fatigue shows heavy tracks are de-emphasised without starvation.
+- **`firstTrackRepetitions`** — how often a day opens with a repeated first track.
+- **`lastToFirstCollisions`** — days that open with the previous day's closing
+  track; **0** proves the seam. **`relaxedDays` / `fallbackDays`** — rule health.
+
+Metrics use a fixed seed (deterministic PRNG) and the real `buildPlannedHistory`
+path, so they are reproducible.
 
 ## Limitations (honest)
 
-- **No real Proof-of-Play**: history is _planned_, not _verified_.
-- **No Affinity Provider**: affinity weighting stays Prepared.
-- Planned history uses the current program content for every look-back day (a
-  deterministic approximation); per-date "which version was live" needs assignment
-  validity windows — a future refinement.
+- **No real Proof-of-Play**: history is _planned_, not _verified_. `playback_events`
+  has no producer and is deliberately not read.
+- **No Affinity Provider**: affinity weighting stays **Prepared** (no score source,
+  no learning). It is **not** Complete.
+- **Not exact time-travel.** Planned history reconstructs prior days from the
+  **current** program content, rotation rules and pairs. Exact reproduction of a
+  past day will require **temporal versioning of assignments, rotation rules and
+  program versions** (validity windows) — a deliberate future refinement, not a
+  claim of this sprint.
+- **Player and Fleet** remain future dependencies; `verified_playback_history`
+  arrives with them.

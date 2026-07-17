@@ -32,10 +32,15 @@
 > - **Config:** `history_lookback_days` + `cross_day_continuity` (aditivos; padrões 7 / on).
 >   Painel "Memória da programação" no Dashboard, com copy honesta (histórico planejado
 >   ≠ comprovação de reprodução). i18n pt/en/es.
-> - **Verificado:** format · lint · typecheck · build verdes; **189 testes**
->   (API 138 em Postgres real — +5 pares, +8 unit de histórico, +8 simulação de 14 dias;
->   SDK 26 · Dashboard 25). Docs: `PROGRAMMING_HISTORY.md`. **Não é um release.**
->   Afinidade permanece Prepared; Proof-of-Play real é trabalho futuro.
+> - **Verificado:** format · lint · typecheck · build verdes; **195 testes**
+>   (API 144 em Postgres real — pares CRUD/RLS/RBAC/auditoria + cross-tenant, unit de
+>   histórico incl. DST, simulação de 14 dias; SDK 26 · Dashboard 25). Docs:
+>   `PROGRAMMING_HISTORY.md`. **Não é um release.** Afinidade permanece Prepared;
+>   Proof-of-Play real é trabalho futuro.
+> - **Fechamento (revisão automatizada):** corrigido defeito de determinismo (pares
+>   ativos carregados em ordem estável ⇒ `planHash` publicado independe da ordem
+>   física de linhas); +testes cross-tenant, DST e catálogos mínimos. CI #19 verde
+>   no commit base; nova validação após os commits de fechamento.
 >
 > ---
 >

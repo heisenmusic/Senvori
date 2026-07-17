@@ -32,10 +32,15 @@ Sprint 07 "Prepared" capabilities become **Complete**; affinity stays Prepared.
   panel with honest copy (planned history ≠ proof of playback). i18n pt/en/es.
 - **Docs:** `PROGRAMMING_HISTORY.md`; `PROGRAMMING_ENGINE.md` capability matrix updated.
 
-Verified: format · lint · typecheck · build green; **189 tests** (API 138 on real
-Postgres — +5 pairs integration, +8 history unit, +8 14-day simulation; SDK 26 ·
-Dashboard 25). **Not a release.** Affinity weighting remains **Prepared** (no score
-source); real Proof-of-Play is future work.
+Closure verification also fixed a determinism defect (active pairs are now loaded
+in a stable order so the published `planHash` never depends on physical row order)
+and added cross-tenant security tests (no pairing another tenant's asset; no
+cross-tenant update/delete) plus DST-boundary and thin-catalog history tests.
+
+Verified: format · lint · typecheck · build green; **195 tests** (API 144 on real
+Postgres — pairs CRUD/RLS/RBAC/audit + cross-tenant, history unit incl. DST, 14-day
+simulation; SDK 26 · Dashboard 25). **Not a release.** Affinity weighting remains
+**Prepared** (no score source); real Proof-of-Play is future work.
 
 ### Added — Intelligent Programming Engine (Sprint 07)
 

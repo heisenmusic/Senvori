@@ -313,7 +313,11 @@ export class PlaylistsRepository {
     await tx.delete(rotationPairs).where(eq(rotationPairs.id, id));
   }
 
-  /** Active pairs for the compiler — order-normalised ids already stored. */
+  /**
+   * Active pairs for the compiler — order-normalised ids already stored. Ordered
+   * deterministically (a, b) so callers get a stable array: the published
+   * version fingerprint (`planHash`) must not depend on physical row order.
+   */
   async loadActivePairs(tx: TenantTx, tenantId: string): Promise<ActivePair[]> {
     const rows = await tx
       .select({
@@ -322,7 +326,8 @@ export class PlaylistsRepository {
         minGapMinutes: rotationPairs.minGapMinutes,
       })
       .from(rotationPairs)
-      .where(and(eq(rotationPairs.tenantId, tenantId), eq(rotationPairs.active, true)));
+      .where(and(eq(rotationPairs.tenantId, tenantId), eq(rotationPairs.active, true)))
+      .orderBy(asc(rotationPairs.assetA), asc(rotationPairs.assetB));
     return rows;
   }
 

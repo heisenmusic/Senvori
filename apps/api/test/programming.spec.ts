@@ -597,6 +597,37 @@ describe("Programming — rotation pairs (Sprint 07B · §11)", () => {
       for (const y of b) expect(Math.abs(x - y)).toBeGreaterThanOrEqual(45 * 60_000);
     await req("DELETE", `/v1/programs/rotation-pairs/${created.json.id}`, "ownerA");
   });
+
+  it("cannot pair another tenant's asset (RLS-scoped validation)", async () => {
+    // A ready track that belongs to tenant B — invisible to tenant A under RLS.
+    const foreign = await seedTrack(tenantB, "Foreign", 180_000);
+    const res = await req("POST", "/v1/programs/rotation-pairs", "ownerA", {
+      assetA: trackIds[0],
+      assetB: foreign,
+    });
+    expect(res.status).toBe(400); // both tracks must be ready tenant tracks
+  });
+
+  it("cannot update or delete another tenant's pair (404, no cross-tenant leak)", async () => {
+    const created = await req("POST", "/v1/programs/rotation-pairs", "ownerA", {
+      assetA: trackIds[2],
+      assetB: trackIds[4],
+    });
+    expect(created.status).toBe(201);
+    const patch = await req("PATCH", `/v1/programs/rotation-pairs/${created.json.id}`, "ownerB", {
+      active: false,
+    });
+    expect(patch.status).toBe(404);
+    const del = await req("DELETE", `/v1/programs/rotation-pairs/${created.json.id}`, "ownerB");
+    expect(del.status).toBe(404);
+    // The owner can still delete it (proves it still exists, untouched).
+    const ownerDel = await req(
+      "DELETE",
+      `/v1/programs/rotation-pairs/${created.json.id}`,
+      "ownerA",
+    );
+    expect(ownerDel.status).toBe(204);
+  });
 });
 
 describe("Programming — end-to-end flow (§26)", () => {

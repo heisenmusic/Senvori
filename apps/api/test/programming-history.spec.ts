@@ -15,8 +15,10 @@ import {
 
 /**
  * Historical Programming Runtime — pure unit tests (Sprint 07B · §19.1). Prove
- * local-date arithmetic (DST-agnostic), the seam-gap model, and deterministic
- * planned-history aggregation with no clock and no DB.
+ * local calendar-date arithmetic (the "previous day" is a civil-date shift; the
+ * timezone only matters when a date is resolved to a UTC instant, which the
+ * compiler handles), the seam-gap model, and deterministic planned-history
+ * aggregation with no clock and no DB.
  */
 
 const min = (n: number): number => n * 60_000;
@@ -54,7 +56,7 @@ const rules: RotationRules = {
 
 const noFallback: FallbackPolicy = { safety: [], allowSilence: false };
 
-describe("history — local date arithmetic (DST-agnostic)", () => {
+describe("history — local calendar-date arithmetic", () => {
   it("shifts calendar dates across month and year boundaries", () => {
     expect(shiftLocalDate("2026-03-01", -1)).toBe("2026-02-28");
     expect(shiftLocalDate("2026-01-01", -1)).toBe("2025-12-31");
@@ -152,5 +154,77 @@ describe("history — planned aggregation", () => {
     });
     // Partial window ⇒ the seam gap (~1200 min) dominates, so nothing blocks.
     expect(h.previousWindowTail[0]?.minutesBeforeStart).toBeGreaterThan(1000);
+  });
+});
+
+describe("history — DST boundary (New York spring-forward)", () => {
+  it("is deterministic across the 23-hour DST day", () => {
+    // Target 2026-03-09 (day after NY springs forward on 2026-03-08). The
+    // look-back includes the 23-hour day; per-date UTC resolution is the
+    // compiler's job, date math is calendar-only.
+    const cat = catalog(40);
+    const args = {
+      base: base({ timezone: "America/New_York" }),
+      targetLocalDate: "2026-03-09",
+      lookbackDays: 5,
+      candidates: cat,
+      historyRules: rules,
+      fallback: noFallback,
+      tailSize: 8,
+    } as const;
+    const a = buildPlannedHistory({ ...args });
+    const b = buildPlannedHistory({ ...args });
+    expect(a).toEqual(b);
+    expect(a.historyFromLocalDate).toBe("2026-03-04");
+    expect(a.historyToLocalDate).toBe("2026-03-08"); // the DST day
+    expect(Object.values(a.recentTrackPlays).reduce((s, n) => s + n, 0)).toBeGreaterThan(0);
+  });
+});
+
+describe("history — thin catalogs terminate safely", () => {
+  it("aggregates and produces a tail with a single track (relaxes, never loops)", () => {
+    const one: CandidateTrack[] = [
+      {
+        assetId: "solo",
+        title: "Solo",
+        artist: "a",
+        durationMs: min(3),
+        source: "base",
+        weight: 1,
+      },
+    ];
+    const h = buildPlannedHistory({
+      base: base(),
+      targetLocalDate: "2026-06-15",
+      lookbackDays: 3,
+      candidates: one,
+      historyRules: { ...rules, minTrackGapMinutes: 30 }, // relaxable, so it fills
+      fallback: noFallback,
+      tailSize: 4,
+    });
+    expect(h.recentTrackPlays.solo).toBeGreaterThan(0);
+    expect(h.previousWindowTail.every((t) => t.assetId === "solo")).toBe(true);
+  });
+
+  it("aggregates recent-artist plays when the catalog is a single artist", () => {
+    const sameArtist: CandidateTrack[] = Array.from({ length: 12 }, (_, i) => ({
+      assetId: `s${i}`,
+      title: `S${i}`,
+      artist: "one-band",
+      durationMs: min(3),
+      source: "base",
+      weight: 1,
+    }));
+    const h = buildPlannedHistory({
+      base: base(),
+      targetLocalDate: "2026-06-15",
+      lookbackDays: 4,
+      candidates: sameArtist,
+      historyRules: { ...rules, minArtistGapMinutes: 0 },
+      fallback: noFallback,
+      tailSize: 4,
+    });
+    expect(Object.keys(h.recentArtistPlays)).toEqual(["one-band"]);
+    expect(h.recentArtistPlays["one-band"]).toBeGreaterThan(0);
   });
 });
