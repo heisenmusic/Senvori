@@ -1,5 +1,49 @@
 # SENVORI 2.0 — PROJECT STATUS REPORT
 
+> ## Atualização — Intelligent Programming Engine (Sprint 07)
+>
+> O compilador determinístico ganhou **quatro capacidades**, opcionais e sem
+> efeito por padrão, e passou para a versão **2.0.0**. Ele continua uma **função
+> pura** (sem DB/HTTP/relógio/aleatoriedade): não há aprendizado — qualquer sinal
+> é calculado a montante e apenas _aplicado_ aqui; a prova de reprodutibilidade
+> (mesmos insumos ⇒ mesmo `planHash`) permanece intacta. Branch
+> `claude/senvori-intelligent-programming-engine`.
+>
+> **Escopo honesto (auditoria de completude):** apenas _categorias de rotação
+> avançadas_ está ligada de ponta a ponta. As outras três são de nível de motor e
+> ficam **Prepared** — o motor (e, para duas, um botão de política persistido)
+> existe, mas o sinal/superfície de produção **não existe ainda** e vai para a
+> **Sprint 07B**. Matriz completa em `docs/PROGRAMMING_ENGINE.md`.
+>
+> | Capacidade                       | Motor | Persist.    | API | SDK | Dashboard | E2E | Status               |
+> | -------------------------------- | ----- | ----------- | --- | --- | --------- | --- | -------------------- |
+> | Categorias de rotação avançadas  | ✅    | ✅          | ✅  | ✅  | ✅        | ✅  | **Complete**         |
+> | Fadiga entre dias                | ✅    | ⚠️ só botão | ⚠️  | ⚠️  | ⚠️        | ❌  | **Prepared**         |
+> | Ponderação por afinidade         | ✅    | ⚠️ só botão | ⚠️  | ⚠️  | ⚠️        | ❌  | **Prepared**         |
+> | Evitar pares                     | ✅    | ❌          | ❌  | ❌  | ❌        | ❌  | **Prepared (motor)** |
+> | Costura entre dias (`carryOver`) | ✅    | ❌          | ❌  | ❌  | ❌        | ❌  | **Prepared (motor)** |
+>
+> - **Categorias avançadas — Complete.** Intervalo por categoria (base + overrides),
+>   relaxável, de `tracks.genres` → migração `0007` → repository → service →
+>   contracts → SDK → Dashboard → compilador, com **E2E em Postgres real**.
+> - **Fadiga entre dias — Prepared.** Motor + botão `fatigueWeightPenalty`
+>   (persistido, editável). O sinal `recentPlays` **não tem fonte** (nada popula
+>   `playback_events`; preview/publish não consultam histórico) ⇒ inerte em
+>   produção. Comprovada só em **simulação** de 7 dias.
+> - **Ponderação por afinidade — Prepared** (renomeada de "personalização
+>   aprendida"; **não há aprendizado**). Motor + botão `affinityStrength`; o score
+>   `affinity` **não tem fonte** ⇒ inerte em produção.
+> - **Evitar pares — Prepared (só motor).** `avoidPairs` são restrição rígida no
+>   compilador, sem coluna/contract/endpoint/SDK/Dashboard/RLS/RBAC/auditoria.
+> - **Costura entre dias (`carryOver`) — Prepared (primitiva de motor).** Semeia a
+>   cauda do dia anterior; o service ainda não a fornece.
+> - **Verificado:** format · lint · typecheck · build verdes; **161 testes**
+>   (API 117 em Postgres real — +12 unit do motor, +10 simulação entre dias,
+>   +2 round-trip da política/E2E de categorias; SDK 22 · Dashboard 22).
+>   Docs: `PROGRAMMING_ENGINE.md` (matriz + plano 07B). **Não é um release.**
+>
+> ---
+>
 > ## Atualização — Programming Foundation completa: SDK + Dashboard + E2E (Sprint 06 · F5–F7)
 >
 > A fundação de programação (F1–F4: compilador determinístico, migração `0006`,

@@ -390,6 +390,117 @@ describe("Programming — published version surfacing", () => {
   });
 });
 
+describe("Programming — intelligent engine policy (Sprint 07)", () => {
+  it("round-trips the engine knobs and keeps preview deterministic + engine-aware", async () => {
+    const put = await req("PUT", "/v1/programs/rotation-policy", "ownerA", {
+      minTrackGapMinutes: 15,
+      minArtistGapMinutes: 8,
+      maxPlaysPerDay: 5,
+      minCategoryGapMinutes: 25,
+      fatigueWeightPenalty: 0.5,
+      affinityStrength: 0.4,
+    });
+    expect(put.status).toBe(200);
+    expect(put.json.minCategoryGapMinutes).toBe(25);
+    expect(put.json.fatigueWeightPenalty).toBe(0.5);
+    expect(put.json.affinityStrength).toBe(0.4);
+
+    const got = await req("GET", "/v1/programs/rotation-policy", "ownerA");
+    expect(got.status).toBe(200);
+    expect(got.json.minCategoryGapMinutes).toBe(25);
+    expect(got.json.fatigueWeightPenalty).toBe(0.5);
+    expect(got.json.affinityStrength).toBe(0.4);
+
+    // Preview with the engine active: the plan carries the engine stats block
+    // and stays deterministic (same input ⇒ same hash) — v2.0.0 compiler.
+    const id = await createProgram("ownerA", "Engine Programa");
+    await req("PUT", `/v1/programs/${id}/items`, "ownerA", { assetIds: trackIds });
+    const body = {
+      timezone: "America/Sao_Paulo",
+      localDate: "2026-06-15",
+      windowStartLocal: "08:00",
+      windowEndLocal: "10:00",
+    };
+    const a = await req("POST", `/v1/programs/${id}/preview`, "ownerA", body);
+    expect(a.status).toBe(200);
+    expect(a.json.compilerVersion).toBe("2.0.0");
+    expect(a.json.stats.engine).toEqual({
+      fatigueApplied: false,
+      affinityApplied: false,
+      categoriesApplied: false,
+      avoidPairBlocks: 0,
+    });
+    const b = await req("POST", `/v1/programs/${id}/preview`, "ownerA", body);
+    expect(b.json.planHash).toBe(a.json.planHash);
+  });
+
+  it("wires Library genres into the category gap end-to-end (categoriesApplied)", async () => {
+    // Seed a mixed catalog (4 genres × 5 tracks) so genres can interleave and
+    // the category gap holds without being relaxed. Proves DB genres →
+    // repository → service → compiler, i.e. advanced categories end-to-end.
+    const genres = ["rock", "pop", "jazz", "mpb"];
+    const byGenre = new Map<string, string[]>();
+    const allIds: string[] = [];
+    for (const genre of genres) {
+      const ids: string[] = [];
+      for (let i = 0; i < 5; i++) {
+        const gid = uuidv7();
+        await withTenantContext(seedDb, tenantA, async (tx) => {
+          await tx.insert(schema.assets).values({
+            id: gid,
+            tenantId: tenantA,
+            type: "track",
+            status: "ready",
+            origin: "tenant_upload",
+            language: "pt-BR",
+            originCountry: "BR",
+            title: `${genre} ${gid.slice(0, 6)}`,
+            durationMs: 180_000,
+          });
+          await tx
+            .insert(schema.tracks)
+            .values({ assetId: gid, tenantId: tenantA, artist: `${genre}-${i}`, genres: [genre] });
+        });
+        ids.push(gid);
+        allIds.push(gid);
+      }
+      byGenre.set(genre, ids);
+    }
+
+    await req("PUT", "/v1/programs/rotation-policy", "ownerA", {
+      minTrackGapMinutes: 1,
+      minArtistGapMinutes: 1,
+      minCategoryGapMinutes: 8,
+    });
+
+    const id = await createProgram("ownerA", "Mixed Programa");
+    await req("PUT", `/v1/programs/${id}/items`, "ownerA", { assetIds: allIds });
+    const preview = await req("POST", `/v1/programs/${id}/preview`, "ownerA", {
+      timezone: "America/Sao_Paulo",
+      localDate: "2026-06-15",
+      windowStartLocal: "08:00",
+      windowEndLocal: "10:00",
+    });
+    expect(preview.status).toBe(200);
+    expect(preview.json.stats.engine.categoriesApplied).toBe(true);
+    // The catalog is rich enough that the gap holds without relaxation.
+    expect(preview.json.stats.relaxedRules).not.toContain("category_gap");
+
+    // Within each genre, consecutive plays are ≥ 8 min apart.
+    const genreOf = new Map<string, string>();
+    for (const [genre, ids] of byGenre) for (const gid of ids) genreOf.set(gid, genre);
+    const lastByGenre = new Map<string, number>();
+    for (const item of preview.json.items as { assetId: string | null; startOffsetMs: number }[]) {
+      if (item.assetId === null) continue;
+      const genre = genreOf.get(item.assetId);
+      if (genre === undefined) continue;
+      const prev = lastByGenre.get(genre);
+      if (prev !== undefined) expect(item.startOffsetMs - prev).toBeGreaterThanOrEqual(8 * 60_000);
+      lastByGenre.set(genre, item.startOffsetMs);
+    }
+  });
+});
+
 describe("Programming — end-to-end flow (§26)", () => {
   it("create → content → rules → assign(unit) → preview → publish → immutability → history → audit → re-preview(same hash)", async () => {
     // A real scope: a brand + unit in tenant A (RLS-scoped seed).

@@ -1,14 +1,22 @@
 /**
- * Programming compiler — pure types (Sprint 06 · §17).
+ * Programming compiler — pure types (Sprint 06 · §17; Sprint 07 · §29).
  *
  * The compiler is a pure function: (context, candidates, rules, fallback) → plan.
  * It never touches the database, HTTP, the clock, or a random source; all
  * variability comes from the derived seed. This is what makes preview,
  * auditability and future offline/sync work (ADR-06-02).
+ *
+ * Sprint 07 (Intelligent Programming Engine) adds four deterministic layers on
+ * top of the Sprint 06 foundation — cross-day fatigue, advanced rotation
+ * categories, paired-track avoidance and affinity-aware weighting. Every one is
+ * optional and off by default: absent its inputs, the engine is a pure superset
+ * of v1 behaviour. The compiler never learns — any signal (`recentPlays`,
+ * `affinity`) is computed *outside* and passed in, so the function stays pure
+ * and reproducible.
  */
 
 /** Bumped whenever the algorithm changes in a way that could alter output. */
-export const COMPILER_VERSION = "1.0.0";
+export const COMPILER_VERSION = "2.0.0";
 
 /** A track already loaded and pre-filtered by the caller (no DB in the algorithm). */
 export interface CandidateTrack {
@@ -21,6 +29,63 @@ export interface CandidateTrack {
   source: string;
   /** Relative weight/priority of its source (higher = more likely). Must be > 0. */
   weight: number;
+  /**
+   * Rotation categories (e.g. genres/energy tags) this track belongs to.
+   * Two tracks that share any category are separated by the category gap
+   * (Sprint 07 · advanced rotation categories). Omitted ⇒ no category rules.
+   */
+  categories?: string[];
+  /**
+   * Plays of this asset over the caller's recent cross-day look-back window.
+   * Higher ⇒ more fatigued ⇒ lower effective weight (Sprint 07 · cross-day
+   * fatigue). The caller supplies the count from play history; the compiler
+   * only applies a deterministic penalty. Omitted/0 ⇒ no fatigue.
+   */
+  recentPlays?: number;
+  /**
+   * Affinity score in [0, 1] for the target audience/daypart (0.5 = neutral),
+   * supplied by the caller. Modulates effective weight when affinity weighting
+   * is on (Sprint 07 · affinity-aware deterministic weighting). The compiler
+   * does NOT learn or compute it — it applies the given score deterministically.
+   * Omitted ⇒ neutral (0.5).
+   */
+  affinity?: number;
+}
+
+/** A pair of assets that should not play close together (Sprint 07). */
+export interface AvoidPair {
+  a: string;
+  b: string;
+  /** Minimum minutes that must separate the two assets. */
+  minGapMinutes: number;
+}
+
+/** An item that played just before this window — seeds the cross-day seam. */
+export interface CarryOverItem {
+  assetId: string | null;
+  artist: string | null;
+  categories?: string[];
+  /** How many minutes before window start this item *started* (≥ 0). */
+  minutesBeforeStart: number;
+}
+
+/** Cross-day fatigue tuning (Sprint 07). */
+export interface FatiguePolicy {
+  /**
+   * Effective weight is divided by `1 + weightPenalty * recentPlays`. `0`
+   * disables fatigue; larger values push variety across days more aggressively.
+   */
+  weightPenalty: number;
+}
+
+/** Affinity-aware weighting tuning (Sprint 07). Not learning — pure weighting. */
+export interface AffinityWeightingPolicy {
+  /**
+   * Effective weight is multiplied by `1 + strength * (2 * affinity - 1)` in
+   * `[0, 1]`. `0` disables the layer (all affinities neutral); `1` lets a
+   * fully-preferred track weigh double and a fully-rejected one weigh ~zero.
+   */
+  strength: number;
 }
 
 /** Anti-repetition rules (maps to `rotation_policies`) + which may be relaxed. */
@@ -28,8 +93,21 @@ export interface RotationRules {
   minTrackGapMinutes: number;
   minArtistGapMinutes: number;
   maxPlaysPerTrack?: number | null;
+  /**
+   * Minimum minutes between two tracks that share a category (Sprint 07).
+   * `0`/omitted ⇒ category rules off. Per-category overrides via `categoryGaps`.
+   */
+  minCategoryGapMinutes?: number;
+  /** Per-category gap overrides (minutes); falls back to `minCategoryGapMinutes`. */
+  categoryGaps?: Record<string, number>;
+  /** Pairs of assets that must not play within their `minGapMinutes` (Sprint 07). */
+  avoidPairs?: AvoidPair[];
+  /** Cross-day fatigue policy (Sprint 07). Omitted ⇒ off. */
+  fatigue?: FatiguePolicy;
+  /** Affinity-aware weighting policy (Sprint 07). Omitted ⇒ off. */
+  affinityWeighting?: AffinityWeightingPolicy;
   /** Rules the compiler may relax to fill the window when the catalog is thin. */
-  relaxable: { trackGap: boolean; artistGap: boolean };
+  relaxable: { trackGap: boolean; artistGap: boolean; categoryGap?: boolean };
 }
 
 /** Everything that determines a plan. Same context ⇒ same plan (ADR-06-02). */
@@ -48,6 +126,14 @@ export interface CompilationContext {
   windowStartLocal: string;
   windowEndLocal: string;
   compilerVersion: string;
+  /**
+   * The tail of the *previous* window (Sprint 07 · cross-day seam). Seeded into
+   * the placement history at negative offsets so track/artist/category/pair
+   * gaps span the day boundary — e.g. the last track of yesterday will not open
+   * today when the track gap forbids it. Omitted ⇒ no cross-day continuity.
+   * Purely an engine input; the caller supplies the prior tail.
+   */
+  carryOver?: CarryOverItem[];
 }
 
 /** Behaviour when nothing else fits (ADR-06-07). */
@@ -63,6 +149,7 @@ export type WarningCode =
   | "insufficient_catalog"
   | "track_gap_relaxed"
   | "artist_gap_relaxed"
+  | "category_gap_relaxed"
   | "fallback_used"
   | "window_not_filled";
 
@@ -101,6 +188,17 @@ export interface ExecutionPlan {
     itemCount: number;
     relaxedRules: string[];
     fallbackCount: number;
+    /** Which intelligence layers actually influenced this plan (Sprint 07). */
+    engine: {
+      /** Fatigue penalty reduced at least one candidate's effective weight. */
+      fatigueApplied: boolean;
+      /** Affinity weighting moved at least one candidate's effective weight. */
+      affinityApplied: boolean;
+      /** Category gaps were enforced (rules configured and categories present). */
+      categoriesApplied: boolean;
+      /** How many times an avoid-pair blocked an otherwise-eligible candidate. */
+      avoidPairBlocks: number;
+    };
   };
 }
 

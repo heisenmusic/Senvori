@@ -34,6 +34,8 @@ export interface CandidateRow {
   title: string;
   durationMs: number | null;
   artist: string | null;
+  /** Rotation categories from `tracks.genres` (Sprint 07 · engine). */
+  genres: string[];
 }
 
 /**
@@ -143,6 +145,7 @@ export class PlaylistsRepository {
         title: assets.title,
         durationMs: assets.durationMs,
         artist: tracks.artist,
+        genres: tracks.genres,
         status: assets.status,
         type: assets.type,
         position: playlistItems.position,
@@ -159,6 +162,7 @@ export class PlaylistsRepository {
         title: r.title,
         durationMs: r.durationMs,
         artist: r.artist,
+        genres: r.genres ?? [],
       }));
   }
 
@@ -171,6 +175,7 @@ export class PlaylistsRepository {
         title: assets.title,
         durationMs: assets.durationMs,
         artist: tracks.artist,
+        genres: tracks.genres,
         status: assets.status,
         type: assets.type,
       })
@@ -187,6 +192,7 @@ export class PlaylistsRepository {
           title: r.title,
           durationMs: r.durationMs,
           artist: r.artist,
+          genres: r.genres ?? [],
         });
       }
     }
@@ -216,6 +222,9 @@ export class PlaylistsRepository {
           minTrackGapMinutes: values.minTrackGapMinutes,
           minArtistGapMinutes: values.minArtistGapMinutes,
           maxPlaysPerDay: values.maxPlaysPerDay ?? null,
+          minCategoryGapMinutes: values.minCategoryGapMinutes ?? null,
+          fatigueWeightPenalty: values.fatigueWeightPenalty ?? null,
+          affinityStrength: values.affinityStrength ?? null,
           updatedAt: new Date(),
         },
       })

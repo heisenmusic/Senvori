@@ -5,6 +5,49 @@ versioning is [SemVer](https://semver.org/). Dates are UTC.
 
 ## [Unreleased]
 
+### Added — Intelligent Programming Engine (Sprint 07)
+
+The Sprint 06 compiler grew four deterministic capabilities and is bumped to
+**2.0.0**. It stays a pure function (no DB/HTTP/clock/random), so the
+reproducibility proof (same inputs ⇒ same `planHash`) is untouched. **Honest
+scope:** only *advanced rotation categories* is wired end-to-end; the other three
+are engine-level and **Prepared** (no production signal/surface yet), deferred to
+**Sprint 07B**. The compiler never learns — any signal is computed upstream and
+passed in. See `docs/PROGRAMMING_ENGINE.md` for the capability matrix.
+
+- **Advanced rotation categories — Complete.** A category gap (base + per-category
+  overrides) keeps tracks sharing a genre apart; relaxable, with a
+  `category_gap_relaxed` warning. Wired `tracks.genres` (DB) → migration →
+  repository → service → contracts → SDK → Dashboard → compiler, with a
+  real-Postgres E2E test. New relaxation order: strict → artist → category →
+  track → fallback.
+- **Cross-day fatigue — Prepared.** Engine + `fatigueWeightPenalty` knob (persisted,
+  editable end-to-end). The per-track `recentPlays` **signal has no source** —
+  nothing populates `playback_events`, preview/publish don't query history — so it
+  is inert in production. Proven only in simulation.
+- **Affinity-aware deterministic weighting — Prepared** (renamed from "learned
+  personalization"; there is **no learning**). Engine + `affinityStrength` knob.
+  The per-track `affinity` **score has no source**, so inert in production.
+- **Paired-track avoidance — Prepared (engine-only).** `avoidPairs` are a hard
+  constraint counted in `stats.engine.avoidPairBlocks`, but exist **only** in the
+  compiler: no column, contract, endpoint, SDK, Dashboard, or RBAC/RLS/audit.
+- **Cross-day seam (`carryOver`) — Prepared (engine primitive).** Seeds the prior
+  window's tail so gaps span the day boundary; not yet supplied by the service.
+- **Explainability:** per-item reasons gain engine bits; the plan reports a
+  `stats.engine` block (`fatigueApplied`, `affinityApplied`, `categoriesApplied`,
+  `avoidPairBlocks`) that flags a layer active only when its signal is present.
+- **Persistence & surface:** migration `0007_programming_engine_policy` (additive,
+  nullable) adds `min_category_gap_minutes`, `fatigue_weight_penalty`,
+  `affinity_strength` to `rotation_policies`; contracts, SDK types and the
+  Dashboard rotation-rules editor (pt-BR/en-US/es-ES) carry the three knobs.
+- **Docs:** `PROGRAMMING_ENGINE.md` (capability matrix + 07B plan);
+  `PROGRAMMING_COMPILER.md` cross-reference.
+
+Verified: format · lint · typecheck · build green; **161 tests** (API 117 on real
+Postgres — +12 engine unit, +10 cross-day simulation, +2 policy/categories E2E;
+SDK 22 · Dashboard 22). **Not a release.** Fatigue, affinity weighting and
+paired-track avoidance remain Prepared → **Sprint 07B**.
+
 ### Added — Programming foundation (Sprint 06: F1–F7)
 
 - **Deterministic compiler** (`apps/api/src/modules/playlists/compiler/`, pure): seed +
@@ -34,9 +77,9 @@ versioning is [SemVer](https://semver.org/). Dates are UTC.
   audit.
 
 Verified: lint · format · typecheck · build green; **137 tests** (API 93 on real
-Postgres · SDK 22 · Dashboard 22). **Not a release.** Deferred to the next sprint
-(Intelligent Programming Engine): cross-day fatigue, advanced rotation categories,
-paired-track avoidance, learned/AI personalization.
+Postgres · SDK 22 · Dashboard 22). **Not a release.** The deferred items
+(cross-day fatigue, advanced rotation categories, paired-track avoidance,
+learned/AI personalization) are delivered in Sprint 07 above.
 
 ## [0.1.0] — 2026-07-16
 

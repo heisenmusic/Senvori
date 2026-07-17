@@ -29,6 +29,9 @@ export const RotationRules = () => {
   const [track, setTrack] = useState(0);
   const [artist, setArtist] = useState(0);
   const [maxPlays, setMaxPlays] = useState<string>("");
+  const [categoryGap, setCategoryGap] = useState(0);
+  const [fatigue, setFatigue] = useState(0);
+  const [affinity, setAffinity] = useState(0);
 
   // Seed the form from the loaded policy whenever we enter edit mode.
   useEffect(() => {
@@ -36,6 +39,9 @@ export const RotationRules = () => {
       setTrack(query.data.minTrackGapMinutes);
       setArtist(query.data.minArtistGapMinutes);
       setMaxPlays(query.data.maxPlaysPerDay?.toString() ?? "");
+      setCategoryGap(query.data.minCategoryGapMinutes ?? 0);
+      setFatigue(query.data.fatigueWeightPenalty ?? 0);
+      setAffinity(query.data.affinityStrength ?? 0);
     }
   }, [editing, query.data]);
 
@@ -45,6 +51,10 @@ export const RotationRules = () => {
         minTrackGapMinutes: track,
         minArtistGapMinutes: artist,
         maxPlaysPerDay: maxPlays.trim() === "" ? null : Number(maxPlays),
+        // 0 ⇒ layer off; sent as null so the policy stores "disabled" cleanly.
+        minCategoryGapMinutes: categoryGap > 0 ? categoryGap : null,
+        fatigueWeightPenalty: fatigue > 0 ? fatigue : null,
+        affinityStrength: affinity > 0 ? affinity : null,
       }),
     onSuccess: (data) => {
       queryClient.setQueryData(["rotation-policy"], data);
@@ -91,6 +101,26 @@ export const RotationRules = () => {
           <div>
             <dt className="text-xs text-muted-foreground">{t("maxPlays")}</dt>
             <dd className="text-sm font-medium text-foreground">{policy.maxPlaysPerDay ?? "—"}</dd>
+          </div>
+          <div>
+            <dt className="text-xs text-muted-foreground">{t("categoryGap")}</dt>
+            <dd className="text-sm font-medium text-foreground">
+              {policy.minCategoryGapMinutes
+                ? `${policy.minCategoryGapMinutes} ${t("minutes")}`
+                : "—"}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-xs text-muted-foreground">{t("fatigue")}</dt>
+            <dd className="text-sm font-medium text-foreground">
+              {policy.fatigueWeightPenalty ?? "—"}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-xs text-muted-foreground">{t("affinity")}</dt>
+            <dd className="text-sm font-medium text-foreground">
+              {policy.affinityStrength ?? "—"}
+            </dd>
           </div>
         </dl>
         <div>
@@ -154,6 +184,56 @@ export const RotationRules = () => {
           />
           <p id="rr-max-hint" className="text-xs text-muted-foreground">
             {t("maxPlaysHint")}
+          </p>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="rr-category">{t("categoryGap")}</Label>
+          <Input
+            id="rr-category"
+            type="number"
+            min={0}
+            max={1440}
+            value={categoryGap}
+            onChange={(e) => setCategoryGap(Number(e.target.value))}
+            aria-describedby="rr-category-hint"
+          />
+          <p id="rr-category-hint" className="text-xs text-muted-foreground">
+            {t("categoryGapHint")}
+          </p>
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="rr-fatigue">{t("fatigue")}</Label>
+          <Input
+            id="rr-fatigue"
+            type="number"
+            min={0}
+            max={10}
+            step={0.1}
+            value={fatigue}
+            onChange={(e) => setFatigue(Number(e.target.value))}
+            aria-describedby="rr-fatigue-hint"
+          />
+          <p id="rr-fatigue-hint" className="text-xs text-muted-foreground">
+            {t("fatigueHint")}
+          </p>
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="rr-affinity">{t("affinity")}</Label>
+          <Input
+            id="rr-affinity"
+            type="number"
+            min={0}
+            max={1}
+            step={0.1}
+            value={affinity}
+            onChange={(e) => setAffinity(Number(e.target.value))}
+            aria-describedby="rr-affinity-hint"
+          />
+          <p id="rr-affinity-hint" className="text-xs text-muted-foreground">
+            {t("affinityHint")}
           </p>
         </div>
       </div>

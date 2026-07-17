@@ -194,6 +194,9 @@ export class PlaylistsService {
         minTrackGapMinutes: input.minTrackGapMinutes,
         minArtistGapMinutes: input.minArtistGapMinutes,
         maxPlaysPerDay: input.maxPlaysPerDay ?? null,
+        minCategoryGapMinutes: input.minCategoryGapMinutes ?? null,
+        fatigueWeightPenalty: input.fatigueWeightPenalty ?? null,
+        affinityStrength: input.affinityStrength ?? null,
       });
       await this.audit.recordInTx(tx, {
         action: "programming.rotation_policy.updated",
@@ -403,15 +406,27 @@ export class PlaylistsService {
         artist: r.artist,
         source,
         weight: 1,
+        // Rotation categories from the Library's genre tags (Sprint 07 — wired).
+        // Play history (recentPlays) and affinity scores are NOT wired yet: they
+        // require a signals pipeline (Sprint 07B) and stay undefined here, so
+        // fatigue and affinity weighting are inert in production for now even
+        // though the engine and their policy knobs already exist.
+        categories: r.genres.length > 0 ? r.genres : undefined,
       }));
   }
 
   private toRules(policy: RotationPolicyRow | undefined): RotationRules {
+    const categoryGap = policy?.minCategoryGapMinutes ?? null;
+    const fatigue = policy?.fatigueWeightPenalty ?? null;
+    const affinity = policy?.affinityStrength ?? null;
     return {
       minTrackGapMinutes: policy?.minTrackGapMinutes ?? DEFAULT_TRACK_GAP,
       minArtistGapMinutes: policy?.minArtistGapMinutes ?? DEFAULT_ARTIST_GAP,
       maxPlaysPerTrack: policy?.maxPlaysPerDay ?? null,
-      relaxable: { trackGap: true, artistGap: true },
+      ...(categoryGap !== null && categoryGap > 0 ? { minCategoryGapMinutes: categoryGap } : {}),
+      ...(fatigue !== null && fatigue > 0 ? { fatigue: { weightPenalty: fatigue } } : {}),
+      ...(affinity !== null && affinity > 0 ? { affinityWeighting: { strength: affinity } } : {}),
+      relaxable: { trackGap: true, artistGap: true, categoryGap: true },
     };
   }
 
@@ -461,6 +476,9 @@ export class PlaylistsService {
       minTrackGapMinutes: policy?.minTrackGapMinutes ?? DEFAULT_TRACK_GAP,
       minArtistGapMinutes: policy?.minArtistGapMinutes ?? DEFAULT_ARTIST_GAP,
       maxPlaysPerDay: policy?.maxPlaysPerDay ?? null,
+      minCategoryGapMinutes: policy?.minCategoryGapMinutes ?? null,
+      fatigueWeightPenalty: policy?.fatigueWeightPenalty ?? null,
+      affinityStrength: policy?.affinityStrength ?? null,
     };
   }
 

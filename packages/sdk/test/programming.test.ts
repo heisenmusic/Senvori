@@ -180,6 +180,9 @@ describe("ProgrammingClient — content & rules", () => {
       minTrackGapMinutes: 60,
       minArtistGapMinutes: 30,
       maxPlaysPerDay: null,
+      minCategoryGapMinutes: null,
+      fatigueWeightPenalty: null,
+      affinityStrength: null,
     };
     const { client, last } = makeClient(() => ({ status: 200, json: policy }));
     const out = await client.programming.getRotationPolicy();
@@ -192,6 +195,9 @@ describe("ProgrammingClient — content & rules", () => {
       minTrackGapMinutes: 45,
       minArtistGapMinutes: 20,
       maxPlaysPerDay: 3,
+      minCategoryGapMinutes: 30,
+      fatigueWeightPenalty: 0.5,
+      affinityStrength: 0.3,
     };
     const { client, last } = makeClient(() => ({ status: 200, json: policy }));
     await client.programming.upsertRotationPolicy({
@@ -211,7 +217,7 @@ describe("ProgrammingClient — content & rules", () => {
 
 describe("ProgrammingClient — preview", () => {
   const plan: ExecutionPlanDto = {
-    compilerVersion: "1.0.0",
+    compilerVersion: "2.0.0",
     timezone: "America/Sao_Paulo",
     localDate: "2026-07-16",
     windowStartUtc: "2026-07-16T03:00:00.000Z",
@@ -220,7 +226,18 @@ describe("ProgrammingClient — preview", () => {
     items: [],
     warnings: [{ code: "insufficient_catalog", message: "few tracks" }],
     planHash: "abc123",
-    stats: { candidateCount: 5, itemCount: 0, relaxedRules: [], fallbackCount: 0 },
+    stats: {
+      candidateCount: 5,
+      itemCount: 0,
+      relaxedRules: [],
+      fallbackCount: 0,
+      engine: {
+        fatigueApplied: false,
+        affinityApplied: false,
+        categoriesApplied: false,
+        avoidPairBlocks: 0,
+      },
+    },
   };
 
   it("preview POSTs the request and returns the plan with warnings", async () => {
