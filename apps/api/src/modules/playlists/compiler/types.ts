@@ -8,10 +8,10 @@
  *
  * Sprint 07 (Intelligent Programming Engine) adds four deterministic layers on
  * top of the Sprint 06 foundation — cross-day fatigue, advanced rotation
- * categories, paired-track avoidance and learned personalization. Every one is
+ * categories, paired-track avoidance and affinity-aware weighting. Every one is
  * optional and off by default: absent its inputs, the engine is a pure superset
- * of v1 behaviour, and the "learning" always happens *outside* the compiler
- * (upstream signals feed `recentPlays`/`affinity`), so the function stays pure
+ * of v1 behaviour. The compiler never learns — any signal (`recentPlays`,
+ * `affinity`) is computed *outside* and passed in, so the function stays pure
  * and reproducible.
  */
 
@@ -43,10 +43,11 @@ export interface CandidateTrack {
    */
   recentPlays?: number;
   /**
-   * Learned preference score in [0, 1] for the target audience/daypart (0.5 =
-   * neutral). Modulates effective weight when personalization is on (Sprint 07 ·
-   * learned personalization). The score is *learned upstream*; the compiler
-   * applies it deterministically. Omitted ⇒ neutral (0.5).
+   * Affinity score in [0, 1] for the target audience/daypart (0.5 = neutral),
+   * supplied by the caller. Modulates effective weight when affinity weighting
+   * is on (Sprint 07 · affinity-aware deterministic weighting). The compiler
+   * does NOT learn or compute it — it applies the given score deterministically.
+   * Omitted ⇒ neutral (0.5).
    */
   affinity?: number;
 }
@@ -59,6 +60,15 @@ export interface AvoidPair {
   minGapMinutes: number;
 }
 
+/** An item that played just before this window — seeds the cross-day seam. */
+export interface CarryOverItem {
+  assetId: string | null;
+  artist: string | null;
+  categories?: string[];
+  /** How many minutes before window start this item *started* (≥ 0). */
+  minutesBeforeStart: number;
+}
+
 /** Cross-day fatigue tuning (Sprint 07). */
 export interface FatiguePolicy {
   /**
@@ -68,11 +78,11 @@ export interface FatiguePolicy {
   weightPenalty: number;
 }
 
-/** Learned-personalization tuning (Sprint 07). */
-export interface PersonalizationPolicy {
+/** Affinity-aware weighting tuning (Sprint 07). Not learning — pure weighting. */
+export interface AffinityWeightingPolicy {
   /**
    * Effective weight is multiplied by `1 + strength * (2 * affinity - 1)` in
-   * `[0, 1]`. `0` disables personalization (all affinities neutral); `1` lets a
+   * `[0, 1]`. `0` disables the layer (all affinities neutral); `1` lets a
    * fully-preferred track weigh double and a fully-rejected one weigh ~zero.
    */
   strength: number;
@@ -94,8 +104,8 @@ export interface RotationRules {
   avoidPairs?: AvoidPair[];
   /** Cross-day fatigue policy (Sprint 07). Omitted ⇒ off. */
   fatigue?: FatiguePolicy;
-  /** Learned personalization policy (Sprint 07). Omitted ⇒ off. */
-  personalization?: PersonalizationPolicy;
+  /** Affinity-aware weighting policy (Sprint 07). Omitted ⇒ off. */
+  affinityWeighting?: AffinityWeightingPolicy;
   /** Rules the compiler may relax to fill the window when the catalog is thin. */
   relaxable: { trackGap: boolean; artistGap: boolean; categoryGap?: boolean };
 }
@@ -116,6 +126,14 @@ export interface CompilationContext {
   windowStartLocal: string;
   windowEndLocal: string;
   compilerVersion: string;
+  /**
+   * The tail of the *previous* window (Sprint 07 · cross-day seam). Seeded into
+   * the placement history at negative offsets so track/artist/category/pair
+   * gaps span the day boundary — e.g. the last track of yesterday will not open
+   * today when the track gap forbids it. Omitted ⇒ no cross-day continuity.
+   * Purely an engine input; the caller supplies the prior tail.
+   */
+  carryOver?: CarryOverItem[];
 }
 
 /** Behaviour when nothing else fits (ADR-06-07). */
@@ -174,8 +192,8 @@ export interface ExecutionPlan {
     engine: {
       /** Fatigue penalty reduced at least one candidate's effective weight. */
       fatigueApplied: boolean;
-      /** Personalization moved at least one candidate's effective weight. */
-      personalizationApplied: boolean;
+      /** Affinity weighting moved at least one candidate's effective weight. */
+      affinityApplied: boolean;
       /** Category gaps were enforced (rules configured and categories present). */
       categoriesApplied: boolean;
       /** How many times an avoid-pair blocked an otherwise-eligible candidate. */

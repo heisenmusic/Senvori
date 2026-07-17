@@ -196,7 +196,7 @@ export class PlaylistsService {
         maxPlaysPerDay: input.maxPlaysPerDay ?? null,
         minCategoryGapMinutes: input.minCategoryGapMinutes ?? null,
         fatigueWeightPenalty: input.fatigueWeightPenalty ?? null,
-        personalizationStrength: input.personalizationStrength ?? null,
+        affinityStrength: input.affinityStrength ?? null,
       });
       await this.audit.recordInTx(tx, {
         action: "programming.rotation_policy.updated",
@@ -406,10 +406,11 @@ export class PlaylistsService {
         artist: r.artist,
         source,
         weight: 1,
-        // Rotation categories from the Library's genre tags (Sprint 07). Play
-        // history (recentPlays) and learned affinity are fed by upstream
-        // signals; they arrive undefined here until that pipeline lands, at
-        // which point the engine already honours them.
+        // Rotation categories from the Library's genre tags (Sprint 07 — wired).
+        // Play history (recentPlays) and affinity scores are NOT wired yet: they
+        // require a signals pipeline (Sprint 07B) and stay undefined here, so
+        // fatigue and affinity weighting are inert in production for now even
+        // though the engine and their policy knobs already exist.
         categories: r.genres.length > 0 ? r.genres : undefined,
       }));
   }
@@ -417,16 +418,14 @@ export class PlaylistsService {
   private toRules(policy: RotationPolicyRow | undefined): RotationRules {
     const categoryGap = policy?.minCategoryGapMinutes ?? null;
     const fatigue = policy?.fatigueWeightPenalty ?? null;
-    const personalization = policy?.personalizationStrength ?? null;
+    const affinity = policy?.affinityStrength ?? null;
     return {
       minTrackGapMinutes: policy?.minTrackGapMinutes ?? DEFAULT_TRACK_GAP,
       minArtistGapMinutes: policy?.minArtistGapMinutes ?? DEFAULT_ARTIST_GAP,
       maxPlaysPerTrack: policy?.maxPlaysPerDay ?? null,
       ...(categoryGap !== null && categoryGap > 0 ? { minCategoryGapMinutes: categoryGap } : {}),
       ...(fatigue !== null && fatigue > 0 ? { fatigue: { weightPenalty: fatigue } } : {}),
-      ...(personalization !== null && personalization > 0
-        ? { personalization: { strength: personalization } }
-        : {}),
+      ...(affinity !== null && affinity > 0 ? { affinityWeighting: { strength: affinity } } : {}),
       relaxable: { trackGap: true, artistGap: true, categoryGap: true },
     };
   }
@@ -479,7 +478,7 @@ export class PlaylistsService {
       maxPlaysPerDay: policy?.maxPlaysPerDay ?? null,
       minCategoryGapMinutes: policy?.minCategoryGapMinutes ?? null,
       fatigueWeightPenalty: policy?.fatigueWeightPenalty ?? null,
-      personalizationStrength: policy?.personalizationStrength ?? null,
+      affinityStrength: policy?.affinityStrength ?? null,
     };
   }
 

@@ -1,5 +1,5 @@
 {
-  "id": "1480f7a0-aff6-4994-9799-40c0079460c5",
+  "id": "b66cadee-f7d2-4308-afd7-e29066772871",
   "prevId": "c22324be-b336-4c20-a065-aabd0086df90",
   "version": "7",
   "dialect": "postgresql",
@@ -12467,8 +12467,8 @@
           "primaryKey": false,
           "notNull": false
         },
-        "personalization_strength": {
-          "name": "personalization_strength",
+        "affinity_strength": {
+          "name": "affinity_strength",
           "type": "double precision",
           "primaryKey": false,
           "notNull": false

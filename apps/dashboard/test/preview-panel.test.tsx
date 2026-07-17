@@ -64,7 +64,7 @@ const plan: ExecutionPlanDto = {
     fallbackCount: 0,
     engine: {
       fatigueApplied: false,
-      personalizationApplied: false,
+      affinityApplied: false,
       categoriesApplied: false,
       avoidPairBlocks: 0,
     },

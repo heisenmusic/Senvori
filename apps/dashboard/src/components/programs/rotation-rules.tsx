@@ -31,7 +31,7 @@ export const RotationRules = () => {
   const [maxPlays, setMaxPlays] = useState<string>("");
   const [categoryGap, setCategoryGap] = useState(0);
   const [fatigue, setFatigue] = useState(0);
-  const [personalization, setPersonalization] = useState(0);
+  const [affinity, setAffinity] = useState(0);
 
   // Seed the form from the loaded policy whenever we enter edit mode.
   useEffect(() => {
@@ -41,7 +41,7 @@ export const RotationRules = () => {
       setMaxPlays(query.data.maxPlaysPerDay?.toString() ?? "");
       setCategoryGap(query.data.minCategoryGapMinutes ?? 0);
       setFatigue(query.data.fatigueWeightPenalty ?? 0);
-      setPersonalization(query.data.personalizationStrength ?? 0);
+      setAffinity(query.data.affinityStrength ?? 0);
     }
   }, [editing, query.data]);
 
@@ -54,7 +54,7 @@ export const RotationRules = () => {
         // 0 ⇒ layer off; sent as null so the policy stores "disabled" cleanly.
         minCategoryGapMinutes: categoryGap > 0 ? categoryGap : null,
         fatigueWeightPenalty: fatigue > 0 ? fatigue : null,
-        personalizationStrength: personalization > 0 ? personalization : null,
+        affinityStrength: affinity > 0 ? affinity : null,
       }),
     onSuccess: (data) => {
       queryClient.setQueryData(["rotation-policy"], data);
@@ -117,9 +117,9 @@ export const RotationRules = () => {
             </dd>
           </div>
           <div>
-            <dt className="text-xs text-muted-foreground">{t("personalization")}</dt>
+            <dt className="text-xs text-muted-foreground">{t("affinity")}</dt>
             <dd className="text-sm font-medium text-foreground">
-              {policy.personalizationStrength ?? "—"}
+              {policy.affinityStrength ?? "—"}
             </dd>
           </div>
         </dl>
@@ -221,19 +221,19 @@ export const RotationRules = () => {
           </p>
         </div>
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor="rr-personalization">{t("personalization")}</Label>
+          <Label htmlFor="rr-affinity">{t("affinity")}</Label>
           <Input
-            id="rr-personalization"
+            id="rr-affinity"
             type="number"
             min={0}
             max={1}
             step={0.1}
-            value={personalization}
-            onChange={(e) => setPersonalization(Number(e.target.value))}
-            aria-describedby="rr-personalization-hint"
+            value={affinity}
+            onChange={(e) => setAffinity(Number(e.target.value))}
+            aria-describedby="rr-affinity-hint"
           />
-          <p id="rr-personalization-hint" className="text-xs text-muted-foreground">
-            {t("personalizationHint")}
+          <p id="rr-affinity-hint" className="text-xs text-muted-foreground">
+            {t("affinityHint")}
           </p>
         </div>
       </div>

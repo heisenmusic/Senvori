@@ -182,7 +182,7 @@ describe("ProgrammingClient — content & rules", () => {
       maxPlaysPerDay: null,
       minCategoryGapMinutes: null,
       fatigueWeightPenalty: null,
-      personalizationStrength: null,
+      affinityStrength: null,
     };
     const { client, last } = makeClient(() => ({ status: 200, json: policy }));
     const out = await client.programming.getRotationPolicy();
@@ -197,7 +197,7 @@ describe("ProgrammingClient — content & rules", () => {
       maxPlaysPerDay: 3,
       minCategoryGapMinutes: 30,
       fatigueWeightPenalty: 0.5,
-      personalizationStrength: 0.3,
+      affinityStrength: 0.3,
     };
     const { client, last } = makeClient(() => ({ status: 200, json: policy }));
     await client.programming.upsertRotationPolicy({
@@ -233,7 +233,7 @@ describe("ProgrammingClient — preview", () => {
       fallbackCount: 0,
       engine: {
         fatigueApplied: false,
-        personalizationApplied: false,
+        affinityApplied: false,
         categoriesApplied: false,
         avoidPairBlocks: 0,
       },

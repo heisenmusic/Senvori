@@ -70,8 +70,8 @@ export const upsertRotationPolicySchema = z.object({
   minCategoryGapMinutes: z.number().int().min(0).max(1440).nullable().optional(),
   /** Cross-day fatigue penalty; 0/null ⇒ off (Sprint 07). */
   fatigueWeightPenalty: z.number().min(0).max(10).nullable().optional(),
-  /** Learned-personalization strength in [0,1]; 0/null ⇒ off (Sprint 07). */
-  personalizationStrength: z.number().min(0).max(1).nullable().optional(),
+  /** Affinity-aware weighting strength in [0,1]; 0/null ⇒ off (Sprint 07). */
+  affinityStrength: z.number().min(0).max(1).nullable().optional(),
 });
 export type UpsertRotationPolicyInput = z.infer<typeof upsertRotationPolicySchema>;
 
@@ -81,7 +81,7 @@ export const rotationPolicySchema = z.object({
   maxPlaysPerDay: z.number().int().nullable(),
   minCategoryGapMinutes: z.number().int().nullable(),
   fatigueWeightPenalty: z.number().nullable(),
-  personalizationStrength: z.number().nullable(),
+  affinityStrength: z.number().nullable(),
 });
 export type RotationPolicyDto = z.infer<typeof rotationPolicySchema>;
 
@@ -145,7 +145,7 @@ export const executionPlanSchema = z.object({
     /** Which intelligence layers shaped this plan (Sprint 07). */
     engine: z.object({
       fatigueApplied: z.boolean(),
-      personalizationApplied: z.boolean(),
+      affinityApplied: z.boolean(),
       categoriesApplied: z.boolean(),
       avoidPairBlocks: z.number().int(),
     }),

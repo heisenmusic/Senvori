@@ -1,129 +1,171 @@
 # Intelligent Programming Engine (Sprint 07 · §29)
 
-> The four intelligence layers the deterministic compiler grew in Sprint 07,
-> on top of the Sprint 06 foundation (`docs/PROGRAMMING_COMPILER.md`).
-> Code: `apps/api/src/modules/playlists/compiler/`. Still framework-free (no
-> NestJS, DB, HTTP, clock, or random source). Verified by `test/engine.spec.ts`.
+> The deterministic capabilities the compiler grew in Sprint 07, on top of the
+> Sprint 06 foundation (`docs/PROGRAMMING_COMPILER.md`). Code:
+> `apps/api/src/modules/playlists/compiler/`. Still framework-free (no NestJS,
+> DB, HTTP, clock, or random source). Verified by `test/engine.spec.ts` and
+> `test/engine-simulation.spec.ts`.
 
-## Why this shape
+## Honest scope — read this first
 
-The compiler stays a **pure function**. Every "intelligent" decision is either
+Sprint 07 delivered the **engine** for four capabilities and bumped the compiler
+to **2.0.0**. It did **not** deliver end-to-end production wiring for all four.
+The compiler is a pure function that _applies_ signals; it does **not** learn,
+and it does **not** read the database. Two of the four capabilities depend on a
+signal pipeline (play history, affinity scores) that **does not exist yet** and
+is deferred to **Sprint 07B**. This document classifies each capability exactly.
 
-1. a deterministic transform of inputs the caller already supplies, or
-2. a deterministic reaction to a signal computed **outside** the compiler and
-   passed in (`recentPlays`, `affinity`).
+Status legend:
 
-That is the whole discipline: the _learning_ happens upstream (play history,
-engagement models); the compiler only _applies_ what it is given, the same way
-every time. Same inputs ⇒ same `planHash` — the Sprint 06 reproducibility proof
-is untouched, and preview still equals what will actually play. The compiler
-version is bumped to **2.0.0** because these layers change output when active.
+- **Complete** — engine + persistence + API + SDK + Dashboard + an E2E test.
+- **Partial** — wired through some layers, with a material gap.
+- **Prepared** — the engine (and sometimes a config knob) exists, but a required
+  input or surface is missing; inert in production until 07B.
+- **Not implemented**.
 
-All four layers are **opt-in and default to no-op**: with none of the new inputs
-present, v2.0.0 produces the same _kind_ of plan v1.0.0 did (only the seed string
-differs because `compilerVersion` participates in it).
+### Capability matrix
 
-## The four layers
+| Capability                   | Engine | Persistence            | API     | SDK     | Dashboard | E2E | Status                          |
+| ---------------------------- | ------ | ---------------------- | ------- | ------- | --------- | --- | ------------------------------- |
+| Advanced rotation categories | ✅     | ✅ genres + gap column | ✅      | ✅      | ✅        | ✅  | **Complete**                    |
+| Cross-day fatigue            | ✅     | ⚠️ knob only¹          | ⚠️ knob | ⚠️ knob | ⚠️ knob   | ❌  | **Prepared**                    |
+| Affinity-aware weighting     | ✅     | ⚠️ knob only²          | ⚠️ knob | ⚠️ knob | ⚠️ knob   | ❌  | **Prepared**                    |
+| Paired-track avoidance       | ✅     | ❌                     | ❌      | ❌      | ❌        | ❌  | **Prepared (engine-only)**      |
+| Cross-day seam (`carryOver`) | ✅     | ❌                     | ❌      | ❌      | ❌        | ❌  | **Prepared (engine primitive)** |
 
-### 1. Cross-day fatigue
+¹ The `fatigueWeightPenalty` knob is persisted and editable end-to-end, but the
+per-track `recentPlays` **signal has no source**: nothing populates
+`playback_events`, and neither preview nor publish queries play history. The
+penalty therefore has nothing to act on in production today.
 
-A track played heavily over recent days should step aside for fresher content
-today. The caller passes `CandidateTrack.recentPlays` (plays over its look-back
-window); `RotationRules.fatigue.weightPenalty` tunes the reaction:
+² The `affinityStrength` knob is persisted and editable end-to-end, but the
+per-track `affinity` **score has no source**: nothing computes or stores it. The
+compiler applies a supplied score deterministically — it is _not_ learning and
+there is _no_ personalization model. Named **affinity-aware deterministic
+weighting**, never "learned personalization".
 
-```
-effectiveWeight ÷= 1 + weightPenalty · recentPlays
-```
+## 1. Advanced rotation categories — Complete
 
-`weightPenalty = 0` (or `recentPlays = 0`) ⇒ no effect. Larger values push
-variety across days more aggressively. It only lowers the _odds_ of a fatigued
-track — it never hard-blocks, so a thin catalog still fills.
+Two tracks that **share a category** (from `tracks.genres`) are kept apart by a
+category gap. `CandidateTrack.categories` carries the tags;
+`RotationRules.minCategoryGapMinutes` is the base gap, with per-category
+overrides in `categoryGaps`. Relaxable (`relaxable.categoryGap`); when relaxed it
+records `category_gap` and emits `category_gap_relaxed`. Relaxation order:
+strict → artist → **category** → track → fallback.
 
-### 2. Advanced rotation categories
+End-to-end path (all present): `tracks.genres` (DB) → migration
+`0007_programming_engine_policy` (`min_category_gap_minutes`) → repository
+(`loadCandidates` selects `genres`) → service (`toCandidates` maps genres →
+categories; `toRules` reads the policy) → contracts → SDK → Dashboard editor →
+compiler. Proven by a real-Postgres E2E test in `programming.spec.ts` (mixed
+catalog, `categoriesApplied` true, per-genre gap holds without relaxation).
 
-Beyond the track and artist gaps, two tracks that **share a category** (genre,
-energy tag, …) are kept apart by a category gap. `CandidateTrack.categories`
-carries the tags; `RotationRules.minCategoryGapMinutes` is the base gap, with
-per-category overrides in `categoryGaps` (e.g. jingles every 60 min, songs every
-5). The category gap is **relaxable** (`relaxable.categoryGap`) and, when relaxed
-to fill a thin period, records `category_gap` and emits `category_gap_relaxed`.
+## 2. Cross-day fatigue — Prepared
 
-Relaxation order is now: strict → artist → **category** → track → fallback, so
-repeating the exact same track stays the last resort.
+`effectiveWeight ÷= 1 + weightPenalty · recentPlays`. `RotationRules.fatigue`
+tunes it; `CandidateTrack.recentPlays` is the signal. The engine and the
+`fatigueWeightPenalty` policy knob are complete and reproducible. **Missing:** a
+pipeline that counts recent plays (per asset, per look-back window, DST-correct)
+from `playback_events` and feeds `recentPlays` into `toCandidates`. Until then
+`recentPlays` is always `undefined`, so `fatigueApplied` is always `false` in
+production. The behaviour is proven only in simulation (see below).
 
-### 3. Paired-track avoidance
+## 3. Affinity-aware weighting — Prepared
 
-Some assets must not play close together (two mixes of one song, an explicit +
-clean pair, competing sponsors). `RotationRules.avoidPairs` lists
-`{ a, b, minGapMinutes }`; either asset blocks the other within the gap. It is a
-**hard** constraint at every relaxation level — only the safety fallback (which
-ignores all rules by definition) can bypass it. `stats.engine.avoidPairBlocks`
-counts how many times a pair excluded an otherwise-eligible candidate at the
-strict level, so operators can see the rule doing work.
+`effectiveWeight ·= 1 + strength · (2 · affinity − 1)`, `affinity ∈ [0, 1]`
+(0.5 = neutral). `RotationRules.affinityWeighting` tunes it. The engine and the
+`affinityStrength` policy knob are complete. **Missing:** whatever computes and
+stores an affinity score per track/audience/daypart. There is **no learning**
+anywhere in this sprint; the compiler applies a given score deterministically.
+Until a score source exists, `affinity` is `undefined`, so `affinityApplied` is
+always `false` in production.
 
-### 4. Learned personalization
+## 4. Paired-track avoidance — Prepared (engine-only)
 
-An upstream model scores each candidate's fit for the target audience/daypart as
-`CandidateTrack.affinity ∈ [0, 1]` (0.5 = neutral).
-`RotationRules.personalization.strength ∈ [0, 1]` sets how much it matters:
+`RotationRules.avoidPairs` (`{ a, b, minGapMinutes }`) keep configured asset
+pairs apart — a **hard** constraint at every relaxation level (only the safety
+fallback bypasses it), counted in `stats.engine.avoidPairBlocks`. This exists
+**only in the compiler**: there is no column, contract, endpoint, SDK method,
+Dashboard surface, or RBAC/RLS/audit path, and `toRules` never populates it. It
+is an engine capability awaiting a product surface (07B).
 
-```
-effectiveWeight ·= 1 + strength · (2 · affinity − 1)
-```
+## 5. Cross-day seam (`carryOver`) — Prepared (engine primitive)
 
-`affinity 0 → (1 − strength)`, `0.5 → 1`, `1 → (1 + strength)`. A missing
-affinity is neutral; `strength = 0` disables the layer. The compiler never
-trains anything — it applies a learned score deterministically.
+`CompilationContext.carryOver` seeds the previous window's tail into the
+placement history at negative offsets, so track/artist/category/pair gaps span
+the day boundary (e.g. yesterday's last track does not open today when the track
+gap forbids it). It is a pure engine input; the service does not yet supply it
+(the previous day's plan tail would come from published versions / play history
+in 07B). Used by the simulation to prove seam continuity.
 
 ## Effective weight
 
 The two weight-modulating layers compose into one deterministic accessor used by
-the seeded weighted pick (personalization and fatigue; source weight is the
+the seeded weighted pick (affinity weighting × fatigue; source weight is the
 base):
 
 ```
 effectiveWeight = max(sourceWeight, 0)
-                · personalization(affinity, strength)   // ×
+                · affinity(affinity, strength)          // ×
                 ÷ fatigue(recentPlays, weightPenalty)   // ÷
 ```
 
-If every effective weight collapses to 0 (e.g. `strength = 1`, all `affinity 0`),
-the pick falls back to a uniform choice — the loop always makes progress.
+If every effective weight collapses to 0, the pick falls back to a uniform
+choice — the loop always makes progress.
 
-## Explainability
+## Explainability & stats
 
 Each item's `reason` gains bits for the layers that shaped it —
 `audience-preferred` / `audience-de-emphasized`, `rotation-balanced across days`,
-and the relaxation notes (`category window relaxed`, …). `stats.engine` reports
-which layers were actually active:
+and the relaxation notes. `stats.engine` reports which layers were **actually
+active** (config on _and_ the signal present), so an operator can see that, today,
+fatigue/affinity are inactive for lack of a signal:
 
 ```jsonc
 "engine": {
-  "fatigueApplied": false,          // penalty > 0 AND some recentPlays > 0
-  "personalizationApplied": false,  // strength > 0 AND some non-neutral affinity
-  "categoriesApplied": false,       // gap configured AND some categories present
-  "avoidPairBlocks": 0              // strict-level exclusions caused by a pair
+  "fatigueApplied": false,   // penalty > 0 AND some recentPlays > 0
+  "affinityApplied": false,  // strength > 0 AND some non-neutral affinity
+  "categoriesApplied": true, // gap configured AND some categories present
+  "avoidPairBlocks": 0       // strict-level exclusions caused by a pair
 }
 ```
 
 ## Persistence & configuration
 
-The tenant `rotation_policies` row (migration `0007_programming_engine_policy`,
-additive, nullable) gained `min_category_gap_minutes`, `fatigue_weight_penalty`
-and `personalization_strength`. `null`/`0` ⇒ layer off. The service maps the
-policy into `RotationRules` and derives `categories` from the Library's
-`tracks.genres`; `recentPlays`/`affinity` arrive from a future signals pipeline
-and are simply `undefined` until then — the engine already honours them.
+Migration `0007_programming_engine_policy` (additive, nullable) added
+`min_category_gap_minutes`, `fatigue_weight_penalty` and `affinity_strength` to
+`rotation_policies` (`null`/`0` ⇒ off). Contracts
+(`upsertRotationPolicySchema`, `rotationPolicySchema`,
+`executionPlanSchema.stats.engine`), the SDK types and the Dashboard
+rotation-rules editor (pt-BR/en-US/es-ES) all carry the three knobs. `avoidPairs`
+and `carryOver` have **no** persistence or surface yet.
 
-Contracts (`upsertRotationPolicySchema`, `rotationPolicySchema`,
-`executionPlanSchema.stats.engine`), the SDK types and the Dashboard rotation
-rules editor all carry the new fields; the editor treats `0` as "off".
+## Tests
 
-## Tests (`test/engine.spec.ts`, 12)
+- **`test/engine.spec.ts`** (12) — each layer in isolation + off-by-default +
+  combined determinism.
+- **`test/engine-simulation.spec.ts`** (10) — a **simulation** of the 07B signal
+  pipeline over seven consecutive dates with a fatigue/seam feedback loop:
+  distinct daily sequences, per-date reproducibility, first-track variation, no
+  cross-day seam repeat, high-`recentPlays` suppression, avoid-pair and category
+  separation, catalog-only fill, and safe termination when rules are impossible.
+  Emits weekly metrics (cross-day overlap %, track/artist frequency, first-track
+  repetition, pair repetition, relaxed-rule days, fallback days). This proves the
+  _engine_ given the signals — not that the signals are wired.
+- **`programming.spec.ts`** — real-Postgres round-trip of the three policy knobs
+  - the categories E2E.
+- Sprint 06 **`compiler.spec.ts`** (16) unchanged.
 
-Fatigue de-weighting + off-by-default, category gap + per-category override +
-relaxation-with-warning, paired-track separation + block counting,
-personalization preference + neutral/off behaviour, determinism preserved across
-all four layers combined, and the all-inactive baseline. The Sprint 06
-`compiler.spec.ts` (16) still passes unchanged, and `programming.spec.ts` gains
-an API round-trip of the engine knobs + engine-aware, deterministic preview.
+## Deferred to Sprint 07B (proposed)
+
+1. **Play-history read model** feeding `recentPlays` from `playback_events` (a
+   DST-correct per-asset look-back), wired into preview and publish → makes
+   **cross-day fatigue** Complete.
+2. **Cross-day seam** in the service: supply `carryOver` from the previous day's
+   plan tail.
+3. **Affinity source**: define, compute and store an affinity score (its data
+   basis, update cadence, audit and explainability) → makes **affinity-aware
+   weighting** Complete. Still deterministic application; scope the model
+   explicitly.
+4. **Paired-track avoidance product surface**: `avoid_pairs` table + contracts +
+   endpoints + SDK + Dashboard + RLS/RBAC/audit → makes it Complete.

@@ -5,10 +5,13 @@
 "@senvori/dashboard": minor
 ---
 
-Intelligent Programming Engine (Sprint 07): the deterministic compiler grows four
-opt-in, no-op-by-default layers — cross-day fatigue, advanced rotation categories,
-paired-track avoidance and learned personalization — and is bumped to 2.0.0. The
-tenant rotation policy gains `minCategoryGapMinutes`, `fatigueWeightPenalty` and
-`personalizationStrength` (migration `0007`, additive), surfaced through the
-contracts, SDK types and the Dashboard rotation-rules editor. The execution plan
-now reports a `stats.engine` block; the compiler stays pure and deterministic.
+Intelligent Programming Engine (Sprint 07): the deterministic compiler grows to
+2.0.0 with four engine-level capabilities. Only **advanced rotation categories**
+is wired end-to-end (genres → migration `0007` → repository → service → contracts
+→ SDK → Dashboard → compiler, with a real-Postgres E2E test). **Cross-day
+fatigue**, **affinity-aware deterministic weighting** (not learning) and
+**paired-track avoidance** are **Prepared** — the engine and, for the first two, a
+persisted policy knob exist, but their production signal/surface is deferred to
+Sprint 07B. The tenant rotation policy gains `minCategoryGapMinutes`,
+`fatigueWeightPenalty` and `affinityStrength`. The execution plan reports a
+`stats.engine` block; the compiler stays pure and deterministic.

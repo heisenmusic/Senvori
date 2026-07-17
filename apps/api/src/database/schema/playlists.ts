@@ -113,7 +113,7 @@ export const rotationPolicies = pgTable(
     /* Intelligent Programming Engine knobs (Sprint 07) — null ⇒ layer off. */
     minCategoryGapMinutes: integer("min_category_gap_minutes"),
     fatigueWeightPenalty: doublePrecision("fatigue_weight_penalty"),
-    personalizationStrength: doublePrecision("personalization_strength"),
+    affinityStrength: doublePrecision("affinity_strength"),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [

@@ -224,7 +224,7 @@ export class PlaylistsRepository {
           maxPlaysPerDay: values.maxPlaysPerDay ?? null,
           minCategoryGapMinutes: values.minCategoryGapMinutes ?? null,
           fatigueWeightPenalty: values.fatigueWeightPenalty ?? null,
-          personalizationStrength: values.personalizationStrength ?? null,
+          affinityStrength: values.affinityStrength ?? null,
           updatedAt: new Date(),
         },
       })

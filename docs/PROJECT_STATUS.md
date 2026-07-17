@@ -2,30 +2,45 @@
 
 > ## Atualização — Intelligent Programming Engine (Sprint 07)
 >
-> O compilador determinístico ganhou **quatro camadas de inteligência**, opcionais
-> e sem efeito por padrão, e passou para a versão **2.0.0**. Ele continua uma
-> **função pura** (sem DB/HTTP/relógio/aleatoriedade): o "aprendizado" acontece a
-> montante e aqui é apenas _aplicado_ — a prova de reprodutibilidade (mesmos
-> insumos ⇒ mesmo `planHash`) permanece intacta. Branch
-> `claude/senvori-intelligent-programming-engine`. Apenas fatos comprovados por execução:
+> O compilador determinístico ganhou **quatro capacidades**, opcionais e sem
+> efeito por padrão, e passou para a versão **2.0.0**. Ele continua uma **função
+> pura** (sem DB/HTTP/relógio/aleatoriedade): não há aprendizado — qualquer sinal
+> é calculado a montante e apenas _aplicado_ aqui; a prova de reprodutibilidade
+> (mesmos insumos ⇒ mesmo `planHash`) permanece intacta. Branch
+> `claude/senvori-intelligent-programming-engine`.
 >
-> - **Fadiga entre dias:** `recentPlays` reduz o peso de faixas muito tocadas nos
->   últimos dias (`peso ÷= 1 + weightPenalty·recentPlays`).
-> - **Categorias de rotação avançadas:** intervalo por categoria (base + overrides)
->   separa faixas do mesmo gênero/tag; relaxável, com aviso `category_gap_relaxed`.
->   Categorias vêm de `tracks.genres`. Ordem: estrito → artista → categoria → faixa → fallback.
-> - **Evitar pares:** `avoidPairs` mantêm pares de assets afastados — restrição
->   **rígida** em todos os níveis, contabilizada em `stats.engine.avoidPairBlocks`.
-> - **Personalização aprendida:** `affinity ∈ [0,1]` modula o peso efetivo
->   (`×(1 + strength·(2·affinity − 1))`), aplicada deterministicamente.
-> - **Persistência + superfície:** migração `0007_programming_engine_policy`
->   (aditiva, nullable) adiciona `min_category_gap_minutes`, `fatigue_weight_penalty`,
->   `personalization_strength` a `rotation_policies`; contracts, tipos do SDK e o
->   editor de regras do Dashboard (pt-BR/en-US/es-ES) expõem os controles (`0` ⇒ desligado).
-> - **Explicabilidade:** `reason` por item e um bloco `stats.engine` no plano.
-> - **Verificado:** format · lint · typecheck · build verdes; **150 testes**
->   (API 106 em Postgres real — +12 unit do motor, +1 round-trip da política;
->   SDK 22 · Dashboard 22). Docs: `PROGRAMMING_ENGINE.md`. **Não é um release.**
+> **Escopo honesto (auditoria de completude):** apenas _categorias de rotação
+> avançadas_ está ligada de ponta a ponta. As outras três são de nível de motor e
+> ficam **Prepared** — o motor (e, para duas, um botão de política persistido)
+> existe, mas o sinal/superfície de produção **não existe ainda** e vai para a
+> **Sprint 07B**. Matriz completa em `docs/PROGRAMMING_ENGINE.md`.
+>
+> | Capacidade                       | Motor | Persist.    | API | SDK | Dashboard | E2E | Status               |
+> | -------------------------------- | ----- | ----------- | --- | --- | --------- | --- | -------------------- |
+> | Categorias de rotação avançadas  | ✅    | ✅          | ✅  | ✅  | ✅        | ✅  | **Complete**         |
+> | Fadiga entre dias                | ✅    | ⚠️ só botão | ⚠️  | ⚠️  | ⚠️        | ❌  | **Prepared**         |
+> | Ponderação por afinidade         | ✅    | ⚠️ só botão | ⚠️  | ⚠️  | ⚠️        | ❌  | **Prepared**         |
+> | Evitar pares                     | ✅    | ❌          | ❌  | ❌  | ❌        | ❌  | **Prepared (motor)** |
+> | Costura entre dias (`carryOver`) | ✅    | ❌          | ❌  | ❌  | ❌        | ❌  | **Prepared (motor)** |
+>
+> - **Categorias avançadas — Complete.** Intervalo por categoria (base + overrides),
+>   relaxável, de `tracks.genres` → migração `0007` → repository → service →
+>   contracts → SDK → Dashboard → compilador, com **E2E em Postgres real**.
+> - **Fadiga entre dias — Prepared.** Motor + botão `fatigueWeightPenalty`
+>   (persistido, editável). O sinal `recentPlays` **não tem fonte** (nada popula
+>   `playback_events`; preview/publish não consultam histórico) ⇒ inerte em
+>   produção. Comprovada só em **simulação** de 7 dias.
+> - **Ponderação por afinidade — Prepared** (renomeada de "personalização
+>   aprendida"; **não há aprendizado**). Motor + botão `affinityStrength`; o score
+>   `affinity` **não tem fonte** ⇒ inerte em produção.
+> - **Evitar pares — Prepared (só motor).** `avoidPairs` são restrição rígida no
+>   compilador, sem coluna/contract/endpoint/SDK/Dashboard/RLS/RBAC/auditoria.
+> - **Costura entre dias (`carryOver`) — Prepared (primitiva de motor).** Semeia a
+>   cauda do dia anterior; o service ainda não a fornece.
+> - **Verificado:** format · lint · typecheck · build verdes; **161 testes**
+>   (API 117 em Postgres real — +12 unit do motor, +10 simulação entre dias,
+>   +2 round-trip da política/E2E de categorias; SDK 22 · Dashboard 22).
+>   Docs: `PROGRAMMING_ENGINE.md` (matriz + plano 07B). **Não é um release.**
 >
 > ---
 >

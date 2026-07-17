@@ -11,7 +11,7 @@ import {
 /**
  * Intelligent Programming Engine tests (Sprint 07 · §29). Pure — no DB, no HTTP.
  * Prove the four deterministic layers (cross-day fatigue, advanced rotation
- * categories, paired-track avoidance, learned personalization) each work, are
+ * categories, paired-track avoidance, affinity-aware weighting) each work, are
  * reproducible, and stay off when their inputs are absent.
  */
 
@@ -176,17 +176,17 @@ describe("engine — paired-track avoidance", () => {
   });
 });
 
-describe("engine — learned personalization", () => {
+describe("engine — affinity-aware weighting", () => {
   it("plays a high-affinity track more than a low-affinity one at equal base weight", () => {
     const cat: CandidateTrack[] = [
       track({ assetId: "loved", artist: "a1", affinity: 1 }),
       track({ assetId: "meh", artist: "a2", affinity: 0 }),
     ];
-    const p = compile(ctx(), cat, rules({ personalization: { strength: 1 } }), noFallback);
+    const p = compile(ctx(), cat, rules({ affinityWeighting: { strength: 1 } }), noFallback);
     const loved = p.items.filter((i) => i.assetId === "loved").length;
     const meh = p.items.filter((i) => i.assetId === "meh").length;
     expect(loved).toBeGreaterThan(meh);
-    expect(p.stats.engine.personalizationApplied).toBe(true);
+    expect(p.stats.engine.affinityApplied).toBe(true);
     const lovedItem = p.items.find((i) => i.assetId === "loved");
     expect(lovedItem?.reason).toContain("audience-preferred");
   });
@@ -196,9 +196,9 @@ describe("engine — learned personalization", () => {
       track({ assetId: "a", artist: "a1" }),
       track({ assetId: "b", artist: "a2" }),
     ];
-    const p = compile(ctx(), cat, rules({ personalization: { strength: 0.5 } }), noFallback);
+    const p = compile(ctx(), cat, rules({ affinityWeighting: { strength: 0.5 } }), noFallback);
     // affinity undefined everywhere ⇒ neutral ⇒ engine reports not applied.
-    expect(p.stats.engine.personalizationApplied).toBe(false);
+    expect(p.stats.engine.affinityApplied).toBe(false);
   });
 });
 
@@ -216,7 +216,7 @@ describe("engine — determinism preserved", () => {
     const r = rules({
       minCategoryGapMinutes: 20,
       fatigue: { weightPenalty: 0.5 },
-      personalization: { strength: 0.7 },
+      affinityWeighting: { strength: 0.7 },
       avoidPairs: [{ a: "d0", b: "d5", minGapMinutes: 45 }],
     });
     const a = compile(ctx(), cat, r, noFallback);
@@ -236,7 +236,7 @@ describe("engine — determinism preserved", () => {
     const p = compile(ctx(), cat, rules(), noFallback);
     expect(p.stats.engine).toEqual({
       fatigueApplied: false,
-      personalizationApplied: false,
+      affinityApplied: false,
       categoriesApplied: false,
       avoidPairBlocks: 0,
     });

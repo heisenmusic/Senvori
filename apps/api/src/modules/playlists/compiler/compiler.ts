@@ -7,12 +7,13 @@
  * relaxing only relaxable rules when the catalog is thin, falling back to safety
  * content, and never looping forever. Every item carries a human reason.
  *
- * Sprint 07 layers four deterministic intelligence capabilities on top:
+ * Sprint 07 layers four deterministic capabilities on top:
  *   1. cross-day fatigue   — de-weight tracks played heavily on recent days;
  *   2. rotation categories — a gap between tracks that share a category;
  *   3. paired-track avoidance — keep configured asset pairs apart;
- *   4. learned personalization — modulate weight by an upstream affinity score.
+ *   4. affinity-aware weighting — modulate weight by a caller-supplied score.
  * All are opt-in and default to no-op, so the engine is a pure superset of v1.
+ * Note: the compiler does not learn — upstream feeds `recentPlays`/`affinity`.
  */
 
 import { hashPlan } from "./seed";
@@ -50,12 +51,12 @@ interface RelaxState {
 
 /**
  * Effective weight after the two weight-modulating engine layers
- * (personalization × fatigue). Pure: no clock, no random source. Always ≥ 0.
+ * (affinity weighting × fatigue). Pure: no clock, no random source. Always ≥ 0.
  */
 const effectiveWeight = (c: CandidateTrack, rules: RotationRules): number => {
   let w = Math.max(c.weight, 0);
 
-  const strength = rules.personalization?.strength ?? 0;
+  const strength = rules.affinityWeighting?.strength ?? 0;
   if (strength > 0) {
     const affinity = c.affinity ?? NEUTRAL_AFFINITY;
     // affinity 0 → (1 − strength); 0.5 → 1; 1 → (1 + strength).
@@ -215,8 +216,8 @@ export const compile = (
   const engine = {
     fatigueApplied:
       (rules.fatigue?.weightPenalty ?? 0) > 0 && candidates.some((c) => (c.recentPlays ?? 0) > 0),
-    personalizationApplied:
-      (rules.personalization?.strength ?? 0) > 0 &&
+    affinityApplied:
+      (rules.affinityWeighting?.strength ?? 0) > 0 &&
       candidates.some((c) => c.affinity !== undefined && c.affinity !== NEUTRAL_AFFINITY),
     categoriesApplied: catRulesOn && candidates.some((c) => (c.categories?.length ?? 0) > 0),
     avoidPairBlocks: 0,
@@ -230,6 +231,18 @@ export const compile = (
   let offset = 0;
   let fallbackCount = 0;
   let iterations = 0;
+
+  // Cross-day seam: seed history with the previous window's tail at negative
+  // offsets so gaps carry over the day boundary. Never emitted as items.
+  for (const co of context.carryOver ?? []) {
+    history.push({
+      assetId: co.assetId,
+      artist: co.artist,
+      categories: co.categories ?? [],
+      startOffsetMs: -Math.max(co.minutesBeforeStart, 0) * MIN,
+    });
+  }
+  history.sort((a, b) => a.startOffsetMs - b.startOffsetMs);
 
   if (candidates.length === 0 && fallback.safety.length === 0) {
     warnings.push({ code: "empty_program", message: "No eligible content to compile." });
@@ -261,11 +274,7 @@ export const compile = (
   /** Explainability bits for the engine layers that shaped this choice. */
   const engineReasons = (c: CandidateTrack): string[] => {
     const bits: string[] = [];
-    if (
-      engine.personalizationApplied &&
-      c.affinity !== undefined &&
-      c.affinity !== NEUTRAL_AFFINITY
-    ) {
+    if (engine.affinityApplied && c.affinity !== undefined && c.affinity !== NEUTRAL_AFFINITY) {
       bits.push(c.affinity > NEUTRAL_AFFINITY ? "audience-preferred" : "audience-de-emphasized");
     }
     if (engine.fatigueApplied && (c.recentPlays ?? 0) > 0) {
