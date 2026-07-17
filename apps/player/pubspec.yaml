@@ -1,0 +1,28 @@
+name: senvori_player
+description: "Senvori Player — premium offline-first runtime for physical environments."
+publish_to: "none"
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.12.2
+
+# Dependencies are intentionally minimal. The runtime layer is pure Dart with
+# injectable ports (filesystem, clock, network, connectivity), so it is fully
+# unit-testable headless without native plugins. UI uses only Flutter SDK +
+# official localization packages.
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  intl: any
+  cupertino_icons: ^1.0.8
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+  generate: true
