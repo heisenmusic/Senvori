@@ -48,6 +48,12 @@ export const PERMISSIONS = [
   "playlists:rotation_pair:read",
   "playlists:rotation_pair:manage",
   "scheduling:program:assign",
+  // Scheduling Runtime (Sprint 08)
+  "scheduling:assignment:read",
+  "scheduling:assignment:manage",
+  "scheduling:event:read",
+  "scheduling:event:manage",
+  "scheduling:plan:read",
   // Fleet (§3.8) — used by later sprints, catalogued now
   "fleet:device:read",
   "fleet:device:pair",

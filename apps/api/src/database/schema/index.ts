@@ -20,6 +20,7 @@ export * from "./catalog";
 export * from "./licensing";
 export * from "./playlists";
 export * from "./scheduling";
+export * from "./scheduling-runtime";
 export * from "./campaigns";
 export * from "./brand-experience";
 export * from "./retail-media";

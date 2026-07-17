@@ -401,5 +401,88 @@
       "error": "No pudimos cargar los pares.",
       "retry": "Reintentar"
     }
+  },
+  "scheduling": {
+    "title": "Programación",
+    "subtitle": "Asignaciones y eventos locales resueltos en una línea de tiempo operativa por unidad.",
+    "states": {
+      "loading": "Cargando…",
+      "error": "Algo salió mal.",
+      "retry": "Reintentar",
+      "noPermission": "No tienes acceso a la programación."
+    },
+    "resolve": {
+      "title": "Vista previa de resolución",
+      "hint": "Proyección determinista: el programa y el plan efectivo de una unidad en una fecha y hora locales.",
+      "unit": "ID de unidad",
+      "unitPlaceholder": "UUID de la unidad",
+      "date": "Fecha local",
+      "time": "Hora local",
+      "run": "Resolver",
+      "running": "Resolviendo…",
+      "error": "No se pudo resolver.",
+      "reason": "Decisión",
+      "selected": "Programa seleccionado",
+      "none": "—",
+      "base": "Hash del plan base",
+      "effective": "Hash del plan efectivo",
+      "overlays": "Superposiciones",
+      "status": "Estado",
+      "emergency": "Emergencia activa"
+    },
+    "assignments": {
+      "title": "Asignaciones",
+      "empty": "Aún no hay asignaciones de programación.",
+      "col": {
+        "program": "Programa",
+        "target": "Objetivo",
+        "priority": "Prioridad",
+        "window": "Ventana",
+        "active": "Activo"
+      }
+    },
+    "events": {
+      "title": "Eventos locales",
+      "empty": "Aún no hay eventos locales.",
+      "col": {
+        "category": "Categoría",
+        "kind": "Tipo",
+        "target": "Objetivo",
+        "window": "Ventana",
+        "offset": "Desplazamiento"
+      },
+      "offsetSeconds": "{seconds}s"
+    },
+    "target": {
+      "tenant": "Tenant",
+      "group": "Grupo",
+      "sync_group": "Grupo de sincronización",
+      "unit": "Unidad"
+    },
+    "kind": {
+      "insert": "Inserción",
+      "overlay": "Superposición",
+      "interrupt": "Interrupción"
+    },
+    "category": {
+      "local_event": "Evento local",
+      "campaign_slot": "Espacio de campaña",
+      "emergency": "Emergencia"
+    },
+    "active": {
+      "yes": "Activo",
+      "no": "Inactivo"
+    },
+    "reason": {
+      "unit_assignment_selected": "Asignación de unidad seleccionada",
+      "group_assignment_selected": "Asignación de grupo seleccionada",
+      "sync_group_assignment_selected": "Asignación de grupo de sincronización seleccionada",
+      "tenant_default_selected": "Predeterminado del tenant seleccionado",
+      "assignment_conflict_detected": "Conflicto — resuelto de forma determinista",
+      "fallback_program_selected": "Programa alternativo seleccionado",
+      "no_assignment": "Ninguna asignación en vigor"
+    },
+    "targetRef": "{label} · {id}",
+    "window": "{start}–{end}"
   }
 }

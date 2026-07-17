@@ -401,5 +401,88 @@
       "error": "We couldn't load the pairs.",
       "retry": "Try again"
     }
+  },
+  "scheduling": {
+    "title": "Scheduling",
+    "subtitle": "Assignments and local events resolved into a per-unit operational timeline.",
+    "states": {
+      "loading": "Loading…",
+      "error": "Something went wrong.",
+      "retry": "Retry",
+      "noPermission": "You don't have access to scheduling."
+    },
+    "resolve": {
+      "title": "Resolve preview",
+      "hint": "Deterministic projection: the program and effective plan for a unit at a local date and time.",
+      "unit": "Unit ID",
+      "unitPlaceholder": "unit UUID",
+      "date": "Local date",
+      "time": "Local time",
+      "run": "Resolve",
+      "running": "Resolving…",
+      "error": "Could not resolve.",
+      "reason": "Decision",
+      "selected": "Selected program",
+      "none": "—",
+      "base": "Base plan hash",
+      "effective": "Effective plan hash",
+      "overlays": "Overlays",
+      "status": "Status",
+      "emergency": "Emergency active"
+    },
+    "assignments": {
+      "title": "Assignments",
+      "empty": "No schedule assignments yet.",
+      "col": {
+        "program": "Program",
+        "target": "Target",
+        "priority": "Priority",
+        "window": "Window",
+        "active": "Active"
+      }
+    },
+    "events": {
+      "title": "Local events",
+      "empty": "No local events yet.",
+      "col": {
+        "category": "Category",
+        "kind": "Kind",
+        "target": "Target",
+        "window": "Window",
+        "offset": "Offset"
+      },
+      "offsetSeconds": "{seconds}s"
+    },
+    "target": {
+      "tenant": "Tenant",
+      "group": "Group",
+      "sync_group": "Sync group",
+      "unit": "Unit"
+    },
+    "kind": {
+      "insert": "Insert",
+      "overlay": "Overlay",
+      "interrupt": "Interrupt"
+    },
+    "category": {
+      "local_event": "Local event",
+      "campaign_slot": "Campaign slot",
+      "emergency": "Emergency"
+    },
+    "active": {
+      "yes": "Active",
+      "no": "Inactive"
+    },
+    "reason": {
+      "unit_assignment_selected": "Unit assignment selected",
+      "group_assignment_selected": "Group assignment selected",
+      "sync_group_assignment_selected": "Sync-group assignment selected",
+      "tenant_default_selected": "Tenant default selected",
+      "assignment_conflict_detected": "Conflict — resolved deterministically",
+      "fallback_program_selected": "Fallback program selected",
+      "no_assignment": "No assignment in effect"
+    },
+    "targetRef": "{label} · {id}",
+    "window": "{start}–{end}"
   }
 }

@@ -1,5 +1,57 @@
 # SENVORI 2.0 — PROJECT STATUS REPORT
 
+> ## Atualização — Scheduling Runtime & Local Events (Sprint 08)
+>
+> Programas publicados viram uma **linha do tempo operacional** — o que toca em
+> uma unidade, em uma data/hora local, por quê e com quais interrupções — **sem
+> produzir áudio** (o Player permanece **Not implemented**). O núcleo de decisão é
+> uma **função pura** (sem DB/relógio/aleatoriedade/locale/timezone ambiente):
+> mesmos insumos ⇒ mesma seleção e mesmo `effectivePlanHash`. Branch
+> `claude/senvori-scheduling-runtime` (a partir de `origin/main`, que já contém a
+> Sprint 07B mesclada).
+>
+> | Capacidade                        | Núcleo | Persist. | Serviço | API | SDK | Dashboard | Testes | Status              |
+> | --------------------------------- | ------ | -------- | ------- | --- | --- | --------- | ------ | ------------------- |
+> | Atribuições de programação        | ✅     | ✅       | ✅      | ✅  | ✅  | ✅        | ✅     | **Complete**        |
+> | Resolver determinístico           | ✅     | —        | ✅      | ✅  | ✅  | ✅        | ✅     | **Complete**        |
+> | Plano base × plano efetivo        | ✅     | ✅       | ✅      | ✅  | ✅  | ✅        | ✅     | **Complete**        |
+> | Eventos locais (overlays)         | ✅     | ✅       | ✅      | ✅  | ✅  | ✅        | ✅     | **Complete**        |
+> | Slots de campanha                 | ✅     | ✅       | ✅      | ✅  | ✅  | ✅        | ✅     | **Complete**        |
+> | Emergência (overlay + flag)       | ✅     | ✅       | ✅      | ✅  | ✅  | ✅        | ✅     | **Complete**        |
+> | Sync soft (hash base compartilh.) | ✅     | ✅       | ✅      | ✅  | ✅  | —         | ✅     | **Complete**        |
+> | Sync hard (lockstep)              | ⚠️     | ⚠️       | ❌      | ❌  | ❌  | ❌        | ❌     | **Prepared**        |
+> | Troca de programa por emergência  | ⚠️     | ⚠️       | ❌      | ❌  | ❌  | ❌        | ❌     | **Prepared**        |
+> | Execução no Player                | ❌     | ❌       | ❌      | ❌  | ❌  | ❌        | ❌     | **Not implemented** |
+>
+> - **Resolver puro** (`resolver/resolver.ts`): especificidade
+>   `unit > group > sync_group > tenant`, depois prioridade, período mais estreito e
+>   desempate estável por id; empate ambíguo ⇒ aviso `assignment_conflict_detected` +
+>   escolha determinística. Janelas `[start,end)`; cross-midnight rejeitado (400) e
+>   ignorado com aviso. Datas em aritmética de calendário (DST-agnóstica).
+> - **Eventos locais puros** (`resolver/local-events.ts`): `insert`/`overlay`/`interrupt`
+>   em três categorias (`local_event`/`campaign_slot`/`emergency`) viram overlays
+>   ordenados; `interrupt` de maior precedência mascara sobreposições de menor
+>   precedência; `emergencyActive` entra no hash efetivo.
+> - **Plano efetivo:** hash base (`playlist_versions.planHash`, identidade
+>   compartilhada do sync group) separado do hash efetivo por unidade/data local.
+> - **Persistência:** migrações `0009` `schedule_assignments` e `0010` `local_events`
+>   (ambas RLS + FORCE + auditoria transacional). API conecta como papel
+>   `NOBYPASSRLS`; referências a programa/asset validadas via checagem sob RLS.
+> - **Superfície:** REST sob `scheduling:assignment:*`, `scheduling:event:*`,
+>   `scheduling:plan:read`; SDK `SchedulingClient`; área "Scheduling" no Dashboard com
+>   prévia de resolução; i18n pt-BR/en-US/es-ES (paridade de chaves mantida).
+> - **Verificado:** typecheck/build verdes; **testes de agendamento**: resolver puro
+>   (16), eventos locais puros (11), simulação de dia completo (5), integração em
+>   Postgres real (14) — CRUD/auditoria, RBAC deny, isolamento por tenant,
+>   determinismo, plano efetivo com overlay e emergência. Docs:
+>   `SCHEDULING_RUNTIME.md`, `LOCAL_EVENTS.md`, `SYNC_GROUPS.md`,
+>   `EFFECTIVE_EXECUTION_PLAN.md` (com ADRs 08-01/02/03). **Não é um release.**
+> - **Escopo honesto (§35):** sem Player Flutter, sem áudio, sem Proof-of-Play, sem
+>   Fleet/manifesto de device, sem billing/marketplace/ML. Sync hard e troca de
+>   programa por emergência ficam **Prepared** — não há runtime que os execute.
+>
+> ---
+>
 > ## Atualização — Historical Programming Runtime (Sprint 07B)
 >
 > A programação ganhou **memória operacional**: a rádio deixou de reiniciar do
