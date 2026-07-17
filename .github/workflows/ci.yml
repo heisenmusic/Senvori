@@ -80,6 +80,9 @@ jobs:
 
       - uses: subosito/flutter-action@v2
         with:
+          # Pinned to the version the suite (incl. goldens) was verified against,
+          # so a moving `stable` cannot drift analysis or golden rendering.
+          flutter-version: 3.44.6
           channel: stable
           cache: true
 
