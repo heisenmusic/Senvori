@@ -450,7 +450,8 @@
         "target": "Objetivo",
         "window": "Ventana",
         "offset": "Desplazamiento"
-      }
+      },
+      "offsetSeconds": "{seconds}s"
     },
     "target": {
       "tenant": "Tenant",
@@ -480,6 +481,8 @@
       "assignment_conflict_detected": "Conflicto — resuelto de forma determinista",
       "fallback_program_selected": "Programa alternativo seleccionado",
       "no_assignment": "Ninguna asignación en vigor"
-    }
+    },
+    "targetRef": "{label} · {id}",
+    "window": "{start}–{end}"
   }
 }

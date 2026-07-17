@@ -450,7 +450,8 @@
         "target": "Target",
         "window": "Window",
         "offset": "Offset"
-      }
+      },
+      "offsetSeconds": "{seconds}s"
     },
     "target": {
       "tenant": "Tenant",
@@ -480,6 +481,8 @@
       "assignment_conflict_detected": "Conflict — resolved deterministically",
       "fallback_program_selected": "Fallback program selected",
       "no_assignment": "No assignment in effect"
-    }
+    },
+    "targetRef": "{label} · {id}",
+    "window": "{start}–{end}"
   }
 }

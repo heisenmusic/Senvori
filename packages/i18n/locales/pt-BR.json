@@ -450,7 +450,8 @@
         "target": "Alvo",
         "window": "Janela",
         "offset": "Deslocamento"
-      }
+      },
+      "offsetSeconds": "{seconds}s"
     },
     "target": {
       "tenant": "Tenant",
@@ -480,6 +481,8 @@
       "assignment_conflict_detected": "Conflito — resolvido de forma determinística",
       "fallback_program_selected": "Programa de fallback selecionado",
       "no_assignment": "Nenhuma atribuição em vigor"
-    }
+    },
+    "targetRef": "{label} · {id}",
+    "window": "{start}–{end}"
   }
 }

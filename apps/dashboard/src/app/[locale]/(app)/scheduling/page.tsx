@@ -207,11 +207,14 @@ const SchedulingPage = () => {
                   <TableRow key={a.id}>
                     <TableCell className="font-mono text-xs">{a.programId.slice(0, 8)}</TableCell>
                     <TableCell>
-                      {t(`target.${a.targetType}`)} · {a.targetId.slice(0, 8)}
+                      {t("targetRef", {
+                        label: t(`target.${a.targetType}`),
+                        id: a.targetId.slice(0, 8),
+                      })}
                     </TableCell>
                     <TableCell>{a.priority}</TableCell>
                     <TableCell className="text-muted-foreground">
-                      {a.startTimeLocal}–{a.endTimeLocal}
+                      {t("window", { start: a.startTimeLocal, end: a.endTimeLocal })}
                     </TableCell>
                     <TableCell>
                       <Badge variant={a.active ? "default" : "outline"}>
@@ -259,13 +262,16 @@ const SchedulingPage = () => {
                     </TableCell>
                     <TableCell>{t(`kind.${e.kind}`)}</TableCell>
                     <TableCell>
-                      {t(`target.${e.targetType}`)} · {e.targetId.slice(0, 8)}
+                      {t("targetRef", {
+                        label: t(`target.${e.targetType}`),
+                        id: e.targetId.slice(0, 8),
+                      })}
                     </TableCell>
                     <TableCell className="text-muted-foreground">
-                      {e.startTimeLocal}–{e.endTimeLocal}
+                      {t("window", { start: e.startTimeLocal, end: e.endTimeLocal })}
                     </TableCell>
                     <TableCell className="text-muted-foreground">
-                      {e.startOffsetMs / 1000}s
+                      {t("events.offsetSeconds", { seconds: e.startOffsetMs / 1000 })}
                     </TableCell>
                   </TableRow>
                 ))}
