@@ -1,5 +1,44 @@
 # SENVORI 2.0 — PROJECT STATUS REPORT
 
+> ## Atualização — Historical Programming Runtime (Sprint 07B)
+>
+> A programação ganhou **memória operacional**: a rádio deixou de reiniciar do
+> zero a cada dia, mantendo o compilador como **função pura**. Branch
+> `claude/senvori-historical-programming-runtime` (a partir de `origin/main`, que
+> já contém a Sprint 07 mesclada). Três capacidades "Prepared" da Sprint 07 viraram
+> **Complete**; afinidade permanece **Prepared** (sem fonte de score, sem aprendizado).
+>
+> | Capacidade                 | Motor | Persist. | Serviço | API | SDK | Dashboard | E2E | Status       |
+> | -------------------------- | ----- | -------- | ------- | --- | --- | --------- | --- | ------------ |
+> | Categorias avançadas       | ✅    | ✅       | ✅      | ✅  | ✅  | ✅        | ✅  | **Complete** |
+> | Fadiga entre dias          | ✅    | ✅       | ✅      | ✅  | ✅  | ✅        | ✅  | **Complete** |
+> | Continuidade (`carryOver`) | ✅    | ✅       | ✅      | ✅  | ✅  | ✅        | ✅  | **Complete** |
+> | Evitar pares               | ✅    | ✅       | ✅      | ✅  | ✅  | ✅        | ✅  | **Complete** |
+> | Ponderação por afinidade   | ✅    | ⚠️ botão | ⚠️      | ⚠️  | ⚠️  | ⚠️        | ❌  | **Prepared** |
+>
+> - **Histórico planejado (`buildPlannedHistory`, puro):** recompila deterministicamente
+>   o programa para datas locais anteriores (aritmética de data DST-agnóstica; fadiga
+>   OFF ⇒ sem recursão) e deriva `recentPlays`, contagem por artista e a cauda do dia
+>   anterior. É `planned_history` (projeção, **não** Proof-of-Play); `playback_events`
+>   não tem produtor e não é usado.
+> - **Fadiga entre dias — Complete.** `recentPlays` vem do histórico; com penalidade,
+>   faixas muito tocadas perdem espaço (comprovado em simulação de 14 dias).
+> - **Continuidade — Complete.** A cauda do dia anterior semeia a costura com gap
+>   wall-clock (0 em janelas 24 h, grande em janelas parciais).
+> - **Evitar pares — Complete.** Migração `0008` `rotation_pairs` (RLS + FORCE, índice
+>   único normalizado, check `a<>b`, auditoria); CRUD REST sob `playlists:rotation_pair:*`
+>   com auditoria transacional e `409`; SDK; editor no Dashboard. Pares ativos alimentam
+>   preview + publish.
+> - **Config:** `history_lookback_days` + `cross_day_continuity` (aditivos; padrões 7 / on).
+>   Painel "Memória da programação" no Dashboard, com copy honesta (histórico planejado
+>   ≠ comprovação de reprodução). i18n pt/en/es.
+> - **Verificado:** format · lint · typecheck · build verdes; **189 testes**
+>   (API 138 em Postgres real — +5 pares, +8 unit de histórico, +8 simulação de 14 dias;
+>   SDK 26 · Dashboard 25). Docs: `PROGRAMMING_HISTORY.md`. **Não é um release.**
+>   Afinidade permanece Prepared; Proof-of-Play real é trabalho futuro.
+>
+> ---
+>
 > ## Atualização — Intelligent Programming Engine (Sprint 07)
 >
 > O compilador determinístico ganhou **quatro capacidades**, opcionais e sem

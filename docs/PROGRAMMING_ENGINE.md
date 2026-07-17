@@ -8,41 +8,41 @@
 
 ## Honest scope — read this first
 
-Sprint 07 delivered the **engine** for four capabilities and bumped the compiler
-to **2.0.0**. It did **not** deliver end-to-end production wiring for all four.
-The compiler is a pure function that _applies_ signals; it does **not** learn,
-and it does **not** read the database. Two of the four capabilities depend on a
-signal pipeline (play history, affinity scores) that **does not exist yet** and
-is deferred to **Sprint 07B**. This document classifies each capability exactly.
+Sprint 07 delivered the **engine** for four capabilities (compiler **2.0.0**);
+**Sprint 07B** (Historical Programming Runtime) supplied the missing signals and
+product surfaces. The compiler is still a pure function that _applies_ signals; it
+does **not** learn and does **not** read the database — see
+`docs/PROGRAMMING_HISTORY.md` for how history is derived deterministically.
 
 Status legend:
 
 - **Complete** — engine + persistence + API + SDK + Dashboard + an E2E test.
 - **Partial** — wired through some layers, with a material gap.
 - **Prepared** — the engine (and sometimes a config knob) exists, but a required
-  input or surface is missing; inert in production until 07B.
+  input or surface is missing.
 - **Not implemented**.
 
-### Capability matrix
+### Capability matrix (after Sprint 07B)
 
-| Capability                   | Engine | Persistence            | API     | SDK     | Dashboard | E2E | Status                          |
-| ---------------------------- | ------ | ---------------------- | ------- | ------- | --------- | --- | ------------------------------- |
-| Advanced rotation categories | ✅     | ✅ genres + gap column | ✅      | ✅      | ✅        | ✅  | **Complete**                    |
-| Cross-day fatigue            | ✅     | ⚠️ knob only¹          | ⚠️ knob | ⚠️ knob | ⚠️ knob   | ❌  | **Prepared**                    |
-| Affinity-aware weighting     | ✅     | ⚠️ knob only²          | ⚠️ knob | ⚠️ knob | ⚠️ knob   | ❌  | **Prepared**                    |
-| Paired-track avoidance       | ✅     | ❌                     | ❌      | ❌      | ❌        | ❌  | **Prepared (engine-only)**      |
-| Cross-day seam (`carryOver`) | ✅     | ❌                     | ❌      | ❌      | ❌        | ❌  | **Prepared (engine primitive)** |
+| Capability                   | Engine | Persistence | Service | API | SDK | Dashboard | E2E | Status       |
+| ---------------------------- | ------ | ----------- | ------- | --- | --- | --------- | --- | ------------ |
+| Advanced rotation categories | ✅     | ✅          | ✅      | ✅  | ✅  | ✅        | ✅  | **Complete** |
+| Cross-day fatigue            | ✅     | ✅          | ✅¹     | ✅  | ✅  | ✅        | ✅  | **Complete** |
+| Cross-day seam (`carryOver`) | ✅     | ✅          | ✅¹     | ✅  | ✅  | ✅        | ✅  | **Complete** |
+| Paired-track avoidance       | ✅     | ✅          | ✅      | ✅  | ✅  | ✅        | ✅  | **Complete** |
+| Affinity-aware weighting     | ✅     | ⚠️ knob     | ⚠️      | ⚠️  | ⚠️  | ⚠️        | ❌  | **Prepared** |
 
-¹ The `fatigueWeightPenalty` knob is persisted and editable end-to-end, but the
-per-track `recentPlays` **signal has no source**: nothing populates
-`playback_events`, and neither preview nor publish queries play history. The
-penalty therefore has nothing to act on in production today.
+¹ Fatigue and the seam are fed by **planned history** — a deterministic projection
+of prior local dates (`buildPlannedHistory`), not Proof-of-Play. Real
+`verified_playback_history` is a future provider with the same shape. See
+`docs/PROGRAMMING_HISTORY.md`.
 
-² The `affinityStrength` knob is persisted and editable end-to-end, but the
-per-track `affinity` **score has no source**: nothing computes or stores it. The
-compiler applies a supplied score deterministically — it is _not_ learning and
-there is _no_ personalization model. Named **affinity-aware deterministic
-weighting**, never "learned personalization".
+² **Affinity remains Prepared.** The `affinityStrength` knob is persisted and
+editable end-to-end, but the per-track `affinity` **score has no source** — nothing
+computes or stores it. The compiler applies a supplied score deterministically; it
+is _not_ learning and there is _no_ personalization model. Named **affinity-aware
+deterministic weighting**, never "learned personalization". Deferred to a future
+sprint with an explicit affinity provider.
 
 ## 1. Advanced rotation categories — Complete
 
