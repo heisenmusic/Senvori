@@ -66,6 +66,43 @@ jobs:
       - name: Build
         run: pnpm build
 
+  # Flutter Player checks (Sprint 09). Runs independently of the Node verify job.
+  # Generates localizations from ARB, then enforces format, static analysis and
+  # the full test suite (unit, widget, golden, integration, soak). Finally builds
+  # a debug APK to prove the Android target compiles end-to-end.
+  player:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/player
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Generate localizations
+        run: flutter gen-l10n
+
+      - name: Format check (excluding generated localizations)
+        run: >-
+          dart format --output=none --set-exit-if-changed
+          $(find lib test -name '*.dart' ! -name 'app_localizations*.dart')
+
+      - name: Analyze
+        run: flutter analyze
+
+      - name: Tests (unit, widget, golden, integration, soak)
+        run: flutter test
+
+      - name: Build debug APK
+        run: flutter build apk --debug
+
   # Docker images are built only after verify (lint/typecheck/test/build) is
   # green, and the built images are uploaded as artifacts. Any failure here
   # fails the pipeline.
