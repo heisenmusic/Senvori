@@ -424,8 +424,11 @@ describe("Programming — intelligent engine policy (Sprint 07)", () => {
     const a = await req("POST", `/v1/programs/${id}/preview`, "ownerA", body);
     expect(a.status).toBe(200);
     expect(a.json.compilerVersion).toBe("2.0.0");
+    // Sprint 07B: fatigue is now WIRED — planned history feeds recentPlays, and
+    // with a penalty configured the layer is genuinely active. Affinity has no
+    // source yet (Prepared) and this program has no genres/pairs.
     expect(a.json.stats.engine).toEqual({
-      fatigueApplied: false,
+      fatigueApplied: true,
       affinityApplied: false,
       categoriesApplied: false,
       avoidPairBlocks: 0,

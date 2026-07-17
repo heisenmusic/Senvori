@@ -1,4 +1,6 @@
 import {
+  boolean,
+  check,
   doublePrecision,
   index,
   integer,
@@ -10,6 +12,7 @@ import {
   uniqueIndex,
   uuid,
 } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 import {
   archivedAt,
   auditFields,
@@ -114,11 +117,47 @@ export const rotationPolicies = pgTable(
     minCategoryGapMinutes: integer("min_category_gap_minutes"),
     fatigueWeightPenalty: doublePrecision("fatigue_weight_penalty"),
     affinityStrength: doublePrecision("affinity_strength"),
+    /* Historical Programming Runtime (Sprint 07B) — null ⇒ service default. */
+    historyLookbackDays: integer("history_lookback_days"),
+    crossDayContinuity: boolean("cross_day_continuity"),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
     uniqueIndex("rotation_policies_tenant_idx").on(t.tenantId),
     tenantIsolation("rotation_policies"),
+  ],
+).enableRLS();
+
+/**
+ * Recurring-pair avoidance (Sprint 07B · §11) — tenant-wide, one row per pair.
+ * `asset_a`/`asset_b` are stored order-normalised (a < b as text) so a plain
+ * unique index rejects both duplicates and inverted duplicates. The compiler
+ * receives only ACTIVE pairs as `RotationRules.avoidPairs`.
+ */
+export const rotationPairs = pgTable(
+  "rotation_pairs",
+  {
+    id: id(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => tenants.id, { onDelete: "cascade" }),
+    assetA: uuid("asset_a")
+      .notNull()
+      .references(() => assets.id, { onDelete: "cascade" }),
+    assetB: uuid("asset_b")
+      .notNull()
+      .references(() => assets.id, { onDelete: "cascade" }),
+    minGapMinutes: integer("min_gap_minutes").notNull().default(60),
+    active: boolean("active").notNull().default(true),
+    createdBy: uuid("created_by").references(() => users.id),
+    updatedBy: uuid("updated_by").references(() => users.id),
+    ...auditFields(),
+  },
+  (t) => [
+    uniqueIndex("rotation_pairs_tenant_pair_idx").on(t.tenantId, t.assetA, t.assetB),
+    index("rotation_pairs_tenant_idx").on(t.tenantId),
+    check("rotation_pairs_distinct_assets", sql`${t.assetA} <> ${t.assetB}`),
+    tenantIsolation("rotation_pairs"),
   ],
 ).enableRLS();
 

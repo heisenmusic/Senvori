@@ -1,9 +1,22 @@
-import { Body, Controller, Get, HttpCode, Param, Patch, Post, Put, Query } from "@nestjs/common";
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  Param,
+  Patch,
+  Post,
+  Put,
+  Query,
+} from "@nestjs/common";
 import {
   type CreateAssignmentInput,
   createAssignmentSchema,
   type CreateProgramInput,
   createProgramSchema,
+  type CreateRotationPairInput,
+  createRotationPairSchema,
   type ExecutionPlanDto,
   type PreviewRequestInput,
   previewRequestSchema,
@@ -12,11 +25,14 @@ import {
   type ProgramListQuery,
   programListQuerySchema,
   type ProgramVersionDto,
+  type RotationPairDto,
   type RotationPolicyDto,
   type SetProgramItemsInput,
   setProgramItemsSchema,
   type UpdateProgramInput,
   updateProgramSchema,
+  type UpdateRotationPairInput,
+  updateRotationPairSchema,
   type UpsertRotationPolicyInput,
   upsertRotationPolicySchema,
 } from "@senvori/contracts";
@@ -67,6 +83,45 @@ export class PlaylistsController {
     @Body(new ZodValidationPipe(upsertRotationPolicySchema)) input: UpsertRotationPolicyInput,
   ): Promise<RotationPolicyDto> {
     return this.service.upsertRotationPolicy(ctx, input);
+  }
+
+  /* ----------------------------------------------------- rotation pairs -- */
+
+  @Get("rotation-pairs")
+  @RequirePermission("playlists:rotation_pair:read")
+  listRotationPairs(
+    @CurrentContext() ctx: RequestContext,
+  ): Promise<{ items: RotationPairDto[]; nextCursor: string | null }> {
+    return this.service.listRotationPairs(ctx);
+  }
+
+  @Post("rotation-pairs")
+  @RequirePermission("playlists:rotation_pair:manage")
+  createRotationPair(
+    @CurrentContext() ctx: RequestContext,
+    @Body(new ZodValidationPipe(createRotationPairSchema)) input: CreateRotationPairInput,
+  ): Promise<RotationPairDto> {
+    return this.service.createRotationPair(ctx, input);
+  }
+
+  @Patch("rotation-pairs/:pairId")
+  @RequirePermission("playlists:rotation_pair:manage")
+  updateRotationPair(
+    @CurrentContext() ctx: RequestContext,
+    @Param("pairId") pairId: string,
+    @Body(new ZodValidationPipe(updateRotationPairSchema)) input: UpdateRotationPairInput,
+  ): Promise<RotationPairDto> {
+    return this.service.updateRotationPair(ctx, pairId, input);
+  }
+
+  @Delete("rotation-pairs/:pairId")
+  @RequirePermission("playlists:rotation_pair:manage")
+  @HttpCode(204)
+  async deleteRotationPair(
+    @CurrentContext() ctx: RequestContext,
+    @Param("pairId") pairId: string,
+  ): Promise<void> {
+    await this.service.deleteRotationPair(ctx, pairId);
   }
 
   @Get(":id")

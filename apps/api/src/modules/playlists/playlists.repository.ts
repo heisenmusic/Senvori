@@ -1,12 +1,14 @@
 import { Injectable } from "@nestjs/common";
 import type { ProgramListQuery } from "@senvori/contracts";
 import { and, asc, desc, eq, gt, ilike, inArray, isNull, max, type SQL } from "drizzle-orm";
+import { alias } from "drizzle-orm/pg-core";
 import type { TenantTx } from "../../database/tenant-context";
 import {
   assets,
   playlistItems,
   playlistVersions,
   playlists,
+  rotationPairs,
   rotationPolicies,
   scheduleEntries,
   schedules,
@@ -16,6 +18,27 @@ import {
 export type ProgramRow = typeof playlists.$inferSelect;
 export type ProgramVersionRow = typeof playlistVersions.$inferSelect;
 export type RotationPolicyRow = typeof rotationPolicies.$inferSelect;
+export type RotationPairRow = typeof rotationPairs.$inferSelect;
+
+/** A rotation pair joined with the two assets' titles (for display). */
+export interface RotationPairView {
+  id: string;
+  assetA: string;
+  assetB: string;
+  assetATitle: string | null;
+  assetBTitle: string | null;
+  minGapMinutes: number;
+  active: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+/** An active pair reduced to the compiler's shape (Sprint 07B). */
+export interface ActivePair {
+  a: string;
+  b: string;
+  minGapMinutes: number;
+}
 
 /** A program content item joined with its Library metadata (for display). */
 export interface ProgramItemRow {
@@ -225,11 +248,82 @@ export class PlaylistsRepository {
           minCategoryGapMinutes: values.minCategoryGapMinutes ?? null,
           fatigueWeightPenalty: values.fatigueWeightPenalty ?? null,
           affinityStrength: values.affinityStrength ?? null,
+          historyLookbackDays: values.historyLookbackDays ?? null,
+          crossDayContinuity: values.crossDayContinuity ?? null,
           updatedAt: new Date(),
         },
       })
       .returning();
     return row as RotationPolicyRow;
+  }
+
+  /* ------------------------------------------------------- rotation pairs -- */
+
+  private static readonly assetB = alias(assets, "asset_b");
+
+  async listRotationPairs(tx: TenantTx, tenantId: string): Promise<RotationPairView[]> {
+    const bt = PlaylistsRepository.assetB;
+    const rows = await tx
+      .select({
+        id: rotationPairs.id,
+        assetA: rotationPairs.assetA,
+        assetB: rotationPairs.assetB,
+        assetATitle: assets.title,
+        assetBTitle: bt.title,
+        minGapMinutes: rotationPairs.minGapMinutes,
+        active: rotationPairs.active,
+        createdAt: rotationPairs.createdAt,
+        updatedAt: rotationPairs.updatedAt,
+      })
+      .from(rotationPairs)
+      .leftJoin(assets, eq(assets.id, rotationPairs.assetA))
+      .leftJoin(bt, eq(bt.id, rotationPairs.assetB))
+      .where(eq(rotationPairs.tenantId, tenantId))
+      .orderBy(desc(rotationPairs.createdAt));
+    return rows;
+  }
+
+  async findRotationPair(tx: TenantTx, id: string): Promise<RotationPairRow | undefined> {
+    const [row] = await tx.select().from(rotationPairs).where(eq(rotationPairs.id, id));
+    return row;
+  }
+
+  async insertRotationPair(
+    tx: TenantTx,
+    values: typeof rotationPairs.$inferInsert,
+  ): Promise<RotationPairRow> {
+    const [row] = await tx.insert(rotationPairs).values(values).returning();
+    return row as RotationPairRow;
+  }
+
+  async updateRotationPair(
+    tx: TenantTx,
+    id: string,
+    patch: Partial<typeof rotationPairs.$inferInsert>,
+  ): Promise<RotationPairRow | undefined> {
+    const [row] = await tx
+      .update(rotationPairs)
+      .set({ ...patch, updatedAt: new Date() })
+      .where(eq(rotationPairs.id, id))
+      .returning();
+    return row;
+  }
+
+  async deleteRotationPair(tx: TenantTx, id: string): Promise<void> {
+    await tx.delete(rotationPairs).where(eq(rotationPairs.id, id));
+  }
+
+  /** Active pairs for the compiler — order-normalised ids already stored. */
+  async loadActivePairs(tx: TenantTx, tenantId: string): Promise<ActivePair[]> {
+    const rows = await tx
+      .select({
+        a: rotationPairs.assetA,
+        b: rotationPairs.assetB,
+        minGapMinutes: rotationPairs.minGapMinutes,
+      })
+      .from(rotationPairs)
+      .where(and(eq(rotationPairs.tenantId, tenantId), eq(rotationPairs.active, true)));
+    return rows;
   }
 
   /* ------------------------------------------------------------ versions -- */
