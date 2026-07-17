@@ -6,14 +6,18 @@ import type {
   CatalogItemListQuery,
   CreateAssignmentInput,
   CreateBrandInput,
+  CreateLocalEventInput,
   CreateProgramInput,
+  CreateScheduleAssignmentInput,
   CreateUnitInput,
   CreateUploadInput,
   CreateZoneInput,
   CurrentUserDto,
   DownloadTicket,
+  EffectivePlanDto,
   ExecutionPlanDto,
   GroupDto,
+  LocalEventDto,
   InviteMemberInput,
   MembershipWithUserDto,
   PreviewRequestInput,
@@ -27,11 +31,16 @@ import type {
   RotationPolicyDto,
   CreateRotationPairInput,
   UpdateRotationPairInput,
+  ScheduleAssignmentDto,
+  ScheduleResolutionDto,
+  ScheduleResolveRequestInput,
   SetProgramItemsInput,
   UnitDto,
   UnitListQuery,
   UpdateCatalogItemInput,
+  UpdateLocalEventInput,
   UpdateProgramInput,
+  UpdateScheduleAssignmentInput,
   UpdateUnitInput,
   UploadTicket,
   UpsertRotationPolicyInput,
@@ -79,6 +88,7 @@ export class SenvoriClient {
   readonly tenancy: TenancyClient;
   readonly catalog: CatalogClient;
   readonly programming: ProgrammingClient;
+  readonly scheduling: SchedulingClient;
 
   constructor(options: SenvoriClientOptions) {
     this.baseUrl = options.baseUrl.replace(/\/$/, "");
@@ -89,6 +99,7 @@ export class SenvoriClient {
     this.tenancy = new TenancyClient(this);
     this.catalog = new CatalogClient(this);
     this.programming = new ProgrammingClient(this);
+    this.scheduling = new SchedulingClient(this);
   }
 
   /** Low-level fetch (used by the storage direct-upload step). */
@@ -375,5 +386,59 @@ class ProgrammingClient {
 
   createAssignment(id: string, input: CreateAssignmentInput): Promise<AssignmentResultDto> {
     return this.c.request("POST", `/v1/programs/${id}/assignments`, { body: input });
+  }
+}
+
+/**
+ * Scheduling Runtime domain (Sprint 08 · §23). Schedule assignments bind
+ * published programs to target scopes; local events layer editorial / campaign /
+ * emergency overlays; `resolve` and `effectivePlan` are read-only, deterministic
+ * projections for a unit at a given local date/time. No audio here (§35).
+ */
+class SchedulingClient {
+  constructor(private readonly c: SenvoriClient) {}
+
+  /* ------------------------------------------------------------ assignments */
+
+  listAssignments(): Promise<{ items: ScheduleAssignmentDto[]; nextCursor: string | null }> {
+    return this.c.request("GET", "/v1/scheduling/assignments");
+  }
+  createAssignment(input: CreateScheduleAssignmentInput): Promise<ScheduleAssignmentDto> {
+    return this.c.request("POST", "/v1/scheduling/assignments", { body: input });
+  }
+  updateAssignment(
+    id: string,
+    input: UpdateScheduleAssignmentInput,
+  ): Promise<ScheduleAssignmentDto> {
+    return this.c.request("PATCH", `/v1/scheduling/assignments/${id}`, { body: input });
+  }
+  deleteAssignment(id: string): Promise<void> {
+    return this.c.request("DELETE", `/v1/scheduling/assignments/${id}`);
+  }
+
+  /* ----------------------------------------------------------- local events */
+
+  listLocalEvents(): Promise<{ items: LocalEventDto[]; nextCursor: string | null }> {
+    return this.c.request("GET", "/v1/scheduling/local-events");
+  }
+  createLocalEvent(input: CreateLocalEventInput): Promise<LocalEventDto> {
+    return this.c.request("POST", "/v1/scheduling/local-events", { body: input });
+  }
+  updateLocalEvent(id: string, input: UpdateLocalEventInput): Promise<LocalEventDto> {
+    return this.c.request("PATCH", `/v1/scheduling/local-events/${id}`, { body: input });
+  }
+  deleteLocalEvent(id: string): Promise<void> {
+    return this.c.request("DELETE", `/v1/scheduling/local-events/${id}`);
+  }
+
+  /* --------------------------------------------------- resolution & preview */
+
+  /** Which published program plays for a unit at a local date/time (read-only). */
+  resolve(input: ScheduleResolveRequestInput): Promise<ScheduleResolutionDto> {
+    return this.c.request("POST", "/v1/scheduling/resolve", { body: input });
+  }
+  /** Base plan + ordered overlays → deterministic effective plan (read-only). */
+  effectivePlan(input: ScheduleResolveRequestInput): Promise<EffectivePlanDto> {
+    return this.c.request("POST", "/v1/scheduling/effective-plan", { body: input });
   }
 }

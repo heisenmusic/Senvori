@@ -401,5 +401,85 @@
       "error": "Não foi possível carregar os pares.",
       "retry": "Tentar novamente"
     }
+  },
+  "scheduling": {
+    "title": "Programação",
+    "subtitle": "Atribuições e eventos locais resolvidos em uma linha do tempo operacional por unidade.",
+    "states": {
+      "loading": "Carregando…",
+      "error": "Algo deu errado.",
+      "retry": "Tentar novamente",
+      "noPermission": "Você não tem acesso à programação."
+    },
+    "resolve": {
+      "title": "Prévia da resolução",
+      "hint": "Projeção determinística: o programa e o plano efetivo de uma unidade em uma data e hora locais.",
+      "unit": "ID da unidade",
+      "unitPlaceholder": "UUID da unidade",
+      "date": "Data local",
+      "time": "Hora local",
+      "run": "Resolver",
+      "running": "Resolvendo…",
+      "error": "Não foi possível resolver.",
+      "reason": "Decisão",
+      "selected": "Programa selecionado",
+      "none": "—",
+      "base": "Hash do plano base",
+      "effective": "Hash do plano efetivo",
+      "overlays": "Sobreposições",
+      "status": "Status",
+      "emergency": "Emergência ativa"
+    },
+    "assignments": {
+      "title": "Atribuições",
+      "empty": "Nenhuma atribuição de programação ainda.",
+      "col": {
+        "program": "Programa",
+        "target": "Alvo",
+        "priority": "Prioridade",
+        "window": "Janela",
+        "active": "Ativo"
+      }
+    },
+    "events": {
+      "title": "Eventos locais",
+      "empty": "Nenhum evento local ainda.",
+      "col": {
+        "category": "Categoria",
+        "kind": "Tipo",
+        "target": "Alvo",
+        "window": "Janela",
+        "offset": "Deslocamento"
+      }
+    },
+    "target": {
+      "tenant": "Tenant",
+      "group": "Grupo",
+      "sync_group": "Grupo de sincronização",
+      "unit": "Unidade"
+    },
+    "kind": {
+      "insert": "Inserção",
+      "overlay": "Sobreposição",
+      "interrupt": "Interrupção"
+    },
+    "category": {
+      "local_event": "Evento local",
+      "campaign_slot": "Slot de campanha",
+      "emergency": "Emergência"
+    },
+    "active": {
+      "yes": "Ativo",
+      "no": "Inativo"
+    },
+    "reason": {
+      "unit_assignment_selected": "Atribuição de unidade selecionada",
+      "group_assignment_selected": "Atribuição de grupo selecionada",
+      "sync_group_assignment_selected": "Atribuição de grupo de sincronização selecionada",
+      "tenant_default_selected": "Padrão do tenant selecionado",
+      "assignment_conflict_detected": "Conflito — resolvido de forma determinística",
+      "fallback_program_selected": "Programa de fallback selecionado",
+      "no_assignment": "Nenhuma atribuição em vigor"
+    }
   }
 }
