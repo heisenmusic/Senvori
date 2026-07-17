@@ -2,10 +2,10 @@
 
 > Estado real por módulo. Atualizar ao fim de cada sprint. Percentuais são estimativas
 > honestas de "código funcional e verificado", não aspiração. Última atualização:
-> **2026-07-17 — pós Sprint 07B (Historical Programming Runtime: histórico planejado
-> alimenta fadiga + continuidade entre dias; evitar-pares como vertical completo
-> (tabela/RLS/API/SDK/Dashboard); afinidade permanece **Prepared** (sem fonte de
-> score); Proof-of-Play real é futuro).**
+> **2026-07-17 — pós Sprint 09 (Flutter Player Foundation: runtime puro + experiência
+> premium sob `apps/player/`; máquina de estados, offline-first real com reinício,
+> asset cache/download atômico, orquestração com emergência, telemetria outbox;
+> áudio real / ativação / Proof-of-Play / Hard Sync permanecem Prepared).**
 
 ## Resumo
 
@@ -16,6 +16,7 @@
 | Catalog                         | ~75%        | ▲ (agora integrado no trunk + verificado)                                |
 | Programming (Playlists)         | ~68%        | ▲ (Sprint 07B: histórico planejado · fadiga/continuidade/pares Complete) |
 | Dashboard                       | ~32%        | ▲ (05B: library · 06: Programação + Prévia do dia)                       |
+| Player (Flutter)                | ~35%        | ▲ (Sprint 09: runtime + experiência; áudio/ativação/PoP Prepared)        |
 | Demais domínios de negócio      | ~1–5%       | = (stubs)                                                                |
 | Especificação de produto        | ~95%        | =                                                                        |
 | **Produto construído (global)** | **~24–28%** | ▲                                                                        |

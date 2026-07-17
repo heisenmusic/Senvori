@@ -5,6 +5,30 @@ versioning is [SemVer](https://semver.org/). Dates are UTC.
 
 ## [Unreleased]
 
+### Added — Flutter Player Foundation (Sprint 09)
+
+First vertical of the Senvori Player (`apps/player/`): a pure-Dart **runtime**
+(source of truth) split from a premium Flutter **experience** layer, wired through
+injectable ports so the runtime is fully headless-testable.
+
+- **Runtime (real, tested):** explicit lifecycle state machine (allow-listed
+  transitions, rejected edges logged); phased bootstrap with real progress;
+  persistent device identity; plan validation + wire mapper + three-slot store
+  (`lastKnownGood`/`pending`/`active`) with **offline restart**; asset cache with
+  atomic downloads, checksum validation, dedup, backoff and deterministic disk
+  eviction; playback engine abstraction + deterministic orchestrator (bounded
+  retry, skip, **emergency interrupt/restore**); connectivity spectrum; telemetry
+  outbox (dedup/persist/prune). No `DateTime.now()` in logic — clocks injected.
+- **Experience:** premium Now Playing with Ambient/Operational/Diagnostics modes,
+  deterministic seeded ambient artwork, motion honouring reduce-motion,
+  responsive wide/narrow layouts, full pt-BR/en-US/es-ES i18n, accessibility.
+- **Tests:** 70 passing — unit, widget, golden, integration scenarios, 24h
+  simulated soak, l10n parity. New CI `player` job (format/analyze/test/build apk).
+- **Honestly Prepared / not implemented:** real audio output (engine is a
+  deterministic fake), production activation backend, real download transport and
+  disk free-space query, secure keystore, Hard Sync, and **certified Proof of
+  Play** (telemetry is prepared operational telemetry — never labelled "proven").
+
 ### Added — Historical Programming Runtime (Sprint 07B)
 
 Gives the deterministic engine **operational memory** — the radio no longer

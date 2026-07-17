@@ -1,5 +1,40 @@
 # SENVORI 2.0 — PROJECT STATUS REPORT
 
+> ## Atualização — Flutter Player Foundation (Sprint 09)
+>
+> Nasce o **Player** (`apps/player/`, Flutter/Dart): a face operacional da
+> plataforma. Arquitetura em duas camadas — **runtime** puro (fonte da verdade)
+> e **experiência** premium — conectadas por _ports_ injetáveis, tornando o
+> runtime testável _headless_. Branch a partir de `origin/main`.
+>
+> | Capacidade                           | Domínio | Persist. | Runtime | UI  | Testes | Status       |
+> | ------------------------------------ | ------- | -------- | ------- | --- | ------ | ------------ |
+> | Bootstrap por fases                  | ✅      | ✅       | ✅      | ✅  | ✅     | **Complete** |
+> | Identidade do dispositivo            | ✅      | ✅       | ✅      | ✅  | ✅     | **Complete** |
+> | Validação de plano + last-known-good | ✅      | ✅       | ✅      | ✅  | ✅     | **Complete** |
+> | Reinício offline                     | ✅      | ✅       | ✅      | ✅  | ✅     | **Complete** |
+> | Orquestração de fila + emergência    | ✅      | —        | ✅      | ✅  | ✅     | **Complete** |
+> | Now Playing + modos + i18n           | —       | —        | ✅      | ✅  | ✅     | **Complete** |
+> | Asset cache / download / disco       | ✅      | ✅       | ✅      | ⚠️  | ✅     | **Partial**  |
+> | Playback engine (áudio real)         | ✅      | —        | ⚠️ fake | ✅  | ✅     | **Partial**  |
+> | Ativação (backend real)              | ✅      | ✅       | ⚠️ mock | ✅  | ✅     | **Partial**  |
+> | Telemetria operacional (outbox)      | ✅      | ✅       | ⚠️ mock | —   | ✅     | **Partial**  |
+> | Proof of Play certificado            | ⚠️      | ⚠️       | ❌      | ❌  | ❌     | **Prepared** |
+> | Soft Sync / Hard Sync                | ⚠️      | ⚠️       | ❌      | ❌  | ❌     | **Prepared** |
+>
+> - **Runtime real e testado:** máquina de estados explícita (transições
+>   allow-list, edges inválidos rejeitados e logados); sem `DateTime.now()` na
+>   lógica (relógios injetados); último plano válido persistido e reproduzido
+>   após reinício **offline**; downloads atômicos + checksum; eviction de disco
+>   determinística; retry/skip/emergência com prioridade absoluta; outbox com
+>   deduplicação/persistência/poda.
+> - **70 testes** (unit, widget, golden, integração, soak 24h simulado, paridade
+>   i18n). Novo job de CI `player` (format/analyze/test/build apk).
+> - **Honestidade:** áudio real, backend de ativação, transporte de download,
+>   query de espaço em disco, keystore seguro, Hard Sync e Proof of Play
+>   certificado permanecem **Prepared/Not implemented**. Demo Mode explícito;
+>   nada rotulado como "comprovado". Ver `docs/PLAYER_*.md`.
+>
 > ## Atualização — Scheduling Runtime & Local Events (Sprint 08)
 >
 > Programas publicados viram uma **linha do tempo operacional** — o que toca em
@@ -466,7 +501,7 @@ Os 12 módulos de domínio contêm apenas `@Module({})` com comentário de front
 **Páginas:** 1 real — `app/[locale]/page.tsx` (card placeholder "Fase 0 — Fundação"). Existe também `_not-found` gerado pelo Next.
 **Layout:** `app/[locale]/layout.tsx` — `<html lang>`, `NextIntlClientProvider`, `Providers` (TanStack Query). `generateStaticParams` para os 3 locales.
 **Componentes locais:** apenas `components/providers.tsx` (QueryClient). Os demais vêm de `@senvori/ui`.
-**Rotas:** roteamento por locale via `middleware.ts` (matcher exclui api/_next/estáticos) + `i18n/{routing,navigation,request}.ts`. Sem rotas de negócio.
+**Rotas:** roteamento por locale via `middleware.ts` (matcher exclui api/\_next/estáticos) + `i18n/{routing,navigation,request}.ts`. Sem rotas de negócio.
 **Autenticação:** ❌ inexistente — busca por `auth|session|login|token` em `apps/dashboard/src` não retorna nada. Não há tela de login, guarda de rota, nem consumo do `/v1/auth`. O `@senvori/sdk` só expõe `health()`.
 
 Status: **🟧 shell de aplicação funcionando (i18n + data provider), zero produto.**
