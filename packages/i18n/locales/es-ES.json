@@ -230,7 +230,8 @@
         "rules": "Reglas de rotación",
         "scope": "Dónde se usa",
         "preview": "Vista previa del día",
-        "versions": "Historial de versiones"
+        "versions": "Historial de versiones",
+        "pairs": "Pares recurrentes"
       }
     },
     "content": {
@@ -274,7 +275,16 @@
       "save": "Guardar reglas",
       "cancel": "Cancelar",
       "saved": "Reglas actualizadas.",
-      "error": "No pudimos guardar las reglas. Inténtalo de nuevo."
+      "error": "No pudimos guardar las reglas. Inténtalo de nuevo.",
+      "memory": "Memoria de la programación",
+      "lookback": "Histórico considerado (días)",
+      "lookbackHint": "Cuántos días recientes de programación planificada ponderar para variar entre días. 0 desactiva el histórico.",
+      "continuity": "Continuidad entre días",
+      "continuityHint": "Evita abrir el día con la pista que cerró el día anterior cuando el catálogo lo permite.",
+      "days": "días",
+      "on": "Activada",
+      "off": "Desactivada",
+      "historyNote": "El histórico usa planes publicados anteriormente. El histórico planificado no es prueba de reproducción."
     },
     "scope": {
       "title": "Dónde se usa",
@@ -370,6 +380,26 @@
       "identifierLabel": "Identificador",
       "identifierHint": "Referencia única de esta versión, usada en las siguientes etapas de distribución.",
       "immutable": "Inmutable"
+    },
+    "pairs": {
+      "subtitle": "Evita que dos pistas suenen juntas en toda la cuenta.",
+      "trackA": "Pista A",
+      "trackB": "Pista B",
+      "gap": "Intervalo mínimo",
+      "add": "Añadir par",
+      "addError": "No pudimos añadir este par. Puede que ya exista.",
+      "empty": "Aún no hay pares configurados.",
+      "status": "Estado",
+      "actions": "Acciones",
+      "active": "Activo",
+      "inactive": "Inactivo",
+      "disable": "Desactivar",
+      "enable": "Activar",
+      "remove": "Eliminar",
+      "minutes": "min",
+      "choose": "Elige una pista",
+      "error": "No pudimos cargar los pares.",
+      "retry": "Reintentar"
     }
   }
 }

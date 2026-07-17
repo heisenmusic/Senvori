@@ -54,8 +54,13 @@ const iso = (d: Date | null | undefined): string => (d ?? new Date()).toISOStrin
 const isoOrNull = (d: Date | null | undefined): string | null => (d ? d.toISOString() : null);
 
 /** Postgres unique-violation SQLSTATE (23505) — surfaced as a 409 Conflict. */
-const isUniqueViolation = (e: unknown): boolean =>
-  typeof e === "object" && e !== null && (e as { code?: string }).code === "23505";
+const isUniqueViolation = (e: unknown): boolean => {
+  const codeOf = (x: unknown): string | undefined =>
+    typeof x === "object" && x !== null ? (x as { code?: string }).code : undefined;
+  if (e === null || typeof e !== "object") return false;
+  // Drizzle wraps the driver error; the SQLSTATE may sit on `.cause`.
+  return codeOf(e) === "23505" || codeOf((e as { cause?: unknown }).cause) === "23505";
+};
 
 const DEFAULT_TRACK_GAP = 180;
 const DEFAULT_ARTIST_GAP = 45;

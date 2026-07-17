@@ -230,7 +230,8 @@
         "rules": "Rotation rules",
         "scope": "Where it's used",
         "preview": "Day preview",
-        "versions": "Version history"
+        "versions": "Version history",
+        "pairs": "Recurring pairs"
       }
     },
     "content": {
@@ -274,7 +275,16 @@
       "save": "Save rules",
       "cancel": "Cancel",
       "saved": "Rules updated.",
-      "error": "We couldn't save the rules. Please try again."
+      "error": "We couldn't save the rules. Please try again.",
+      "memory": "Programming memory",
+      "lookback": "History look-back (days)",
+      "lookbackHint": "How many recent days of planned programming to weigh for cross-day variety. 0 turns history off.",
+      "continuity": "Cross-day continuity",
+      "continuityHint": "Avoid opening a day with the previous day's closing track when the catalog allows.",
+      "days": "days",
+      "on": "On",
+      "off": "Off",
+      "historyNote": "History uses previously published plans. Planned history is not proof of playback."
     },
     "scope": {
       "title": "Where it's used",
@@ -370,6 +380,26 @@
       "identifierLabel": "Identifier",
       "identifierHint": "A unique reference for this version, used in the next distribution steps.",
       "immutable": "Immutable"
+    },
+    "pairs": {
+      "subtitle": "Prevent two tracks from playing close together across the whole account.",
+      "trackA": "Track A",
+      "trackB": "Track B",
+      "gap": "Minimum gap",
+      "add": "Add pair",
+      "addError": "We couldn't add this pair. It may already exist.",
+      "empty": "No pairs configured yet.",
+      "status": "Status",
+      "actions": "Actions",
+      "active": "Active",
+      "inactive": "Inactive",
+      "disable": "Disable",
+      "enable": "Enable",
+      "remove": "Remove",
+      "minutes": "min",
+      "choose": "Choose a track",
+      "error": "We couldn't load the pairs.",
+      "retry": "Try again"
     }
   }
 }

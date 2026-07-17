@@ -23,7 +23,10 @@ import type {
   ProgramListQuery,
   ProgramVersionDto,
   RoleAssignmentDto,
+  RotationPairDto,
   RotationPolicyDto,
+  CreateRotationPairInput,
+  UpdateRotationPairInput,
   SetProgramItemsInput,
   UnitDto,
   UnitListQuery,
@@ -330,6 +333,22 @@ class ProgrammingClient {
   }
   upsertRotationPolicy(input: UpsertRotationPolicyInput): Promise<RotationPolicyDto> {
     return this.c.request("PUT", "/v1/programs/rotation-policy", { body: input });
+  }
+
+  /* ---------------------------------------------------------- rotation pairs */
+
+  /** List the tenant's configured avoid-pairs (Sprint 07B). */
+  listRotationPairs(): Promise<{ items: RotationPairDto[]; nextCursor: string | null }> {
+    return this.c.request("GET", "/v1/programs/rotation-pairs");
+  }
+  createRotationPair(input: CreateRotationPairInput): Promise<RotationPairDto> {
+    return this.c.request("POST", "/v1/programs/rotation-pairs", { body: input });
+  }
+  updateRotationPair(pairId: string, input: UpdateRotationPairInput): Promise<RotationPairDto> {
+    return this.c.request("PATCH", `/v1/programs/rotation-pairs/${pairId}`, { body: input });
+  }
+  deleteRotationPair(pairId: string): Promise<void> {
+    return this.c.request("DELETE", `/v1/programs/rotation-pairs/${pairId}`);
   }
 
   /* ---------------------------------------------------------------- preview */

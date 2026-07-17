@@ -27,6 +27,7 @@ import { ContentEditor } from "@/components/programs/content-editor";
 import { PreviewPanel } from "@/components/programs/preview-panel";
 import { PublishDialog } from "@/components/programs/publish-dialog";
 import { RotationRules } from "@/components/programs/rotation-rules";
+import { RotationPairs } from "@/components/programs/rotation-pairs";
 import { VersionsList } from "@/components/programs/versions-list";
 
 const Section = ({
@@ -316,6 +317,10 @@ const ProgramDetailPage = () => {
 
         <Section title={t("detail.sections.rules")} description={t("rules.subtitle")}>
           <RotationRules />
+        </Section>
+
+        <Section title={t("detail.sections.pairs")} description={t("pairs.subtitle")}>
+          <RotationPairs programId={program.id} />
         </Section>
 
         <Section title={t("detail.sections.scope")} description={t("scope.subtitle")}>
