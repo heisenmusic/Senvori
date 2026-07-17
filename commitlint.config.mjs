@@ -16,6 +16,7 @@ export default {
         "docs",
         "deps",
         "repo",
+        "player",
       ],
     ],
   },
