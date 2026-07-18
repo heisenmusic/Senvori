@@ -369,36 +369,45 @@ class _WideBody extends StatelessWidget {
     required this.l10n,
     required this.seed,
   });
+
   final NowPlayingViewState state;
   final L10n l10n;
   final String seed;
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Expanded(
-          flex: 5,
-          child: Padding(
-            padding: const EdgeInsets.only(right: SenvoriSpacing.xl),
-            child: _ArtworkSurface(seed: seed),
-          ),
-        ),
-        Expanded(
-          flex: 6,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              _Hero(state: state, seed: seed, l10n: l10n),
-              const SizedBox(height: SenvoriSpacing.lg),
-              _NextUp(state: state, l10n: l10n),
-              _OperationalStrip(state: state, l10n: l10n),
-            ],
-          ),
-        ),
-      ],
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final compact = constraints.maxHeight < 430;
+
+        final details = Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _Hero(state: state, seed: seed, l10n: l10n),
+            SizedBox(height: compact ? SenvoriSpacing.md : SenvoriSpacing.lg),
+            _NextUp(state: state, l10n: l10n),
+            _OperationalStrip(state: state, l10n: l10n),
+          ],
+        );
+
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Expanded(
+              flex: 5,
+              child: Padding(
+                padding: const EdgeInsets.only(right: SenvoriSpacing.xl),
+                child: _ArtworkSurface(seed: seed),
+              ),
+            ),
+            Expanded(
+              flex: 6,
+              child: compact ? SingleChildScrollView(child: details) : details,
+            ),
+          ],
+        );
+      },
     );
   }
 }
