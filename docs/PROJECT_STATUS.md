@@ -1,5 +1,48 @@
 # SENVORI 2.0 — PROJECT STATUS REPORT
 
+> ## Atualização — Player Production Integration, Fase 10A (Sprint 10)
+>
+> **Status da Sprint 10: Partial.** A Fase 10A entrega a **fundação de
+> integração de backend** do Player (contratos, API, schema, SDK, dashboard) com
+> testes em Postgres real. A **Fase 10B (adapters Flutter)** — secure storage,
+> cliente HTTP autenticado, áudio real, sync cycle, APK — permanece **Not
+> implemented** (o Flutter SDK não estava disponível no ambiente desta fase).
+> Proof of Play **não** é certificado; Hard Sync e Fleet completo seguem fora de
+> escopo.
+>
+> Reuso de schema (aditivo, sem duplicatas): estende `pairing_codes`,
+> `device_tokens` (+ política RLS `self_auth`) e `heartbeat_statuses`; reutiliza
+> `devices`, `playback_events`, `device_metric_events`, `player_error_events`,
+> `ingestion_batches` e as permissões `fleet:device:*`. Migração `0011`
+> verificada em banco limpo e migrado.
+>
+> | Capacidade (Fase 10A)                       | Contrato | Persist. | Transporte | Runtime API | UI  | Testes | Status            |
+> | ------------------------------------------- | -------- | -------- | ---------- | ----------- | --- | ------ | ----------------- |
+> | Autenticação de dispositivo (RLS self-auth) | ✅       | ✅       | ✅         | ✅          | —   | ✅     | **Complete**      |
+> | Ativação (start/claim/complete)             | ✅       | ✅       | ✅         | ✅          | ✅  | ✅     | **Complete**      |
+> | Refresh / revogação de credencial           | ✅       | ✅       | ✅         | ✅          | ✅  | ✅     | **Complete**      |
+> | Heartbeat + runtime status                  | ✅       | ✅       | ✅         | ✅          | ✅  | ✅     | **Complete**      |
+> | Plano efetivo (itens + assets assinados)    | ✅       | ✅       | ✅         | ✅          | —   | ✅     | **Partial**\*     |
+> | Ingestão idempotente de telemetria          | ✅       | ✅       | ✅         | ✅          | —   | ✅     | **Complete**      |
+> | Eventos operacionais de reprodução          | ✅       | ✅       | ✅         | ✅          | ✅  | ✅     | **Partial**\*\*   |
+> | SDK administrativo (fleet)                  | ✅       | —        | ✅         | ✅          | —   | ✅     | **Complete**      |
+> | Dashboard: ativação + detalhe               | ✅       | —        | ✅         | ✅          | ✅  | ⚠️     | **Partial**\*\*\* |
+> | Adapters Flutter do Player (10B)            | ✅       | —        | —          | —           | —   | —      | **Not impl.**     |
+> | Proof of Play certificado / Hard Sync       | —        | —        | —          | —           | —   | —      | **Not impl.**     |
+>
+> \* Serve a ordem publicada (`resolved_items`) + overlays/emergência + URLs
+> assinadas; não re-executa o compilador (fatigue/afinidade/histórico) em request
+> time. \*\* Eventos operacionais reais e deduplicados — **não** Proof of Play
+> certificado. \*\*\* Console mínimo (ativar + detalhe + revogar); não é o Fleet
+> completo. UI coberta por typecheck/lint/build; sem teste de componente dedicado
+> nesta fase.
+>
+> **Gates executados nesta fase:** contracts typecheck/lint/build + 12 testes;
+> API typecheck/lint/build + **203 testes** (13 novos de integração em Postgres
+> real); migração `0011` em banco limpo e migrado; SDK typecheck/lint/build;
+> dashboard typecheck/lint + **28 testes** + `next build`. Gates Flutter/APK/goldens
+> **não** aplicáveis nesta fase (Fase 10B).
+
 > ## Atualização — Flutter Player Foundation (Sprint 09)
 >
 > Nasce o **Player** (`apps/player/`, Flutter/Dart): a face operacional da
