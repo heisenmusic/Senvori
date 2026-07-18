@@ -1,0 +1,22 @@
+# Senvori Player static analysis. Builds on flutter_lints with a few
+# project-specific choices.
+include: package:flutter_lints/flutter.yaml
+
+analyzer:
+  errors:
+    # Treat unused code as hard failures — dead code matters for an always-on
+    # runtime we intend to keep lean.
+    unused_import: error
+    unused_local_variable: error
+  exclude:
+    - lib/l10n/app_localizations*.dart # generated
+    - "**/*.g.dart"
+
+linter:
+  rules:
+    # The runtime deliberately exposes clean public constructor parameter names
+    # (e.g. `store`) while assigning to private fields (`_store`). This is an
+    # intentional encapsulation choice, so the initializing-formal lint (which
+    # would force `this._store` into the public API) is disabled.
+    prefer_initializing_formals: false
+    directives_ordering: true
