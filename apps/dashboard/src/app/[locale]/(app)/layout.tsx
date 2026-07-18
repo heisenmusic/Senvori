@@ -30,6 +30,7 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
     { href: "/library", label: t("nav.library") },
     { href: "/programs", label: t("nav.programs") },
     { href: "/scheduling", label: t("nav.scheduling") },
+    { href: "/devices", label: t("nav.devices") },
   ];
 
   return (

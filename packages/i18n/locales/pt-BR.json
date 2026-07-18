@@ -25,7 +25,8 @@
     "analytics": "Analytics",
     "settings": "Configurações",
     "library": "Biblioteca",
-    "programs": "Programação"
+    "programs": "Programação",
+    "devices": "Dispositivos"
   },
   "auth": {
     "login": {
@@ -484,5 +485,77 @@
     },
     "targetRef": "{label} · {id}",
     "window": "{start}–{end}"
+  },
+  "devices": {
+    "title": "Dispositivos",
+    "subtitle": "Ative e monitore seus players.",
+    "loading": "Carregando…",
+    "empty": "Nenhum dispositivo ainda. Ative um abaixo.",
+    "error": "Não foi possível carregar os dispositivos.",
+    "retry": "Tentar novamente",
+    "noPermission": "Você não tem acesso a dispositivos.",
+    "col": {
+      "name": "Nome",
+      "unit": "Unidade",
+      "status": "Status",
+      "version": "Versão",
+      "lastSeen": "Visto por último"
+    },
+    "status": {
+      "pending": "Pendente",
+      "active": "Online",
+      "offline": "Offline",
+      "decommissioned": "Revogado",
+      "never": "Nunca"
+    },
+    "activate": {
+      "title": "Ativar um dispositivo",
+      "hint": "Digite o código exibido na tela do player e escolha onde ele toca.",
+      "codeLabel": "Código de ativação",
+      "codePlaceholder": "ex.: K7P2QW9F",
+      "lookup": "Consultar",
+      "unitLabel": "Unidade",
+      "zoneLabel": "Zona",
+      "chooseUnit": "Escolha uma unidade",
+      "chooseZone": "Escolha uma zona",
+      "submit": "Parear dispositivo",
+      "success": "Dispositivo pareado.",
+      "notFound": "Nenhuma ativação pendente para esse código.",
+      "codeStatus": "Status:",
+      "pairing": "Pareando…",
+      "looking": "Consultando…"
+    },
+    "detail": {
+      "back": "Voltar aos dispositivos",
+      "overview": "Visão geral",
+      "unit": "Unidade",
+      "platform": "Plataforma",
+      "version": "Versão do app",
+      "status": "Status",
+      "lastHeartbeat": "Último heartbeat",
+      "runtime": "Estado de execução",
+      "connectivity": "Conectividade",
+      "plan": "Hash do plano efetivo",
+      "currentItem": "Item atual",
+      "storage": "Armazenamento (livre / total)",
+      "lastError": "Último erro",
+      "credential": "Credencial",
+      "hasCredential": "Ativa",
+      "noCredential": "Nenhuma",
+      "revoke": "Revogar dispositivo",
+      "revokeConfirm": "Revogar este dispositivo? A credencial é invalidada e ele para de tocar.",
+      "revoked": "Dispositivo revogado.",
+      "events": "Reproduções recentes",
+      "noEvents": "Nenhum evento de reprodução ainda.",
+      "none": "—",
+      "loading": "Carregando…",
+      "notFound": "Dispositivo não encontrado.",
+      "eventCol": {
+        "asset": "Ativo",
+        "started": "Início",
+        "completion": "Conclusão",
+        "received": "Recebido"
+      }
+    }
   }
 }

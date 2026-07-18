@@ -25,7 +25,8 @@
     "analytics": "Analytics",
     "settings": "Settings",
     "library": "Library",
-    "programs": "Programming"
+    "programs": "Programming",
+    "devices": "Devices"
   },
   "auth": {
     "login": {
@@ -484,5 +485,77 @@
     },
     "targetRef": "{label} · {id}",
     "window": "{start}–{end}"
+  },
+  "devices": {
+    "title": "Devices",
+    "subtitle": "Activate and monitor your players.",
+    "loading": "Loading…",
+    "empty": "No devices yet. Activate one below.",
+    "error": "Could not load devices.",
+    "retry": "Try again",
+    "noPermission": "You don't have access to devices.",
+    "col": {
+      "name": "Name",
+      "unit": "Unit",
+      "status": "Status",
+      "version": "Version",
+      "lastSeen": "Last seen"
+    },
+    "status": {
+      "pending": "Pending",
+      "active": "Online",
+      "offline": "Offline",
+      "decommissioned": "Revoked",
+      "never": "Never"
+    },
+    "activate": {
+      "title": "Activate a device",
+      "hint": "Enter the code shown on the player screen, then choose where it plays.",
+      "codeLabel": "Activation code",
+      "codePlaceholder": "e.g. K7P2QW9F",
+      "lookup": "Look up",
+      "unitLabel": "Unit",
+      "zoneLabel": "Zone",
+      "chooseUnit": "Choose a unit",
+      "chooseZone": "Choose a zone",
+      "submit": "Pair device",
+      "success": "Device paired.",
+      "notFound": "No pending activation for that code.",
+      "codeStatus": "Status:",
+      "pairing": "Pairing…",
+      "looking": "Looking up…"
+    },
+    "detail": {
+      "back": "Back to devices",
+      "overview": "Overview",
+      "unit": "Unit",
+      "platform": "Platform",
+      "version": "App version",
+      "status": "Status",
+      "lastHeartbeat": "Last heartbeat",
+      "runtime": "Runtime state",
+      "connectivity": "Connectivity",
+      "plan": "Effective plan hash",
+      "currentItem": "Current item",
+      "storage": "Storage (free / total)",
+      "lastError": "Last error",
+      "credential": "Credential",
+      "hasCredential": "Active",
+      "noCredential": "None",
+      "revoke": "Revoke device",
+      "revokeConfirm": "Revoke this device? Its credential is invalidated and it stops playing.",
+      "revoked": "Device revoked.",
+      "events": "Recent playback",
+      "noEvents": "No playback events yet.",
+      "none": "—",
+      "loading": "Loading…",
+      "notFound": "Device not found.",
+      "eventCol": {
+        "asset": "Asset",
+        "started": "Started",
+        "completion": "Completion",
+        "received": "Received"
+      }
+    }
   }
 }

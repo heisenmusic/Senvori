@@ -25,7 +25,8 @@
     "analytics": "Analytics",
     "settings": "Configuración",
     "library": "Biblioteca",
-    "programs": "Programación"
+    "programs": "Programación",
+    "devices": "Dispositivos"
   },
   "auth": {
     "login": {
@@ -484,5 +485,77 @@
     },
     "targetRef": "{label} · {id}",
     "window": "{start}–{end}"
+  },
+  "devices": {
+    "title": "Dispositivos",
+    "subtitle": "Activa y supervisa tus reproductores.",
+    "loading": "Cargando…",
+    "empty": "Aún no hay dispositivos. Activa uno abajo.",
+    "error": "No se pudieron cargar los dispositivos.",
+    "retry": "Reintentar",
+    "noPermission": "No tienes acceso a dispositivos.",
+    "col": {
+      "name": "Nombre",
+      "unit": "Unidad",
+      "status": "Estado",
+      "version": "Versión",
+      "lastSeen": "Visto por última vez"
+    },
+    "status": {
+      "pending": "Pendiente",
+      "active": "En línea",
+      "offline": "Desconectado",
+      "decommissioned": "Revocado",
+      "never": "Nunca"
+    },
+    "activate": {
+      "title": "Activar un dispositivo",
+      "hint": "Introduce el código que aparece en la pantalla del reproductor y elige dónde suena.",
+      "codeLabel": "Código de activación",
+      "codePlaceholder": "p. ej. K7P2QW9F",
+      "lookup": "Consultar",
+      "unitLabel": "Unidad",
+      "zoneLabel": "Zona",
+      "chooseUnit": "Elige una unidad",
+      "chooseZone": "Elige una zona",
+      "submit": "Emparejar dispositivo",
+      "success": "Dispositivo emparejado.",
+      "notFound": "No hay activación pendiente para ese código.",
+      "codeStatus": "Estado:",
+      "pairing": "Emparejando…",
+      "looking": "Consultando…"
+    },
+    "detail": {
+      "back": "Volver a dispositivos",
+      "overview": "Resumen",
+      "unit": "Unidad",
+      "platform": "Plataforma",
+      "version": "Versión de la app",
+      "status": "Estado",
+      "lastHeartbeat": "Último latido",
+      "runtime": "Estado de ejecución",
+      "connectivity": "Conectividad",
+      "plan": "Hash del plan efectivo",
+      "currentItem": "Elemento actual",
+      "storage": "Almacenamiento (libre / total)",
+      "lastError": "Último error",
+      "credential": "Credencial",
+      "hasCredential": "Activa",
+      "noCredential": "Ninguna",
+      "revoke": "Revocar dispositivo",
+      "revokeConfirm": "¿Revocar este dispositivo? Su credencial se invalida y deja de reproducir.",
+      "revoked": "Dispositivo revocado.",
+      "events": "Reproducciones recientes",
+      "noEvents": "Aún no hay eventos de reproducción.",
+      "none": "—",
+      "loading": "Cargando…",
+      "notFound": "Dispositivo no encontrado.",
+      "eventCol": {
+        "asset": "Activo",
+        "started": "Inicio",
+        "completion": "Finalización",
+        "received": "Recibido"
+      }
+    }
   }
 }
