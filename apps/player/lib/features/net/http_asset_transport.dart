@@ -11,7 +11,6 @@
 /// file-streaming variant; that is noted as a follow-up rather than pretended.
 library;
 
-import 'dart:async';
 import 'dart:io';
 
 import '../asset_cache/ports.dart';
