@@ -5,24 +5,30 @@ void main() {
   group('resolveEndpoint', () {
     test('joins origin + v1 prefix + route', () {
       expect(
-        resolveEndpoint('https://api.senvori.test', 'player/execution-plan')
-            .toString(),
+        resolveEndpoint(
+          'https://api.senvori.test',
+          'player/execution-plan',
+        ).toString(),
         'https://api.senvori.test/v1/player/execution-plan',
       );
     });
 
     test('tolerates a trailing slash on the origin', () {
       expect(
-        resolveEndpoint('https://api.senvori.test/', 'player/heartbeat')
-            .toString(),
+        resolveEndpoint(
+          'https://api.senvori.test/',
+          'player/heartbeat',
+        ).toString(),
         'https://api.senvori.test/v1/player/heartbeat',
       );
     });
 
     test('tolerates a leading slash on the route', () {
       expect(
-        resolveEndpoint('https://api.senvori.test', '/player/telemetry')
-            .toString(),
+        resolveEndpoint(
+          'https://api.senvori.test',
+          '/player/telemetry',
+        ).toString(),
         'https://api.senvori.test/v1/player/telemetry',
       );
     });
@@ -30,8 +36,10 @@ void main() {
     test('passes an absolute (signed asset) URL through unchanged', () {
       const signed =
           'https://cdn.senvori.test/assets/abc?X-Amz-Signature=deadbeef';
-      expect(resolveEndpoint('https://api.senvori.test', signed).toString(),
-          signed);
+      expect(
+        resolveEndpoint('https://api.senvori.test', signed).toString(),
+        signed,
+      );
     });
   });
 

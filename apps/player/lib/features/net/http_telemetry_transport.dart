@@ -136,9 +136,7 @@ String? _playbackEventType(TelemetryKind kind) => switch (kind) {
 /// durably recorded (both mean "do not send again").
 Set<String> parseDurablyHandled(Map<String, Object?> json) {
   final accepted = (json['acceptedIds'] as List?)?.cast<Object?>() ?? const [];
-  final duplicate = (json['duplicateIds'] as List?)?.cast<Object?>() ?? const [];
-  return {
-    ...accepted.whereType<String>(),
-    ...duplicate.whereType<String>(),
-  };
+  final duplicate =
+      (json['duplicateIds'] as List?)?.cast<Object?>() ?? const [];
+  return {...accepted.whereType<String>(), ...duplicate.whereType<String>()};
 }

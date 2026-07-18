@@ -48,7 +48,8 @@ void _runProduction(String baseUrl) {
   // as a dependency-free fallback we anchor under the system temp dir, which is
   // honest for desktop/dev and clearly a follow-up for hardened Android storage.
   final root = Directory('${Directory.systemTemp.path}/senvori_player');
-  final storageDir = Directory('${root.path}/store')..createSync(recursive: true);
+  final storageDir = Directory('${root.path}/store')
+    ..createSync(recursive: true);
   final cacheRoot = '${root.path}/cache';
 
   final platform = Platform.isAndroid
@@ -62,7 +63,5 @@ void _runProduction(String baseUrl) {
     platform: platform,
   );
 
-  runApp(
-    PlayerApp(runtime: production.runtime, syncCycle: production.sync),
-  );
+  runApp(PlayerApp(runtime: production.runtime, syncCycle: production.sync));
 }

@@ -19,6 +19,7 @@ library;
 import '../../app/player_runtime.dart';
 import '../../core/logging/logger.dart';
 import '../../core/result/result.dart';
+import '../connectivity/connectivity.dart';
 import 'execution_plan_gateway.dart';
 import 'heartbeat_client.dart';
 

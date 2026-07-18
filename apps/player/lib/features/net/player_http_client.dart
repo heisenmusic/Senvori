@@ -73,7 +73,9 @@ final class PlayerHttpClient {
     HttpClient? httpClient,
     TokenProvider? tokenProvider,
   }) : _tokenProvider = tokenProvider,
-       _client = httpClient ?? (HttpClient()..connectionTimeout = config.connectTimeout);
+       _client =
+           httpClient ??
+           (HttpClient()..connectionTimeout = config.connectTimeout);
 
   final PlayerBackendConfig config;
   final HttpClient _client;
@@ -108,7 +110,10 @@ final class PlayerHttpClient {
       if (authenticated) {
         final token = await _tokenProvider?.call();
         if (token == null || token.isEmpty) {
-          throw const PlayerHttpException(401, 'no device credential available');
+          throw const PlayerHttpException(
+            401,
+            'no device credential available',
+          );
         }
         request.headers.set(HttpHeaders.authorizationHeader, 'Bearer $token');
       }

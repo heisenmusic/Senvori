@@ -64,13 +64,17 @@ void main() {
 
     test('local-only lifecycle kinds map to null (not ingestible)', () {
       expect(
-        mapToPlaybackEvent(event(TelemetryKind.planActivated),
-            appVersion: '1.0.0'),
+        mapToPlaybackEvent(
+          event(TelemetryKind.planActivated),
+          appVersion: '1.0.0',
+        ),
         isNull,
       );
       expect(
-        mapToPlaybackEvent(event(TelemetryKind.itemPrepared),
-            appVersion: '1.0.0'),
+        mapToPlaybackEvent(
+          event(TelemetryKind.itemPrepared),
+          appVersion: '1.0.0',
+        ),
         isNull,
       );
     });

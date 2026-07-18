@@ -37,8 +37,7 @@ const List<int> _k = <int>[
 
 const int _mask32 = 0xFFFFFFFF;
 
-int _rotr(int x, int n) =>
-    ((x >> n) | (x << (32 - n))) & _mask32;
+int _rotr(int x, int n) => ((x >> n) | (x << (32 - n))) & _mask32;
 
 /// Computes the SHA-256 digest of [bytes] and returns it as 32 raw bytes.
 Uint8List sha256Bytes(List<int> bytes) {
@@ -59,28 +58,20 @@ Uint8List sha256Bytes(List<int> bytes) {
   for (var chunk = 0; chunk < message.length; chunk += 64) {
     for (var i = 0; i < 16; i++) {
       final j = chunk + i * 4;
-      w[i] = ((message[j] << 24) |
+      w[i] =
+          ((message[j] << 24) |
               (message[j + 1] << 16) |
               (message[j + 2] << 8) |
               message[j + 3]) &
           _mask32;
     }
     for (var i = 16; i < 64; i++) {
-      final s0 =
-          _rotr(w[i - 15], 7) ^ _rotr(w[i - 15], 18) ^ (w[i - 15] >> 3);
-      final s1 =
-          _rotr(w[i - 2], 17) ^ _rotr(w[i - 2], 19) ^ (w[i - 2] >> 10);
+      final s0 = _rotr(w[i - 15], 7) ^ _rotr(w[i - 15], 18) ^ (w[i - 15] >> 3);
+      final s1 = _rotr(w[i - 2], 17) ^ _rotr(w[i - 2], 19) ^ (w[i - 2] >> 10);
       w[i] = (w[i - 16] + s0 + w[i - 7] + s1) & _mask32;
     }
 
-    var a = h0,
-        b = h1,
-        c = h2,
-        d = h3,
-        e = h4,
-        f = h5,
-        g = h6,
-        h = h7;
+    var a = h0, b = h1, c = h2, d = h3, e = h4, f = h5, g = h6, h = h7;
 
     for (var i = 0; i < 64; i++) {
       final s1 = _rotr(e, 6) ^ _rotr(e, 11) ^ _rotr(e, 25);

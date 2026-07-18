@@ -31,5 +31,5 @@ String randomUuidV4([Random? random]) {
 
 /// Whether [s] is a syntactically valid lowercase/any-case UUID.
 bool isUuid(String s) => RegExp(
-      r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$',
-    ).hasMatch(s);
+  r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$',
+).hasMatch(s);

@@ -37,15 +37,17 @@ void main() {
       );
     });
 
-    test('exactly one block (64 bytes) with padding overflow to a 2nd block',
-        () {
-      // 64 bytes forces the length field into a second padded block.
-      final input = List<int>.filled(64, 0x61); // 64 * 'a'
-      expect(
-        sha256Hex(input),
-        'ffe054fe7ae0cb6dc65c3af9b61d5209f439851db43d0ba5997337df154668eb',
-      );
-    });
+    test(
+      'exactly one block (64 bytes) with padding overflow to a 2nd block',
+      () {
+        // 64 bytes forces the length field into a second padded block.
+        final input = List<int>.filled(64, 0x61); // 64 * 'a'
+        expect(
+          sha256Hex(input),
+          'ffe054fe7ae0cb6dc65c3af9b61d5209f439851db43d0ba5997337df154668eb',
+        );
+      },
+    );
   });
 
   group('Sha256Checksum adapter', () {

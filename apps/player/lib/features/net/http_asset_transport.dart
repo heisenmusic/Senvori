@@ -12,6 +12,7 @@
 library;
 
 import 'dart:io';
+import 'dart:typed_data';
 
 import '../asset_cache/ports.dart';
 

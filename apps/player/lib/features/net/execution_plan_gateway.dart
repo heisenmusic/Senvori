@@ -52,7 +52,9 @@ final class ExecutionPlanGateway {
       final res = await _http.getJson(kExecutionPlanRoute, authenticated: true);
       return mapExecutionPlanResponse(res.json);
     } on PlayerHttpException catch (e) {
-      if (e.isUnauthorized) return Err(PlayerErrors.unauthorized(status: e.statusCode));
+      if (e.isUnauthorized) {
+        return Err(PlayerErrors.unauthorized(status: e.statusCode));
+      }
       if (e.isNetwork) return Err(PlayerErrors.network(e.message, cause: e));
       return Err(PlayerErrors.server(e.statusCode, cause: e));
     }
@@ -193,5 +195,4 @@ Result<FetchedPlan> mapExecutionPlanResponse(Map<String, Object?> json) {
   }
 }
 
-DateTime? _parseDate(Object? v) =>
-    v is String ? DateTime.tryParse(v) : null;
+DateTime? _parseDate(Object? v) => v is String ? DateTime.tryParse(v) : null;
