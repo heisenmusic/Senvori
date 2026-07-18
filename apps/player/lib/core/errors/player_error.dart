@@ -196,4 +196,40 @@ abstract final class PlayerErrors {
     message: 'No reachable API; operating from local state',
     messageKey: 'error.connectivity.offline',
   );
+
+  /// A network/transport failure reaching the API (DNS, socket, TLS, timeout).
+  /// Retryable — the sync cycle backs off and tries again.
+  static PlayerError network(String detail, {Object? cause}) => PlayerError(
+    code: 'connectivity.network',
+    category: ErrorCategory.connectivity,
+    severity: ErrorSeverity.warning,
+    retryable: true,
+    message: 'Network error contacting API: $detail',
+    messageKey: 'error.connectivity.offline',
+    cause: cause,
+  );
+
+  /// The device credential was rejected (401/403). Not silently retryable — the
+  /// runtime must refresh the session or fall back to activation.
+  static PlayerError unauthorized({int status = 401}) => PlayerError(
+    code: 'auth.unauthorized',
+    category: ErrorCategory.authentication,
+    severity: ErrorSeverity.error,
+    retryable: false,
+    message: 'Device credential rejected (HTTP $status)',
+    messageKey: 'error.activation.invalid',
+    context: {'status': status},
+  );
+
+  /// The server returned an unexpected status. Retryable for 5xx, not for 4xx.
+  static PlayerError server(int status, {Object? cause}) => PlayerError(
+    code: 'api.unexpected_status',
+    category: ErrorCategory.connectivity,
+    severity: ErrorSeverity.warning,
+    retryable: status >= 500,
+    message: 'Unexpected API status $status',
+    messageKey: 'error.connectivity.offline',
+    context: {'status': status},
+    cause: cause,
+  );
 }
