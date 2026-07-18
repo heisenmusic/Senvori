@@ -4,6 +4,7 @@ import {
   index,
   integer,
   jsonb,
+  pgPolicy,
   pgTable,
   text,
   timestamp,
@@ -75,8 +76,24 @@ export const pairingCodes = pgTable(
     expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
     usedAt: timestamp("used_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    /* --- Sprint 10A: player activation lifecycle (additive) --- */
+    /** Pairing lifecycle (§4.1). pending → claimed → completed; expired/revoked terminal. */
+    status: text("status", { enum: ["pending", "claimed", "completed", "expired", "revoked"] })
+      .notNull()
+      .default("pending"),
+    /** sha256 of the device's activation secret — proof-of-possession for `complete`. */
+    activationSecretHash: text("activation_secret_hash"),
+    /** Zone the operator binds the device to at claim time. */
+    zoneId: uuid("zone_id").references(() => zones.id, { onDelete: "set null" }),
+    /** Operator who claimed the code (audit). */
+    claimedBy: uuid("claimed_by").references(() => users.id),
+    claimedAt: timestamp("claimed_at", { withTimezone: true }),
+    completedAt: timestamp("completed_at", { withTimezone: true }),
   },
-  (t) => [index("pairing_codes_expiry_idx").on(t.expiresAt)],
+  (t) => [
+    index("pairing_codes_expiry_idx").on(t.expiresAt),
+    index("pairing_codes_status_idx").on(t.status),
+  ],
 );
 
 /** Rotating device credential with minimal scope (§3.2, D11). */
@@ -94,9 +111,28 @@ export const deviceTokens = pgTable(
     expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
     rotatedAt: timestamp("rotated_at", { withTimezone: true }),
     revokedAt: timestamp("revoked_at", { withTimezone: true }),
+    /** Sprint 10A: last time this credential authenticated a request (diagnostics). */
+    lastUsedAt: timestamp("last_used_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
-  (t) => [index("device_tokens_device_idx").on(t.deviceId), tenantIsolation("device_tokens")],
+  (t) => [
+    index("device_tokens_device_idx").on(t.deviceId),
+    tenantIsolation("device_tokens"),
+    /**
+     * Sprint 10A device self-authentication. Under FORCE RLS + a NOBYPASSRLS app
+     * role, a device credential must be verifiable BEFORE the tenant context
+     * exists. This permissive SELECT policy lets a caller read exactly the row
+     * whose `token_hash` it already presents via the `app.device_token_hash`
+     * transaction-local GUC — i.e. only the holder of the raw token can read its
+     * row. Every other access path stays tenant-isolated.
+     */
+    pgPolicy("device_tokens_self_auth", {
+      as: "permissive",
+      for: "select",
+      to: "public",
+      using: sql`token_hash = NULLIF(current_setting('app.device_token_hash', true), '')`,
+    }),
+  ],
 ).enableRLS();
 
 /**
@@ -118,6 +154,16 @@ export const heartbeatStatuses = pgTable(
     network: jsonb("network").$type<Record<string, unknown>>().notNull().default({}),
     cache: jsonb("cache").$type<Record<string, unknown>>().notNull().default({}),
     playback: jsonb("playback").$type<Record<string, unknown>>().notNull().default({}),
+    /* --- Sprint 10A: player runtime projection (additive; hot row only) --- */
+    runtimeState: text("runtime_state"),
+    connectivity: text("connectivity"),
+    contractVersion: text("contract_version"),
+    effectivePlanHash: text("effective_plan_hash"),
+    currentItemId: text("current_item_id"),
+    /** Short, sanitized last-error code/message — never a full stack trace. */
+    lastError: text("last_error"),
+    storage: jsonb("storage").$type<Record<string, unknown>>().notNull().default({}),
+    lastSyncAt: timestamp("last_sync_at", { withTimezone: true }),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
