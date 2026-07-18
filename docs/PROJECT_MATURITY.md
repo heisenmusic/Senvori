@@ -2,10 +2,14 @@
 
 > Estado real por módulo. Atualizar ao fim de cada sprint. Percentuais são estimativas
 > honestas de "código funcional e verificado", não aspiração. Última atualização:
-> **2026-07-17 — pós Sprint 09 (Flutter Player Foundation: runtime puro + experiência
-> premium sob `apps/player/`; máquina de estados, offline-first real com reinício,
-> asset cache/download atômico, orquestração com emergência, telemetria outbox;
-> áudio real / ativação / Proof-of-Play / Hard Sync permanecem Prepared).**
+> **2026-07-18 — pós Sprint 10A (Player Production Integration — Backend Foundation:
+> autenticação de dispositivo sob FORCE RLS, ativação por proof-of-possession,
+> heartbeat, plano efetivo com assets assinados, ingestão idempotente de telemetria,
+> SDK admin e dashboard mínimo de dispositivos; testes em Postgres real. Adapters
+> Flutter (Fase 10B), Proof of Play certificado e Hard Sync permanecem Not
+> implemented).**
+>
+> **Sprint 10 = Partial** (só a Fase 10A landou nesta branch).
 
 ## Resumo
 
@@ -16,7 +20,8 @@
 | Catalog                         | ~75%        | ▲ (agora integrado no trunk + verificado)                                |
 | Programming (Playlists)         | ~68%        | ▲ (Sprint 07B: histórico planejado · fadiga/continuidade/pares Complete) |
 | Dashboard                       | ~32%        | ▲ (05B: library · 06: Programação + Prévia do dia)                       |
-| Player (Flutter)                | ~35%        | ▲ (Sprint 09: runtime + experiência; áudio/ativação/PoP Prepared)        |
+| Player (Flutter)                | ~35%        | = (Sprint 10A foi backend; adapters Flutter = Fase 10B, Not impl.)       |
+| Fleet (backend integração)      | ~40%        | ▲ (Sprint 10A: device-auth, ativação, heartbeat, plano, telemetria)      |
 | Demais domínios de negócio      | ~1–5%       | = (stubs)                                                                |
 | Especificação de produto        | ~95%        | =                                                                        |
 | **Produto construído (global)** | **~24–28%** | ▲                                                                        |

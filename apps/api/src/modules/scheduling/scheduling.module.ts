@@ -15,5 +15,8 @@ import { SchedulingService } from "./scheduling.service";
 @Module({
   controllers: [SchedulingController],
   providers: [SchedulingService, SchedulingRepository],
+  // Exported so the Fleet module (device execution plan, Sprint 10A) can reuse
+  // the tenant-scoped assignment/local-event repository without re-implementing it.
+  exports: [SchedulingRepository],
 })
 export class SchedulingModule {}

@@ -5,6 +5,35 @@ versioning is [SemVer](https://semver.org/). Dates are UTC.
 
 ## [Unreleased]
 
+### Added — Player Production Integration, Phase 10A (Sprint 10) · **Partial**
+
+Backend integration foundation for the Player. **Sprint 10 is Partial**: the
+Flutter Player adapters (Phase 10B — secure storage, authenticated HTTP client,
+real audio, sync cycle, APK) are **Not implemented** in this phase.
+
+- **Contracts** (`@senvori/contracts`): device⇄backend schemas — activation
+  (proof-of-possession), device credential, heartbeat/runtime status, effective
+  execution plan with signed asset descriptors, idempotent telemetry and
+  operational playback events. 12 unit tests.
+- **API** (`@senvori/api`): the Fleet module gains device authentication (a
+  `device_tokens_self_auth` RLS policy verifiable under FORCE RLS + a NOBYPASSRLS
+  app role), activation (start → operator claim → complete; single-use, expiring,
+  replay-protected, audited), session refresh/deactivate, heartbeat, the
+  effective execution plan, and idempotent telemetry/playback-event ingestion —
+  all tenant-isolated with server-derived scope. 13 integration tests on real
+  Postgres.
+- **Schema**: migration `0011` extends `pairing_codes`, `device_tokens` and
+  `heartbeat_statuses` additively and reuses `devices`, `playback_events`,
+  `device_metric_events`, `player_error_events`, `ingestion_batches` (no `player_*`
+  duplicates). Verified on clean and already-migrated databases.
+- **SDK** (`@senvori/sdk`): `client.fleet` administration surface (list/get/revoke
+  devices, activation lookup + claim, playback events).
+- **Dashboard**: minimal Device Activation + Detail console (pt-BR/en-US/es-ES).
+- **Docs**: `PLAYER_BACKEND_INTEGRATION.md`, `PLAYER_EXECUTION_EVENTS.md`, ADRs
+  0002 (device auth), 0003 (execution-plan contract), 0004 (telemetry idempotency).
+
+Not certified Proof of Play; Hard Sync and full Fleet remain out of scope.
+
 ### Added — Flutter Player Foundation (Sprint 09)
 
 First vertical of the Senvori Player (`apps/player/`): a pure-Dart **runtime**

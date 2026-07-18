@@ -45,6 +45,11 @@ import type {
   UploadTicket,
   UpsertRotationPolicyInput,
   ZoneDto,
+  PlayerActivationAdmin,
+  PlayerActivationClaimRequest,
+  PlayerDeviceDetail,
+  PlayerDeviceSummary,
+  PlayerPlaybackEventRecord,
 } from "@senvori/contracts";
 
 /** Result of assigning a program to a scope (`POST /programs/:id/assignments`). */
@@ -89,6 +94,7 @@ export class SenvoriClient {
   readonly catalog: CatalogClient;
   readonly programming: ProgrammingClient;
   readonly scheduling: SchedulingClient;
+  readonly fleet: FleetClient;
 
   constructor(options: SenvoriClientOptions) {
     this.baseUrl = options.baseUrl.replace(/\/$/, "");
@@ -100,6 +106,7 @@ export class SenvoriClient {
     this.catalog = new CatalogClient(this);
     this.programming = new ProgrammingClient(this);
     this.scheduling = new SchedulingClient(this);
+    this.fleet = new FleetClient(this);
   }
 
   /** Low-level fetch (used by the storage direct-upload step). */
@@ -440,5 +447,40 @@ class SchedulingClient {
   /** Base plan + ordered overlays → deterministic effective plan (read-only). */
   effectivePlan(input: ScheduleResolveRequestInput): Promise<EffectivePlanDto> {
     return this.c.request("POST", "/v1/scheduling/effective-plan", { body: input });
+  }
+}
+
+/**
+ * Fleet administration (§3 / §8, Sprint 10A). Human operator surface for device
+ * activation and detail — NOT the device-facing Player API (that authenticates
+ * with a device token, not a session, and is called by the Player itself).
+ * Credentials/tokens are never exposed here.
+ */
+class FleetClient {
+  constructor(private readonly c: SenvoriClient) {}
+
+  /** All Player devices in the tenant. */
+  listDevices(): Promise<{ items: PlayerDeviceSummary[] }> {
+    return this.c.request("GET", "/v1/fleet/devices");
+  }
+  /** A device with its latest runtime projection (no secrets). */
+  getDevice(id: string): Promise<PlayerDeviceDetail> {
+    return this.c.request("GET", `/v1/fleet/devices/${id}`);
+  }
+  /** Revoke a device's credentials and decommission it. */
+  revokeDevice(id: string): Promise<PlayerDeviceDetail> {
+    return this.c.request("POST", `/v1/fleet/devices/${id}/revoke`);
+  }
+  /** Recent operational playback events for a device. */
+  playbackEvents(id: string): Promise<{ items: PlayerPlaybackEventRecord[] }> {
+    return this.c.request("GET", `/v1/fleet/devices/${id}/playback-events`);
+  }
+  /** Look up a pending activation by its on-screen code. */
+  getActivation(code: string): Promise<PlayerActivationAdmin> {
+    return this.c.request("GET", `/v1/fleet/activations/${code}`);
+  }
+  /** Bind a pending device (by code) to a zone in this tenant. */
+  claimActivation(code: string, input: PlayerActivationClaimRequest): Promise<PlayerDeviceSummary> {
+    return this.c.request("POST", `/v1/fleet/activations/${code}/claim`, { body: input });
   }
 }
