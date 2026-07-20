@@ -62,9 +62,9 @@
 ## Consequences
 
 - The full online path — activate → authenticated calls → fetch plan → download
-  + SHA-256 verify → validate/stage/activate → heartbeat → telemetry — is real
-  code exercised by unit tests on its pure parts (SHA-256 vectors, plan mapping,
-  telemetry/heartbeat codecs, URL resolution, sync-cycle branching).
+  - SHA-256 verify → validate/stage/activate → heartbeat → telemetry — is real
+    code exercised by unit tests on its pure parts (SHA-256 vectors, plan mapping,
+    telemetry/heartbeat codecs, URL resolution, sync-cycle branching).
 - It could **not** be run end-to-end against a live backend or on Android in this
   environment (no Flutter toolchain, no reachable API), so nothing is claimed as
   "verified on device". See `PROJECT_STATUS.md` for the honest matrix.

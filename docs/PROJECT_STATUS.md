@@ -14,23 +14,23 @@
 > unidade (vetores SHA-256, mapeamento de plano, codecs de telemetria/heartbeat,
 > resolução de URL, ramos do sync cycle). Nada é rotulado como "verificado".
 >
-> | Capacidade (Fase 10B)                          | Impl. | Testes (puros) | Verif. device | Status              |
-> | ---------------------------------------------- | ----- | -------------- | ------------- | ------------------- |
-> | SHA-256 (integridade de asset)                 | ✅    | ✅             | —             | **Complete**\*      |
-> | Cliente HTTP autenticado                       | ✅    | ✅ (parcial)   | ❌            | **Implemented**\*\* |
-> | Activation gateway (start/status/complete)     | ✅    | ⚠️ (codec)     | ❌            | **Implemented**\*\* |
-> | Armazenamento de credencial (token)            | ✅    | ✅             | ❌            | **Partial**\*\*\*   |
-> | Execution plan remoto + mapeamento             | ✅    | ✅             | ❌            | **Implemented**\*\* |
-> | Download de asset (URL assinada)               | ✅    | —              | ❌            | **Implemented**\*\* |
-> | Telemetria (batch idempotente)                 | ✅    | ✅             | ❌            | **Implemented**\*\* |
-> | Heartbeat + runtime status                     | ✅    | ✅             | ❌            | **Implemented**\*\* |
-> | Probe de conectividade (/v1/health)            | ✅    | —              | ❌            | **Implemented**\*\* |
-> | Sync cycle (heartbeat→plano→telemetria)        | ✅    | ✅             | ❌            | **Implemented**\*\* |
-> | Composition root de produção                   | ✅    | ⚙️ (via demo)  | ❌            | **Implemented**\*\* |
-> | Áudio real (gapless/ducking)                   | ❌    | —              | —             | **Not impl.**\*\*\*\* |
-> | Secure storage (OS Keystore/Keychain)          | ❌    | —             | —             | **Not impl.**\*\*\*\* |
-> | Query real de espaço em disco                  | ❌    | —             | —             | **Not impl.**\*\*\*\* |
-> | Proof of Play certificado / Hard Sync          | ❌    | —             | —             | **Not impl.**       |
+> | Capacidade (Fase 10B)                      | Impl. | Testes (puros) | Verif. device | Status                |
+> | ------------------------------------------ | ----- | -------------- | ------------- | --------------------- |
+> | SHA-256 (integridade de asset)             | ✅    | ✅             | —             | **Complete**\*        |
+> | Cliente HTTP autenticado                   | ✅    | ✅ (parcial)   | ❌            | **Implemented**\*\*   |
+> | Activation gateway (start/status/complete) | ✅    | ⚠️ (codec)     | ❌            | **Implemented**\*\*   |
+> | Armazenamento de credencial (token)        | ✅    | ✅             | ❌            | **Partial**\*\*\*     |
+> | Execution plan remoto + mapeamento         | ✅    | ✅             | ❌            | **Implemented**\*\*   |
+> | Download de asset (URL assinada)           | ✅    | —              | ❌            | **Implemented**\*\*   |
+> | Telemetria (batch idempotente)             | ✅    | ✅             | ❌            | **Implemented**\*\*   |
+> | Heartbeat + runtime status                 | ✅    | ✅             | ❌            | **Implemented**\*\*   |
+> | Probe de conectividade (/v1/health)        | ✅    | —              | ❌            | **Implemented**\*\*   |
+> | Sync cycle (heartbeat→plano→telemetria)    | ✅    | ✅             | ❌            | **Implemented**\*\*   |
+> | Composition root de produção               | ✅    | ⚙️ (via demo)  | ❌            | **Implemented**\*\*   |
+> | Áudio real (gapless/ducking)               | ❌    | —              | —             | **Not impl.**\*\*\*\* |
+> | Secure storage (OS Keystore/Keychain)      | ❌    | —              | —             | **Not impl.**\*\*\*\* |
+> | Query real de espaço em disco              | ❌    | —              | —             | **Not impl.**\*\*\*\* |
+> | Proof of Play certificado / Hard Sync      | ❌    | —              | —             | **Not impl.**         |
 >
 > \* Substitui o fallback FNV-1a não-criptográfico; verificado contra vetores NIST.
 > \*\* Código real e completo, com codecs/mapeadores puros testados; **não**

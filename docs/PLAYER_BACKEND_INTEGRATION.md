@@ -125,19 +125,19 @@ Now implemented as dependency-free adapters (`apps/player/lib/features/net/**`,
 `core/crypto/**`, `core/persistence/token_store.dart`,
 `app/production_factory.dart`):
 
-| Adapter                    | Class                                    | Endpoint / concern                    |
-| -------------------------- | ---------------------------------------- | ------------------------------------- |
-| Authenticated HTTP         | `PlayerHttpClient`                       | bearer auth, `v1` prefix, timeouts    |
-| SHA-256 integrity          | `Sha256Checksum` / `sha256.dart`         | asset verification (NIST vectors)     |
-| Activation gateway         | `HttpActivationGateway`                  | start / status / complete             |
-| Credential storage         | `DocumentTokenStore` (`TokenStore`)      | app-private file (not OS Keystore)    |
-| Execution plan             | `ExecutionPlanGateway`                   | `GET /v1/player/execution-plan`       |
-| Asset download             | `HttpAssetTransport`                     | signed-URL streaming                  |
-| Telemetry                  | `HttpTelemetryTransport`                 | `POST /v1/player/telemetry`           |
-| Heartbeat                  | `HeartbeatClient`                        | `POST /v1/player/heartbeat`           |
-| Connectivity               | `HttpConnectivityProbe`                  | `GET /v1/health`                      |
-| Sync cycle                 | `SyncCycle`                              | heartbeat → plan → telemetry loop     |
-| Composition root           | `ProductionFactory`                      | wires all of the above                |
+| Adapter            | Class                               | Endpoint / concern                 |
+| ------------------ | ----------------------------------- | ---------------------------------- |
+| Authenticated HTTP | `PlayerHttpClient`                  | bearer auth, `v1` prefix, timeouts |
+| SHA-256 integrity  | `Sha256Checksum` / `sha256.dart`    | asset verification (NIST vectors)  |
+| Activation gateway | `HttpActivationGateway`             | start / status / complete          |
+| Credential storage | `DocumentTokenStore` (`TokenStore`) | app-private file (not OS Keystore) |
+| Execution plan     | `ExecutionPlanGateway`              | `GET /v1/player/execution-plan`    |
+| Asset download     | `HttpAssetTransport`                | signed-URL streaming               |
+| Telemetry          | `HttpTelemetryTransport`            | `POST /v1/player/telemetry`        |
+| Heartbeat          | `HeartbeatClient`                   | `POST /v1/player/heartbeat`        |
+| Connectivity       | `HttpConnectivityProbe`             | `GET /v1/health`                   |
+| Sync cycle         | `SyncCycle`                         | heartbeat → plan → telemetry loop  |
+| Composition root   | `ProductionFactory`                 | wires all of the above             |
 
 ## Still deferred / follow-ups
 
