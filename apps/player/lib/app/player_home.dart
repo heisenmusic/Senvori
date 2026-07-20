@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../bootstrap/boot_phase.dart';
 import '../core/config/player_config.dart';
 import '../features/demo/demo_fixtures.dart';
+import '../features/net/sync_cycle.dart';
 import '../features/now_playing/boot_screen.dart';
 import '../features/now_playing/now_playing_screen.dart';
 import '../features/now_playing/now_playing_view_state.dart';
@@ -23,7 +24,9 @@ final class PlayerHome extends StatefulWidget {
     super.key,
     required this.runtime,
     this.demoEngine,
+    this.syncCycle,
     this.autoAdvance = true,
+    this.syncInterval = const Duration(seconds: 30),
   });
   final PlayerRuntime runtime;
 
@@ -32,7 +35,12 @@ final class PlayerHome extends StatefulWidget {
   /// leaves this null. Tests pass null and drive time themselves.
   final FakePlaybackEngine? demoEngine;
 
+  /// When provided (production), the online sync loop (heartbeat → plan re-fetch
+  /// → telemetry flush) runs on [syncInterval]. Null in demo/tests.
+  final SyncCycle? syncCycle;
+
   final bool autoAdvance;
+  final Duration syncInterval;
 
   @override
   State<PlayerHome> createState() => _PlayerHomeState();
@@ -46,6 +54,7 @@ class _PlayerHomeState extends State<PlayerHome> {
   OrchestratorSnapshot _orchestrator = OrchestratorSnapshot.idle;
   PlayerMode _mode = PlayerMode.ambient;
   Timer? _ticker;
+  Timer? _syncTimer;
   final _subs = <StreamSubscription>[];
 
   PlayerRuntime get runtime => widget.runtime;
@@ -68,11 +77,31 @@ class _PlayerHomeState extends State<PlayerHome> {
 
   Future<void> _start() async {
     await runtime.boot();
-    // Demo: apply the café plan so there is something to show.
-    await runtime.applyPlan(DemoFixtures.cafePlan(), sourceUris: const {});
+    // Demo: apply the café plan so there is something to show. Production loads
+    // its plan from the backend via the sync cycle instead.
+    if (runtime.config.flags.demoMode) {
+      await runtime.applyPlan(DemoFixtures.cafePlan(), sourceUris: const {});
+    }
     if (!mounted) return;
     setState(() => _booting = false);
     _startTicker();
+    _startSyncLoop();
+  }
+
+  void _startSyncLoop() {
+    final sync = widget.syncCycle;
+    if (sync == null) return;
+    // Kick an immediate cycle, then run on a fixed interval. Adapting the
+    // interval to the server's nextHeartbeatSeconds is a documented follow-up.
+    unawaited(_runSyncOnce(sync));
+    _syncTimer = Timer.periodic(widget.syncInterval, (_) {
+      unawaited(_runSyncOnce(sync));
+    });
+  }
+
+  Future<void> _runSyncOnce(SyncCycle sync) async {
+    await sync.tick();
+    if (mounted) setState(() {});
   }
 
   void _startTicker() {
@@ -94,6 +123,7 @@ class _PlayerHomeState extends State<PlayerHome> {
   @override
   void dispose() {
     _ticker?.cancel();
+    _syncTimer?.cancel();
     for (final s in _subs) {
       s.cancel();
     }

@@ -1,10 +1,19 @@
-# Player ↔ Backend Integration (Sprint 10A)
+# Player ↔ Backend Integration (Sprint 10A + 10B)
 
-Status: **Partial** — Sprint 10A delivers the **backend integration foundation**
-(contracts, API, schema, SDK, dashboard) with real Postgres tests. The Flutter
-Player adapters that consume this surface (secure storage, authenticated HTTP
-client, real audio, sync cycle) are **Phase 10B** and remain **Not implemented**.
-Nothing here is "Proof of Play certified"; Hard Sync remains out of scope.
+Status: **Partial → adapters implemented (10B), unverified on device.** Sprint
+10A delivered the **backend integration foundation** (contracts, API, schema,
+SDK, dashboard) with real Postgres tests. **Sprint 10B** now implements the
+Flutter Player adapters that consume this surface — authenticated HTTP,
+activation gateway, execution-plan fetch/mapping, HTTP asset download with
+real **SHA-256** verification, heartbeat, telemetry, connectivity probe and a
+sync cycle — all dependency-free (`dart:io`, no new pub packages). Two adapters
+remain fakes by necessity: **real audio** (needs an audio plugin) and
+**OS-Keystore secure storage** (needs `flutter_secure_storage`); the token is
+persisted app-private instead. The 10B adapters could **not** be run against a
+live backend or on Android in this environment (no Flutter toolchain), so their
+pure logic is unit-tested but nothing is "verified on device". Nothing here is
+"Proof of Play certified"; Hard Sync remains out of scope. See ADR 0005 and
+`PROJECT_STATUS.md`.
 
 ## What this sprint connected
 
@@ -110,9 +119,30 @@ RBAC + cross-tenant denial, device auth (valid/forged/missing/revoked), heartbea
 with dedup + cross-tenant isolation, oversized-batch rejection, token rotation,
 device listing. Plus 12 contract unit tests in `@senvori/contracts`.
 
-## Deferred to Phase 10B (Flutter)
+## Phase 10B (Flutter adapters) — implemented
 
-Secure credential storage, authenticated HTTP client, real activation UI, plan
-fetch/validation on device, HTTP asset transport, real disk-space adapter, real
-audio engine (+ ADR), the sync cycle, on-device diagnostics, Flutter tests, APK
-build, emulator/hardware validation. See `PROJECT_STATUS.md` for the matrix.
+Now implemented as dependency-free adapters (`apps/player/lib/features/net/**`,
+`core/crypto/**`, `core/persistence/token_store.dart`,
+`app/production_factory.dart`):
+
+| Adapter            | Class                               | Endpoint / concern                 |
+| ------------------ | ----------------------------------- | ---------------------------------- |
+| Authenticated HTTP | `PlayerHttpClient`                  | bearer auth, `v1` prefix, timeouts |
+| SHA-256 integrity  | `Sha256Checksum` / `sha256.dart`    | asset verification (NIST vectors)  |
+| Activation gateway | `HttpActivationGateway`             | start / status / complete          |
+| Credential storage | `DocumentTokenStore` (`TokenStore`) | app-private file (not OS Keystore) |
+| Execution plan     | `ExecutionPlanGateway`              | `GET /v1/player/execution-plan`    |
+| Asset download     | `HttpAssetTransport`                | signed-URL streaming               |
+| Telemetry          | `HttpTelemetryTransport`            | `POST /v1/player/telemetry`        |
+| Heartbeat          | `HeartbeatClient`                   | `POST /v1/player/heartbeat`        |
+| Connectivity       | `HttpConnectivityProbe`             | `GET /v1/health`                   |
+| Sync cycle         | `SyncCycle`                         | heartbeat → plan → telemetry loop  |
+| Composition root   | `ProductionFactory`                 | wires all of the above             |
+
+## Still deferred / follow-ups
+
+Real audio engine (audio plugin + ADR), OS-Keystore-backed secure storage,
+real disk-space query (needs a platform channel), activation-UI wiring to the
+injected `ActivationController`, adaptive heartbeat interval, large-asset
+file-streaming downloads, on-device diagnostics, APK build, and
+emulator/hardware validation. See `PROJECT_STATUS.md` for the matrix.

@@ -1,5 +1,53 @@
 # SENVORI 2.0 — PROJECT STATUS REPORT
 
+> ## Atualização — Player Production Adapters, Fase 10B (Sprint 10)
+>
+> **Status da Sprint 10B: Adapters implementados, não verificados em
+> dispositivo.** A Fase 10B conecta o **Flutter Player** à infraestrutura da
+> Fase 10A com adapters de produção reais, **sem novas dependências pub** (apenas
+> `dart:io`/`dart:convert`/`dart:typed_data`/`dart:math`), preservando a
+> arquitetura de _ports_ e o runtime testável _headless_.
+>
+> **Ambiente desta fase não possuía o Flutter SDK nem um backend acessível**, então
+> `flutter pub get`/`analyze`/`test` **não** puderam ser executados aqui e nada foi
+> validado em Android. A lógica pura dos adapters é coberta por novos testes de
+> unidade (vetores SHA-256, mapeamento de plano, codecs de telemetria/heartbeat,
+> resolução de URL, ramos do sync cycle). Nada é rotulado como "verificado".
+>
+> | Capacidade (Fase 10B)                      | Impl. | Testes (puros) | Verif. device | Status                |
+> | ------------------------------------------ | ----- | -------------- | ------------- | --------------------- |
+> | SHA-256 (integridade de asset)             | ✅    | ✅             | —             | **Complete**\*        |
+> | Cliente HTTP autenticado                   | ✅    | ✅ (parcial)   | ❌            | **Implemented**\*\*   |
+> | Activation gateway (start/status/complete) | ✅    | ⚠️ (codec)     | ❌            | **Implemented**\*\*   |
+> | Armazenamento de credencial (token)        | ✅    | ✅             | ❌            | **Partial**\*\*\*     |
+> | Execution plan remoto + mapeamento         | ✅    | ✅             | ❌            | **Implemented**\*\*   |
+> | Download de asset (URL assinada)           | ✅    | —              | ❌            | **Implemented**\*\*   |
+> | Telemetria (batch idempotente)             | ✅    | ✅             | ❌            | **Implemented**\*\*   |
+> | Heartbeat + runtime status                 | ✅    | ✅             | ❌            | **Implemented**\*\*   |
+> | Probe de conectividade (/v1/health)        | ✅    | —              | ❌            | **Implemented**\*\*   |
+> | Sync cycle (heartbeat→plano→telemetria)    | ✅    | ✅             | ❌            | **Implemented**\*\*   |
+> | Composition root de produção               | ✅    | ⚙️ (via demo)  | ❌            | **Implemented**\*\*   |
+> | Áudio real (gapless/ducking)               | ❌    | —              | —             | **Not impl.**\*\*\*\* |
+> | Secure storage (OS Keystore/Keychain)      | ❌    | —              | —             | **Not impl.**\*\*\*\* |
+> | Query real de espaço em disco              | ❌    | —              | —             | **Not impl.**\*\*\*\* |
+> | Proof of Play certificado / Hard Sync      | ❌    | —              | —             | **Not impl.**         |
+>
+> \* Substitui o fallback FNV-1a não-criptográfico; verificado contra vetores NIST.
+> \*\* Código real e completo, com codecs/mapeadores puros testados; **não**
+> exercitado contra API real nem em Android nesta fase. \*\*\* Token persistido em
+> arquivo app-privado (`DocumentTokenStore`), **não** em Keystore/Keychain de SO —
+> `capabilities.secureStorage = false` até um adapter com plugin existir.
+> \*\*\*\* Exige plugin de plataforma (`just_audio`/`media_kit`,
+> `flutter_secure_storage`, platform channel de disco), fora da postura
+> dependency-free; documentado, não escondido. Ver ADR 0005 e
+> `PLAYER_BACKEND_INTEGRATION.md`.
+>
+> **Commits (branch `feat/player-production-adapters`):** SHA-256 + adapter;
+> cliente HTTP + config; asset transport; execution-plan gateway + mapper;
+> telemetria + heartbeat; activation gateway + token store; probe + sync cycle +
+> production factory + wiring de UI; docs. **Gates Flutter (`pub get`/`analyze`/
+> `test`) e validação Android: não executados neste ambiente (sem SDK/back-end).**
+
 > ## Atualização — Player Production Integration, Fase 10A (Sprint 10)
 >
 > **Status da Sprint 10: Partial.** A Fase 10A entrega a **fundação de
